@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "splinter"
+version = "0.1.0"
+description = "Supabase Project Linter"
+authors = ["Oliver Rice <github@oliverrice.com>"]
+license = "Apache 2"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+SQLAlchemy = {extras = ["asyncio"], version = "^2.0.25"}
+psycopg = "^3.1.18"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+parse = "^1.20.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
