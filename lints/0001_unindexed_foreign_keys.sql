@@ -1,4 +1,4 @@
--- TODO: 
+create view "0001_unindexed_foreign_keys" as
 
 select
     'unindexed_foreign_key' as name,
@@ -35,7 +35,10 @@ from
         and a.attnum = any(ct.conkey)
     left join pg_index ix
         on ix.indrelid = ct.conrelid
-        and (ct.conkey <@ ix.indkey)
+    left join lateral (
+        select array_agg(i) as indkeys
+        from unnest(ix.indkey) with ordinality as u(i, ord)
+    ) ix_keys on true
     left join pg_depend d
         on d.refobjid = cl.oid
         and d.deptype = 'e'
@@ -45,10 +48,11 @@ where
     ct.contype = 'f' -- foreign key constraints
     and ns.nspname not in ('pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'extensions')
     and e.oid is null -- exclude tables that are dependencies of extensions
+    and (ix.indrelid is null or not (ct.conkey <@ ix_keys.indkeys))
 group by
     ns.nspname,
     cl.relname,
     ct.oid
 having
-    bool_or(ix.oid is null) -- check if there's no index covering all columns of the foreign key;
+    bool_or(ix.indrelid is null) -- check if there's no index covering all columns of the foreign key;
 

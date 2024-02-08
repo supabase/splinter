@@ -1,40 +1,21 @@
-name: Tests
-
-on: [push, pull_request]
+name: tests
+on:
+  pull_request:
+  push: { branches: master }
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  test:
+    name: Run tests
     strategy:
-        matrix:
-            python-version: ['3.11']
-            postgres-version: ['14', '15']
-    services:
-
-      postgres:
-        image: supabase/postgres:${{ matrix.postgres-version }}
-        env:
-          POSTGRES_DB: postgres
-          POSTGRES_HOST: localhost
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        ports:
-        - 5610:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
+      matrix:
+        postgres: ["15.1.1.13"]
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Install
-      run: |
-        pip install --upgrade pip
-        pip install poetry
-        poetry install --with=dev
+      - name: Build docker images
+        run: PG_VERSION=${{ matrix.postgres }} docker-compose -f .ci/docker-compose.yml build
 
-    - name: Test
-      run: |
-        poetry run pytest
+      - name: Run tests
+        run: PG_VERSION=${{ matrix.postgres }} docker-compose -f .ci/docker-compose.yml run test
