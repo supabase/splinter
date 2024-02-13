@@ -1,58 +1,55 @@
 create view "0001_unindexed_foreign_keys" as
 
+with foreign_keys as (
+	select
+		cl.oid::regclass as table_,
+		ct.conname as fkey_name,
+		ct.conkey col_attnums
+	from
+		pg_constraint ct
+		join pg_class cl -- fkey owning table
+			on ct.conrelid = cl.oid
+		left join pg_depend d
+			on d.objid = cl.oid
+			and d.deptype = 'e'
+	where
+		ct.contype = 'f' -- foreign key constraints
+		and d.objid is null -- exclude tables that are dependencies of extensions
+		and cl.relnamespace::regnamespace::text not in (
+			'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'extensions'
+		)
+),
+index_ as (
+	select
+		indrelid::regclass as table_,
+		indexrelid::regclass as index_,
+		string_to_array(indkey::text, ' ')::smallint[] as col_attnums
+	from
+		pg_index
+	where
+		indisvalid
+)
 select
-    'unindexed_foreign_key' as name,
-    'WARN' as level,
-    'INTERNAL' as facing,
-    'Foreign keys without indexes can degrade performance on joins.' as description,
+    '0001_unindexed_foreign_keys' as name,
+    'INFO' as level,
+    'EXTERNAL' as facing,
+    'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
     format(
-		'The foreign key on table %I.%I involving columns (%s) is not indexed.',
-		ns.nspname,
-		cl.relname,
-		string_agg(a.attname, ', ' order by a.attnum)
-	) as detail,
-    format(
-		'create index on %I.%I(%s);',
-		ns.nspname,
-		cl.relname,
-		string_agg(a.attname, ', ' order by a.attnum)
-	) as remediation,
-    '{}'::jsonb as metadata,
-    format(
-		'unindexed_foreign_key_%s_%s_%s',
-		ns.nspname,
-		cl.relname,
-		string_agg(a.attname, '_' order by a.attnum)
-	) as cache_key
+        'Table "%s" has a foreign key "%s" without a covering index. This can lead to suboptimal query performance.',
+        fk.table_, fk.fkey_name
+    ) as detail,
+    null as remediation,
+    jsonb_build_object(
+        'table', fk.table_,
+        'fkey_name', fk.fkey_name,
+        'fkey_columns', fk.col_attnums
+    ) as metadata,
+    format('0001_unindexed_foreign_keys_%s_%s', fk.table_, fk.fkey_name) as cache_key
 from
-    pg_constraint ct
-    join pg_class cl
-        on ct.conrelid = cl.oid
-    join pg_namespace ns
-        on cl.relnamespace = ns.oid
-    join pg_attribute a
-        on a.attrelid = cl.oid
-        and a.attnum = any(ct.conkey)
-    left join pg_index ix
-        on ix.indrelid = ct.conrelid
-    left join lateral (
-        select array_agg(i) as indkeys
-        from unnest(ix.indkey) with ordinality as u(i, ord)
-    ) ix_keys on true
-    left join pg_depend d
-        on d.refobjid = cl.oid
-        and d.deptype = 'e'
-    left join pg_extension e
-        on e.oid = d.objid
+    foreign_keys fk
+left join index_ idx on fk.table_ = idx.table_ and fk.col_attnums = idx.col_attnums
 where
-    ct.contype = 'f' -- foreign key constraints
-    and ns.nspname not in ('pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'extensions')
-    and e.oid is null -- exclude tables that are dependencies of extensions
-    and (ix.indrelid is null or not (ct.conkey <@ ix_keys.indkeys))
-group by
-    ns.nspname,
-    cl.relname,
-    ct.oid
-having
-    bool_or(ix.indrelid is null) -- check if there's no index covering all columns of the foreign key;
-
+    idx.index_ is null
+order by
+    fk.table_,
+    fk.fkey_name;
