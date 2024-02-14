@@ -1,5 +1,7 @@
 # splinter (Supabase Postgres LINTER)
 
+<img src="https://github.com/supabase/splinter/assets/12958657/3683c310-c9f6-4b05-ae3a-c51c03d3ff0f" height="250">
+
 This project maintains a set of lints for Supabase projects. It uses SQL queries to identify common database schema issues. Some lints are general purpose for Postgres projects while others are specific to Supabase features storing their data in Postgres e.g. auth and storage.
 
 Currently `splinter` is intended to house the SQL for the lints but it not opinionated about how they will be executed against user projects. See [Project Linting RFC](https://www.notion.so/supabase/Project-Lints-f34e7b24bb5846c188c8096ad10eb045) for options under consideration.
