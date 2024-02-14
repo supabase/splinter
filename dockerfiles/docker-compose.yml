@@ -1,7 +1,7 @@
 version: '3'
 services:
 
-  db:
+  test:
     container_name: supabase-db
     build:
         context: ..
