@@ -46,7 +46,7 @@ Detects if auth.users is exposed to anon or authenticated roles via a view or ma
 
 ### 0003_auth_rls_initplan
 
-Detects if calls to auth.<function>() in RLS policies are being unnecessarily re-evaluated for each row
+Detects if calls to auth.function() in RLS policies are being unnecessarily re-evaluated for each row
 
 - Level: WARN
 - Facing: EXTERNAL
