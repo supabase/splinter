@@ -1,0 +1,65 @@
+begin;
+	-- No issues	
+	select * from lint."0003_auth_rls_initplan";
+ name | level | facing | description | detail | remediation | metadata | cache_key 
+------+-------+--------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+	-- Create a view that exposes auth.users
+    create table public.foo (
+        id int primary key,
+        user_id uuid,
+        jwt jsonb,
+        role text,
+        email text
+    );
+    create policy bad_policy_uid on public.foo
+    for select
+        to authenticated
+        using (user_id = auth.uid());
+    create policy bad_policy_jwt on public.foo
+    for insert
+        to authenticated
+        with check (jwt = auth.jwt());
+    create policy bad_policy_role on public.foo
+    for update
+        to authenticated
+        with check ("role" = auth.role());
+    create policy bad_policy_email on public.foo
+    for delete 
+        to authenticated
+        using ("email" = auth.email());
+    create policy good_policy_uid on public.foo
+    for select
+        to authenticated
+        using (user_id = (select auth.uid()));
+    create policy good_policy_jwt on public.foo
+    for insert
+        to authenticated
+        with check (jwt = (select auth.jwt()));
+    create policy good_policy_role on public.foo
+    for update 
+        to authenticated
+        with check ("role" = (select auth.role()));
+    create policy good_policy_email on public.foo
+    for delete
+        to authenticated
+        using ("email" = (select auth.email()));
+    -- Still empty because RLS not enabled
+	select * from lint."0003_auth_rls_initplan";
+ name | level | facing | description | detail | remediation | metadata | cache_key 
+------+-------+--------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+    alter table public.foo enable row level security;
+    -- 4 entries, 1 per "bad_" policy
+	select * from lint."0003_auth_rls_initplan";
+       name        | level |  facing  |                                               description                                               |                                                                                                                                                                                    detail                                                                                                                                                                                     | remediation | metadata |                cache_key                
+-------------------+-------+----------+---------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------+----------+-----------------------------------------
+ auth_rls_initplan | WARN  | EXTERNAL | Detects if calls to auth.<function>() in RLS policies are being unnecessarily re-evaluated for each row | Table "foo" has a row level security policy "bad_policy_uid" that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing "auth.<function>()" with "(select auth.<function>())". See https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select for more.   |             |          | auth_rls_init_plan_foo_bad_policy_uid
+ auth_rls_initplan | WARN  | EXTERNAL | Detects if calls to auth.<function>() in RLS policies are being unnecessarily re-evaluated for each row | Table "foo" has a row level security policy "bad_policy_jwt" that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing "auth.<function>()" with "(select auth.<function>())". See https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select for more.   |             |          | auth_rls_init_plan_foo_bad_policy_jwt
+ auth_rls_initplan | WARN  | EXTERNAL | Detects if calls to auth.<function>() in RLS policies are being unnecessarily re-evaluated for each row | Table "foo" has a row level security policy "bad_policy_role" that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing "auth.<function>()" with "(select auth.<function>())". See https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select for more.  |             |          | auth_rls_init_plan_foo_bad_policy_role
+ auth_rls_initplan | WARN  | EXTERNAL | Detects if calls to auth.<function>() in RLS policies are being unnecessarily re-evaluated for each row | Table "foo" has a row level security policy "bad_policy_email" that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing "auth.<function>()" with "(select auth.<function>())". See https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select for more. |             |          | auth_rls_init_plan_foo_bad_policy_email
+(4 rows)
+
+rollback;

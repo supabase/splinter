@@ -1,4 +1,4 @@
-create view "0001_unindexed_foreign_keys" as
+create view lint."0001_unindexed_foreign_keys" as
 
 with foreign_keys as (
 	select

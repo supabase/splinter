@@ -1,4 +1,4 @@
-create view "0002_auth_users_exposed" as
+create view lint."0002_auth_users_exposed" as
 
 select
     'auth_users_exposed' as name,
