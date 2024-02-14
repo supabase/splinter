@@ -2,11 +2,16 @@ version: '3'
 services:
 
   test:
-    container_name: repo_test
+    container_name: supabase-db
     build:
         context: ..
         dockerfile: ./dockerfiles/Dockerfile
         args:
           PG_VERSION: ${SUPABASE_VERSION:-15.1.1.13}
+    healthcheck:
+      test: pg_isready -U postgres -h localhost
+      interval: 5s
+      timeout: 5s
+      retries: 10
     command:
       - ./bin/installcheck
