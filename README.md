@@ -41,34 +41,16 @@ Detects if calls to auth.function() in RLS policies are being unnecessarily re-e
 - Level: WARN
 - Facing: EXTERNAL
 
-## TODO Lints
-
-The following are lints on the TODO list with a WIP associated query showing how to get at "some" of the data.
-
-### tables_missing_primary_key
+### 0004_no_primary_key
 
 Detect tables without a primary key.
 
 - Level: INFO
 - Facing: EXTERNAL
 
+## TODO Lints
 
-```sql
-SELECT n.nspname as schema_name,
-       c.relname as table_name
-FROM pg_catalog.pg_class c
-LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-WHERE c.relkind = 'r'
-  AND NOT EXISTS (
-    SELECT 1
-    FROM pg_catalog.pg_constraint con
-    WHERE con.conrelid = c.oid
-      AND con.contype = 'p'
-  )
-  AND n.nspname <> 'pg_catalog'
-  AND n.nspname <> 'information_schema'
-  AND n.nspname !~ '^pg_toast';
-```
+The following are lints on the TODO list with a WIP associated query showing how to get at "some" of the data.
 
 ### unused_indexes
 
