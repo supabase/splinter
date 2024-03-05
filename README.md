@@ -50,25 +50,16 @@ Detect tables without a primary key.
 - Level: INFO
 - Facing: EXTERNAL
 
-## TODO Lints
-
-The following are lints on the TODO list with a WIP associated query showing how to get at "some" of the data.
-
-### unused_indexes
+### 0005_unused_index
 
 Detects indexes that have never been used to service a query.
 
 - Level: INFO
 - Facing: EXTERNAL
 
-```sql
-SELECT schemaname, relname, indexrelname
-FROM pg_stat_user_indexes
-JOIN pg_index USING (indexrelid)
-WHERE idx_scan = 0
-  AND indisunique IS FALSE;
-```
+## TODO Lints
 
+The following are lints on the TODO list with a WIP associated query showing how to get at "some" of the data.
 
 ### duplicate_indexes
 
