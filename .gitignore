@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# test artifacts
+regression.diffs
+regression.out
+
 # C extensions
 *.so
 
