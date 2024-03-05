@@ -1,0 +1,22 @@
+begin;
+	-- No issues	
+	select * from lint."0005_unused_index";
+ name | level | facing | description | detail | remediation | metadata | cache_key 
+------+-------+--------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+    create table public.foo (
+        id int primary key,
+        foo text unique,
+        bar text
+    );
+    create index some_unused_index on public.foo (bar);
+    analyze public.foo;
+    -- Only the "bar" table is listed
+	select * from lint."0005_unused_index";
+     name     | level |  facing  |                                 description                                 |                               detail                                | remediation | metadata |                 cache_key                 
+--------------+-------+----------+-----------------------------------------------------------------------------+---------------------------------------------------------------------+-------------+----------+-------------------------------------------
+ unused_index | INFO  | EXTERNAL | Detects if an index has never been used and may be a candidate for removal. | Index "some_unused_index" on table "public"."foo" has not been used |             |          | unused_index_public_foo_some_unused_index
+(1 row)
+
+rollback;
