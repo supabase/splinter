@@ -4,7 +4,7 @@ select
 	'no_primary_key' as name,
 	'INFO' as level,
 	'EXTERNAL' as facing,
-	'Detects if a function does not have a priamry key. Tables without a primary key can be inefficient to interact with at scale.' as description,
+	'Detects if a table does not have a primary key. Tables without a primary key can be inefficient to interact with at scale.' as description,
 	format(
 		'Table "%s.%s" does not have a primary key',
 		pgns.nspname,
