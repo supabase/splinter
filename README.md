@@ -64,45 +64,6 @@ Detects if multiple permissive policies are present on a table for the same `rol
 - Level: WARN 
 - Facing: EXTERNAL
 
-```sql
-SELECT polrelid::regclass AS table, COUNT(*) AS permissive_policies
-FROM pg_policy
-WHERE polcmd = 'ALL' AND polpermissive
-GROUP BY polrelid
-HAVING COUNT(*) > 1;
-```
-
-## TODO Lints
-
-The following are lints on the TODO list with a WIP associated query showing how to get at "some" of the data.
-
-
-
-### rls_policy_with_rls_disabled
-
-Detects if RLS policies exist for a table but RLS has not been enabled for the table.
-
-- Level: WARN 
-- Facing: EXTERNAL
-
-```sql
-SELECT n.nspname AS schema_name,
-       c.relname AS table_name,
-       EXISTS (SELECT 1 
-               FROM pg_catalog.pg_policy p 
-               WHERE p.polrelid = c.oid) AS has_policy,
-       c.relrowsecurity AS rls_enabled
-FROM pg_catalog.pg_class c
-JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-WHERE c.relkind = 'r' -- restrict to tables
-      AND n.nspname NOT IN ('pg_catalog', 'information_schema') -- exclude system tables
-      AND EXISTS (SELECT 1 
-                  FROM pg_catalog.pg_policy p 
-                  WHERE p.polrelid = c.oid)
-      AND c.relrowsecurity = false; -- RLS is not enabled
-
-```
-
 ## Requirements
 
 Supabase PostgreSQL 14+
