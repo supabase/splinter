@@ -57,25 +57,7 @@ Detects indexes that have never been used to service a query.
 - Level: INFO
 - Facing: EXTERNAL
 
-## TODO Lints
-
-The following are lints on the TODO list with a WIP associated query showing how to get at "some" of the data.
-
-### duplicate_indexes
-
-Detects duplicate/redundant indexes.
-
-- Level: WARN 
-- Facing: EXTERNAL
-
-```sql
-SELECT indrelid::regclass, array_agg(indexrelid::regclass), array_agg(indexrelid) AS index_ids
-FROM pg_index
-GROUP BY indrelid, indkey
-HAVING COUNT(*) > 1;
-```
-
-### rls_multiple_permissive_policies
+### 0006_multiple_permissive_policies
 
 Detects if multiple permissive policies are present on a table for the same `role` and `action` (e.g. insert).
 
@@ -89,6 +71,12 @@ WHERE polcmd = 'ALL' AND polpermissive
 GROUP BY polrelid
 HAVING COUNT(*) > 1;
 ```
+
+## TODO Lints
+
+The following are lints on the TODO list with a WIP associated query showing how to get at "some" of the data.
+
+
 
 ### rls_policy_with_rls_disabled
 
