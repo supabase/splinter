@@ -1,5 +1,5 @@
 begin;
-  -- No issues	
+  -- No issues
   select * from lint."0005_unused_index";
  name | level | facing | description | detail | remediation | metadata | cache_key 
 ------+-------+--------+-------------+--------+-------------+----------+-----------

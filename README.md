@@ -6,7 +6,11 @@ This project maintains a set of lints for Supabase projects. It uses SQL queries
 
 Currently `splinter` is intended to house the SQL for the lints but it not opinionated about how they will be executed against user projects. See [Project Linting RFC](https://www.notion.so/supabase/Project-Lints-f34e7b24bb5846c188c8096ad10eb045) for options under consideration.
 
-## Interface
+## Usage
+
+If you are only interested in linting a project, a single query containing the latest version of all lints is availble in splinter.sql in the repo root.
+
+## Lint Interface
 
 Each lint creates a view that returns a common interface. The interface is:
 
@@ -16,7 +20,7 @@ Each lint creates a view that returns a common interface. The interface is:
 - description (text) not null -- This is a description of the lint and why its an issue
 - detail (text) not null -- A text description of the issue that includes references to the specific table/column/constraint/whatever that fails the lint
 - remediation (text) optional -- The SQL to resolve the issue
-- metadata (jsonb) optional -- Any additional information that 
+- metadata (jsonb) optional -- Any additional information that
 - cache_key (text) not null -- A short, uniquely identifiable string that users can add to an exclusion list to avoid repeatedly seeing the same lint failures. It should identify the releavnt table/column/constraint. The string should be prefixed with the lint name. For example a lint named "unindexed_foreign_key" might have a unique key "unindexed_foreign_key_public_user_created_by_id"
 
 
@@ -61,7 +65,7 @@ Detects indexes that have never been used to service a query.
 
 Detects if multiple permissive policies are present on a table for the same `role` and `action` (e.g. insert).
 
-- Level: WARN 
+- Level: WARN
 - Facing: EXTERNAL
 
 ## Requirements
@@ -79,7 +83,7 @@ cd splinter
 
 All lints must have positive and negative tests.
 
-To run the test suite, 
+To run the test suite,
 
 Run test
 ```sh

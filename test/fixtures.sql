@@ -1,4 +1,4 @@
--- Important for source SQL to be schema qualified. 
+-- Important for source SQL to be schema qualified.
 set search_path = '';
 
 -- Dummy schema to hold views during testing
