@@ -8,7 +8,7 @@ Currently `splinter` is intended to house the SQL for the lints but it not opini
 
 ## Usage
 
-If you are only interested in linting a project, a single query containing the latest version of all lints is availble in lints.sql in the repo root.
+If you are only interested in linting a project, a single query containing the latest version of all lints is availble in splinter.sql in the repo root.
 
 ## Lint Interface
 

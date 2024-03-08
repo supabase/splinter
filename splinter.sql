@@ -1,4 +1,4 @@
-
+(
 select
     'auth_users_exposed' as name,
     'WARN' as level,
@@ -35,10 +35,9 @@ where
     -- Exclude self
     and c.relname <> '0002_auth_users_exposed'
 group by
-    c.relname, c.oid;
-
+    c.relname, c.oid)
 union all
-
+(
 select
     'unused_index' as name,
     'INFO' as level,
@@ -69,17 +68,16 @@ where
     and not pi.indisprimary
     and psui.schemaname not in (
         'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
-    );
-
+    ))
 union all
-/*
+(/*
 Usage of auth.uid(), auth.role() ... are common in RLS policies.
 
 A naive policy like
 
     create policy "rls_test_select" on test_table
     to authenticated
-    using ( auth.uid() = user_id );
+    using ( auth.uid() = user_id )
 
 will re-evaluate the auth.uid() function for every row. That can result in 100s of times slower performance
 https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select
@@ -91,10 +89,10 @@ For example:
 
     create policy "rls_test_select" on test_table
     to authenticated
-    using ( (select auth.uid()) = user_id );
+    using ( (select auth.uid()) = user_id )
 
 NOTE:
-    This lint requires search_path = '' or 'auth' not in search_path;
+    This lint requires search_path = '' or 'auth' not in search_path
     because qual and with_check are dependent on search_path to determine if function calls include the "auth" schema
 */
 
@@ -158,10 +156,9 @@ where
             -- Example: select auth.uid()
             and lower(with_check) !~ 'select\s+(auth)\.(uid|jwt|role|email)\(\)'
         )
-    );
-
+    ))
 union all
-
+(
 select
     'multiple_permissive_policies' as name,
     'WARN' as level,
@@ -219,10 +216,9 @@ group by
     r.rolname,
     act.cmd
 having
-    count(1) > 1;
-
+    count(1) > 1)
 union all
-
+(
 select
     'no_primary_key' as name,
     'INFO' as level,
@@ -256,10 +252,9 @@ group by
     pgns.nspname,
     pgc.relname
 having
-    max(coalesce(pgi.indisprimary, false)::int) = 0;
-
+    max(coalesce(pgi.indisprimary, false)::int) = 0)
 union all
-
+(
 with foreign_keys as (
     select
         cl.oid::regclass as table_,
@@ -290,7 +285,7 @@ index_ as (
         indisvalid
 )
 select
-    '0001_unindexed_foreign_keys' as name,
+    'unindexed_foreign_keys' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
     'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
@@ -312,4 +307,4 @@ where
     idx.index_ is null
 order by
     fk.table_,
-    fk.fkey_name;
+    fk.fkey_name)

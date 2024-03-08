@@ -30,7 +30,7 @@ index_ as (
         indisvalid
 )
 select
-    '0001_unindexed_foreign_keys' as name,
+    'unindexed_foreign_keys' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
     'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,

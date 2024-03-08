@@ -15,6 +15,19 @@ repos:
     - id: remove-tabs
       args: [--whitespaces-count, '4']  # defaults to: 4
 
+- repo: https://github.com/Lucas-C/pre-commit-hooks
+  rev: v1.5.5
+  hooks:
+    - id: remove-tabs
+      args: [--whitespaces-count, '4']  # defaults to: 4
+
+repos:
+-   repo: https://github.com/psf/black
+    rev: 24.2.0
+    hooks:
+    - id: black
+      language_version: python3.9
+
 - repo: local
   hooks:
   - id: compile-script
