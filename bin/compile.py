@@ -14,7 +14,7 @@ def join_sql_files(directory_path) -> str:
         raise Exception(f"The directory {directory} does not exist.")
 
     # Loop through each file in the specified directory
-    for file_path in directory.glob("*.sql"):
+    for file_path in sorted(directory.glob("*.sql")):
         # Open and read the SQL file
         with file_path.open("r") as file:
             # Read the file's content and add it to the concatenated SQL string

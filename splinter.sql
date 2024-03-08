@@ -1,4 +1,59 @@
 (
+with foreign_keys as (
+    select
+        cl.oid::regclass as table_,
+        ct.conname as fkey_name,
+        ct.conkey col_attnums
+    from
+        pg_constraint ct
+        join pg_class cl -- fkey owning table
+            on ct.conrelid = cl.oid
+        left join pg_depend d
+            on d.objid = cl.oid
+            and d.deptype = 'e'
+    where
+        ct.contype = 'f' -- foreign key constraints
+        and d.objid is null -- exclude tables that are dependencies of extensions
+        and cl.relnamespace::regnamespace::text not in (
+            'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'extensions'
+        )
+),
+index_ as (
+    select
+        indrelid::regclass as table_,
+        indexrelid::regclass as index_,
+        string_to_array(indkey::text, ' ')::smallint[] as col_attnums
+    from
+        pg_index
+    where
+        indisvalid
+)
+select
+    'unindexed_foreign_keys' as name,
+    'INFO' as level,
+    'EXTERNAL' as facing,
+    'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
+    format(
+        'Table "%s" has a foreign key "%s" without a covering index. This can lead to suboptimal query performance.',
+        fk.table_, fk.fkey_name
+    ) as detail,
+    null as remediation,
+    jsonb_build_object(
+        'table', fk.table_,
+        'fkey_name', fk.fkey_name,
+        'fkey_columns', fk.col_attnums
+    ) as metadata,
+    format('0001_unindexed_foreign_keys_%s_%s', fk.table_, fk.fkey_name) as cache_key
+from
+    foreign_keys fk
+left join index_ idx on fk.table_ = idx.table_ and fk.col_attnums = idx.col_attnums
+where
+    idx.index_ is null
+order by
+    fk.table_,
+    fk.fkey_name)
+union all
+(
 select
     'auth_users_exposed' as name,
     'WARN' as level,
@@ -36,39 +91,6 @@ where
     and c.relname <> '0002_auth_users_exposed'
 group by
     c.relname, c.oid)
-union all
-(
-select
-    'unused_index' as name,
-    'INFO' as level,
-    'EXTERNAL' as facing,
-    'Detects if an index has never been used and may be a candidate for removal.' as description,
-    format(
-        'Index "%s" on table "%s"."%s" has not been used',
-        psui.indexrelname,
-        psui.schemaname,
-        psui.relname
-    ) as detail,
-    null as remediation,
-    null as metadata,
-    format(
-        'unused_index_%s_%s_%s',
-        psui.schemaname,
-        psui.relname,
-        psui.indexrelname
-    ) as cache_key
-
-from
-    pg_catalog.pg_stat_user_indexes psui
-    join pg_catalog.pg_index pi
-        on psui.indexrelid = pi.indexrelid
-where
-    psui.idx_scan = 0
-    and not pi.indisunique
-    and not pi.indisprimary
-    and psui.schemaname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
-    ))
 union all
 (/*
 Usage of auth.uid(), auth.role() ... are common in RLS policies.
@@ -160,6 +182,75 @@ where
 union all
 (
 select
+    'no_primary_key' as name,
+    'INFO' as level,
+    'EXTERNAL' as facing,
+    'Detects if a table does not have a primary key. Tables without a primary key can be inefficient to interact with at scale.' as description,
+    format(
+        'Table "%s.%s" does not have a primary key',
+        pgns.nspname,
+        pgc.relname
+    ) as detail,
+    null as remediation,
+    null as metadata,
+    format(
+        'no_primary_key_%s_%s',
+        pgns.nspname,
+        pgc.relname
+    ) as cache_key
+from
+    pg_class pgc
+    join pg_namespace pgns
+        on pgns.oid = pgc.relnamespace
+    left join pg_index pgi
+        on pgi.indrelid = pgc.oid
+where
+    pgc.relkind = 'r' -- regular tables
+    and pgns.nspname not in (
+        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+    )
+group by
+    pgc.oid,
+    pgns.nspname,
+    pgc.relname
+having
+    max(coalesce(pgi.indisprimary, false)::int) = 0)
+union all
+(
+select
+    'unused_index' as name,
+    'INFO' as level,
+    'EXTERNAL' as facing,
+    'Detects if an index has never been used and may be a candidate for removal.' as description,
+    format(
+        'Index "%s" on table "%s"."%s" has not been used',
+        psui.indexrelname,
+        psui.schemaname,
+        psui.relname
+    ) as detail,
+    null as remediation,
+    null as metadata,
+    format(
+        'unused_index_%s_%s_%s',
+        psui.schemaname,
+        psui.relname,
+        psui.indexrelname
+    ) as cache_key
+
+from
+    pg_catalog.pg_stat_user_indexes psui
+    join pg_catalog.pg_index pi
+        on psui.indexrelid = pi.indexrelid
+where
+    psui.idx_scan = 0
+    and not pi.indisunique
+    and not pi.indisprimary
+    and psui.schemaname not in (
+        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+    ))
+union all
+(
+select
     'multiple_permissive_policies' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
@@ -217,94 +308,3 @@ group by
     act.cmd
 having
     count(1) > 1)
-union all
-(
-select
-    'no_primary_key' as name,
-    'INFO' as level,
-    'EXTERNAL' as facing,
-    'Detects if a table does not have a primary key. Tables without a primary key can be inefficient to interact with at scale.' as description,
-    format(
-        'Table "%s.%s" does not have a primary key',
-        pgns.nspname,
-        pgc.relname
-    ) as detail,
-    null as remediation,
-    null as metadata,
-    format(
-        'no_primary_key_%s_%s',
-        pgns.nspname,
-        pgc.relname
-    ) as cache_key
-from
-    pg_class pgc
-    join pg_namespace pgns
-        on pgns.oid = pgc.relnamespace
-    left join pg_index pgi
-        on pgi.indrelid = pgc.oid
-where
-    pgc.relkind = 'r' -- regular tables
-    and pgns.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
-    )
-group by
-    pgc.oid,
-    pgns.nspname,
-    pgc.relname
-having
-    max(coalesce(pgi.indisprimary, false)::int) = 0)
-union all
-(
-with foreign_keys as (
-    select
-        cl.oid::regclass as table_,
-        ct.conname as fkey_name,
-        ct.conkey col_attnums
-    from
-        pg_constraint ct
-        join pg_class cl -- fkey owning table
-            on ct.conrelid = cl.oid
-        left join pg_depend d
-            on d.objid = cl.oid
-            and d.deptype = 'e'
-    where
-        ct.contype = 'f' -- foreign key constraints
-        and d.objid is null -- exclude tables that are dependencies of extensions
-        and cl.relnamespace::regnamespace::text not in (
-            'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'extensions'
-        )
-),
-index_ as (
-    select
-        indrelid::regclass as table_,
-        indexrelid::regclass as index_,
-        string_to_array(indkey::text, ' ')::smallint[] as col_attnums
-    from
-        pg_index
-    where
-        indisvalid
-)
-select
-    'unindexed_foreign_keys' as name,
-    'INFO' as level,
-    'EXTERNAL' as facing,
-    'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
-    format(
-        'Table "%s" has a foreign key "%s" without a covering index. This can lead to suboptimal query performance.',
-        fk.table_, fk.fkey_name
-    ) as detail,
-    null as remediation,
-    jsonb_build_object(
-        'table', fk.table_,
-        'fkey_name', fk.fkey_name,
-        'fkey_columns', fk.col_attnums
-    ) as metadata,
-    format('0001_unindexed_foreign_keys_%s_%s', fk.table_, fk.fkey_name) as cache_key
-from
-    foreign_keys fk
-left join index_ idx on fk.table_ = idx.table_ and fk.col_attnums = idx.col_attnums
-where
-    idx.index_ is null
-order by
-    fk.table_,
-    fk.fkey_name)
