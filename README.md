@@ -6,7 +6,11 @@ This project maintains a set of lints for Supabase projects. It uses SQL queries
 
 Currently `splinter` is intended to house the SQL for the lints but it not opinionated about how they will be executed against user projects. See [Project Linting RFC](https://www.notion.so/supabase/Project-Lints-f34e7b24bb5846c188c8096ad10eb045) for options under consideration.
 
-## Interface
+## Usage
+
+If you are only interested in linting a project, a single query containing the latest version of all lints is availble in lints.sql in the repo root.
+
+## Lint Interface
 
 Each lint creates a view that returns a common interface. The interface is:
 
