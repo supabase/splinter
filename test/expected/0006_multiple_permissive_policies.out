@@ -1,5 +1,5 @@
 begin;
-  -- No issues	
+  -- No issues
   select * from lint."0006_multiple_permissive_policies";
  name | level | facing | description | detail | remediation | metadata | cache_key 
 ------+-------+--------+-------------+--------+-------------+----------+-----------

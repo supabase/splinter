@@ -16,7 +16,7 @@ Each lint creates a view that returns a common interface. The interface is:
 - description (text) not null -- This is a description of the lint and why its an issue
 - detail (text) not null -- A text description of the issue that includes references to the specific table/column/constraint/whatever that fails the lint
 - remediation (text) optional -- The SQL to resolve the issue
-- metadata (jsonb) optional -- Any additional information that 
+- metadata (jsonb) optional -- Any additional information that
 - cache_key (text) not null -- A short, uniquely identifiable string that users can add to an exclusion list to avoid repeatedly seeing the same lint failures. It should identify the releavnt table/column/constraint. The string should be prefixed with the lint name. For example a lint named "unindexed_foreign_key" might have a unique key "unindexed_foreign_key_public_user_created_by_id"
 
 
@@ -61,7 +61,7 @@ Detects indexes that have never been used to service a query.
 
 Detects if multiple permissive policies are present on a table for the same `role` and `action` (e.g. insert).
 
-- Level: WARN 
+- Level: WARN
 - Facing: EXTERNAL
 
 ## Requirements
@@ -79,7 +79,7 @@ cd splinter
 
 All lints must have positive and negative tests.
 
-To run the test suite, 
+To run the test suite,
 
 Run test
 ```sh

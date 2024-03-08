@@ -1,6 +1,6 @@
 begin;
 
-  -- No issues	
+  -- No issues
   select * from lint."0005_unused_index";
 
   create table public.foo (

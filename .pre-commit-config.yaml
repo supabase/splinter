@@ -1,0 +1,25 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.3.0
+  hooks:
+  - id: trailing-whitespace
+    exclude: '^test/expected'
+  - id: check-added-large-files
+  - id: check-yaml
+  - id: mixed-line-ending
+    args: ['--fix=lf']
+
+- repo: https://github.com/Lucas-C/pre-commit-hooks
+  rev: v1.5.5
+  hooks:
+    - id: remove-tabs
+      args: [--whitespaces-count, '4']  # defaults to: 4
+
+- repo: local
+  hooks:
+  - id: compile-script
+    name: Compile SQL Files
+    entry: python bin/compile.py
+    language: system
+    always_run: true
+    pass_filenames: false

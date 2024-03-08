@@ -1,6 +1,6 @@
 begin;
 
-  -- No issues	
+  -- No issues
   select * from lint."0006_multiple_permissive_policies";
 
   create table public.blog(
