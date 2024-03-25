@@ -1,6 +1,7 @@
 (
 with foreign_keys as (
     select
+        cl.relnamespace::regnamespace as schema_,
         cl.oid::regclass as table_,
         ct.conname as fkey_name,
         ct.conkey col_attnums
@@ -34,11 +35,15 @@ select
     'EXTERNAL' as facing,
     'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
     format(
-        'Table "%s" has a foreign key "%s" without a covering index. This can lead to suboptimal query performance.',
-        fk.table_, fk.fkey_name
+        'Table "%s"."%s" has a foreign key "%s" without a covering index. This can lead to suboptimal query performance.',
+        fk.schema_,
+        fk.table_,
+        fk.table_,
+        fk.fkey_name
     ) as detail,
     null as remediation,
     jsonb_build_object(
+        'schema', fk.schema_,
         'table', fk.table_,
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
@@ -46,7 +51,9 @@ select
     format('0001_unindexed_foreign_keys_%s_%s', fk.table_, fk.fkey_name) as cache_key
 from
     foreign_keys fk
-left join index_ idx on fk.table_ = idx.table_ and fk.col_attnums = idx.col_attnums
+    left join index_ idx
+        on fk.table_ = idx.table_
+        and fk.col_attnums = idx.col_attnums
 where
     idx.index_ is null
 order by
