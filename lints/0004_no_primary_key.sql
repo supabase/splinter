@@ -6,12 +6,15 @@ select
     'EXTERNAL' as facing,
     'Detects if a table does not have a primary key. Tables without a primary key can be inefficient to interact with at scale.' as description,
     format(
-        'Table "%s.%s" does not have a primary key',
+        'Table \`%s.%s\` does not have a primary key',
         pgns.nspname,
         pgc.relname
     ) as detail,
     null as remediation,
-    null as metadata,
+     jsonb_build_object(
+        'schema', pgns.nspname,
+        'table', pgc.relname
+    ) as metadata,
     format(
         'no_primary_key_%s_%s',
         pgns.nspname,
