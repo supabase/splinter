@@ -65,7 +65,12 @@ select
         policy_name
     ) as detail,
     null as remediation,
-    null as metadata,
+    jsonb_build_object(
+        -- not sure how to get schema name here
+        'schema', 'schema_name',
+        'name', table_,
+        'type', 'table'
+    ) as metadata,
     format('auth_rls_init_plan_%s_%s', table_, policy_name) as cache_key
 from
     policies

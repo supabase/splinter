@@ -14,7 +14,8 @@ select
     null as remediation,
     jsonb_build_object(
         'schema', psui.schemaname,
-        'table', psui.relname
+        'name', psui.relname,
+        'type', 'table'
     ) as metadata,
     format(
         'unused_index_%s_%s_%s',

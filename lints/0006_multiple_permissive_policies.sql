@@ -16,7 +16,8 @@ select
     null as remediation,
     jsonb_build_object(
         'schema', n.nspname,
-        'table', c.relname
+        'name', c.relname,
+        'type', 'table'
     ) as metadata,
     format(
         'multiple_permissive_policies_%s_%s_%s_%s',
