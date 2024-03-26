@@ -13,7 +13,8 @@ select
     null as remediation,
      jsonb_build_object(
         'schema', pgns.nspname,
-        'table', pgc.relname
+        'name', pgc.relname,
+        'type', 'table'
     ) as metadata,
     format(
         'no_primary_key_%s_%s',

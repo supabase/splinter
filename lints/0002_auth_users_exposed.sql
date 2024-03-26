@@ -11,11 +11,12 @@ select
     ) as detail,
     'Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
     jsonb_build_object(
-        'view_name', c.relname,
         'schema', 'public',
+        'name', c.relname,
+        'type', 'view',
         'exposed_to', array_remove(array_agg(DISTINCT case when pg_catalog.has_table_privilege('anon', c.oid, 'SELECT') then 'anon' when pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT') then 'authenticated' end), null)
     ) as metadata,
-    format('auth_users_exposed_%s', c.relname) as cache_key
+    format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
 from
     pg_depend d
     join pg_rewrite r
