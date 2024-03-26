@@ -43,12 +43,13 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema', fk.schema_,
-        'table', fk.table_,
+        'schema_name', fk.schema_,
+        'table_name', fk.table_,
+        'type', 'table',
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
     ) as metadata,
-    format('0001_unindexed_foreign_keys_%s_%s', fk.table_, fk.fkey_name) as cache_key
+    format('0001_unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
 from
     foreign_keys fk
     left join index_ idx
@@ -72,11 +73,12 @@ select
     ) as detail,
     'Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
     jsonb_build_object(
+        'schema_name', 'public',
         'view_name', c.relname,
-        'schema', 'public',
+        'type', 'view',
         'exposed_to', array_remove(array_agg(DISTINCT case when pg_catalog.has_table_privilege('anon', c.oid, 'SELECT') then 'anon' when pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT') then 'authenticated' end), null)
     ) as metadata,
-    format('auth_users_exposed_%s', c.relname) as cache_key
+    format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
 from
     pg_depend d
     join pg_rewrite r
@@ -129,6 +131,7 @@ NOTE:
 
 with policies as (
     select
+        nsp.nspname as schema_,
         polrelid::regclass table_,
         pc.relrowsecurity is_rls_active,
         polname as policy_name,
@@ -165,8 +168,12 @@ select
         policy_name
     ) as detail,
     null as remediation,
-    null as metadata,
-    format('auth_rls_init_plan_%s_%s', table_, policy_name) as cache_key
+    jsonb_build_object(
+        'schema_name', schema_,
+        'table_name', table_,
+        'type', 'table'
+    ) as metadata,
+    format('auth_rls_init_plan_%s_%s_%s', schema_, table_, policy_name) as cache_key
 from
     policies
 where
@@ -200,8 +207,9 @@ select
     ) as detail,
     null as remediation,
      jsonb_build_object(
-        'schema', pgns.nspname,
-        'table', pgc.relname
+        'schema_name', pgns.nspname,
+        'table_name', pgc.relname,
+        'type', 'table'
     ) as metadata,
     format(
         'no_primary_key_%s_%s',
@@ -240,8 +248,9 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema', psui.schemaname,
-        'table', psui.relname
+        'schema_name', psui.schemaname,
+        'table_name', psui.relname,
+        'type', 'table'
     ) as metadata,
     format(
         'unused_index_%s_%s_%s',
@@ -278,8 +287,9 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema', n.nspname,
-        'table', c.relname
+        'schema_name', n.nspname,
+        'table_name', c.relname,
+        'type', 'table'
     ) as metadata,
     format(
         'multiple_permissive_policies_%s_%s_%s_%s',

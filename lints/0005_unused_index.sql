@@ -13,8 +13,8 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema', psui.schemaname,
-        'name', psui.relname,
+        'schema_name', psui.schemaname,
+        'table_name', psui.relname,
         'type', 'table'
     ) as metadata,
     format(

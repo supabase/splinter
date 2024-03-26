@@ -12,8 +12,8 @@ select
     ) as detail,
     null as remediation,
      jsonb_build_object(
-        'schema', pgns.nspname,
-        'name', pgc.relname,
+        'schema_name', pgns.nspname,
+        'table_name', pgc.relname,
         'type', 'table'
     ) as metadata,
     format(

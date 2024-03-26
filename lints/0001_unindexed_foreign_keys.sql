@@ -44,13 +44,13 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema', fk.schema_,
-        'name', fk.table_,
-        'type', 'table'
+        'schema_name', fk.schema_,
+        'table_name', fk.table_,
+        'type', 'table',
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
     ) as metadata,
-    format('0001_unindexed_foreign_keys_%s_%s', fk.table_, fk.fkey_name) as cache_key
+    format('0001_unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
 from
     foreign_keys fk
     left join index_ idx

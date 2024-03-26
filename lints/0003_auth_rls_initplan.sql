@@ -29,6 +29,7 @@ create view lint."0003_auth_rls_initplan" as
 
 with policies as (
     select
+        nsp.nspname as schema_,
         polrelid::regclass table_,
         pc.relrowsecurity is_rls_active,
         polname as policy_name,
@@ -66,12 +67,11 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        -- not sure how to get schema name here
-        'schema', 'schema_name',
-        'name', table_,
+        'schema_name', schema_,
+        'table_name', table_,
         'type', 'table'
     ) as metadata,
-    format('auth_rls_init_plan_%s_%s', table_, policy_name) as cache_key
+    format('auth_rls_init_plan_%s_%s_%s', schema_, table_, policy_name) as cache_key
 from
     policies
 where
