@@ -35,7 +35,7 @@ select
     'EXTERNAL' as facing,
     'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
     format(
-        'Table "%s"."%s" has a foreign key "%s" without a covering index. This can lead to suboptimal query performance.',
+        'Table \`%s.%s\` has a foreign key \`%s\` without a covering index. This can lead to suboptimal query performance.',
         fk.schema_,
         fk.table_,
         fk.table_,
@@ -67,10 +67,10 @@ select
     'EXTERNAL' as facing,
     'Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security.' as description,
     format(
-        'View/Materialized View "%s" in the public schema may expose auth.users data to anon or authenticated roles.',
+        'View/Materialized View "%s" in the public schema may expose \`auth.users\` data to anon or authenticated roles.',
         c.relname
     ) as detail,
-    'Review the view/materialized view definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
+    'Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
     jsonb_build_object(
         'view_name', c.relname,
         'schema', 'public',
@@ -158,9 +158,9 @@ select
     'auth_rls_initplan' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
-    'Detects if calls to auth.<function>() in RLS policies are being unnecessarily re-evaluated for each row' as description,
+    'Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row' as description,
     format(
-        'Table "%s" has a row level security policy "%s" that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing "auth.<function>()" with "(select auth.<function>())". See https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select for more.',
+        'Table \`%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select for more.',
         table_,
         policy_name
     ) as detail,
@@ -194,12 +194,15 @@ select
     'EXTERNAL' as facing,
     'Detects if a table does not have a primary key. Tables without a primary key can be inefficient to interact with at scale.' as description,
     format(
-        'Table "%s.%s" does not have a primary key',
+        'Table \`%s.%s\` does not have a primary key',
         pgns.nspname,
         pgc.relname
     ) as detail,
     null as remediation,
-    null as metadata,
+     jsonb_build_object(
+        'schema', pgns.nspname,
+        'table', pgc.relname
+    ) as metadata,
     format(
         'no_primary_key_%s_%s',
         pgns.nspname,
@@ -230,13 +233,16 @@ select
     'EXTERNAL' as facing,
     'Detects if an index has never been used and may be a candidate for removal.' as description,
     format(
-        'Index "%s" on table "%s"."%s" has not been used',
+        'Index `\%s\` on table \`%s.%s\` has not been used',
         psui.indexrelname,
         psui.schemaname,
         psui.relname
     ) as detail,
     null as remediation,
-    null as metadata,
+    jsonb_build_object(
+        'schema', psui.schemaname,
+        'table', psui.relname
+    ) as metadata,
     format(
         'unused_index_%s_%s_%s',
         psui.schemaname,
@@ -263,7 +269,7 @@ select
     'EXTERNAL' as facing,
     'Detects if multiple permissive row level security policies are present on a table for the same `role` and `action` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.' as description,
     format(
-        'Table "%s"."%s" has multiple permissive policies for role "%s" for action "%s". Policies include %s',
+        'Table \`%s.%s\` has multiple permissive policies for role \`%s\` for action \`%s\`. Policies include \`%s\`',
         n.nspname,
         c.relname,
         r.rolname,
@@ -271,7 +277,10 @@ select
         array_agg(p.polname order by p.polname)
     ) as detail,
     null as remediation,
-    null as metadata,
+    jsonb_build_object(
+        'schema', n.nspname,
+        'table', c.relname
+    ) as metadata,
     format(
         'multiple_permissive_policies_%s_%s_%s_%s',
         n.nspname,

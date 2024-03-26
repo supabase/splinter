@@ -6,13 +6,16 @@ select
     'EXTERNAL' as facing,
     'Detects if an index has never been used and may be a candidate for removal.' as description,
     format(
-        'Index "%s" on table "%s"."%s" has not been used',
+        'Index `\%s\` on table \`%s.%s\` has not been used',
         psui.indexrelname,
         psui.schemaname,
         psui.relname
     ) as detail,
     null as remediation,
-    null as metadata,
+    jsonb_build_object(
+        'schema', psui.schemaname,
+        'table', psui.relname
+    ) as metadata,
     format(
         'unused_index_%s_%s_%s',
         psui.schemaname,
