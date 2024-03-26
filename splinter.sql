@@ -43,8 +43,8 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema_name', fk.schema_,
-        'table_name', fk.table_,
+        'schema', fk.schema_,
+        'name', fk.table_,
         'type', 'table',
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
@@ -73,8 +73,8 @@ select
     ) as detail,
     'Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
     jsonb_build_object(
-        'schema_name', 'public',
-        'view_name', c.relname,
+        'schema', 'public',
+        'name', c.relname,
         'type', 'view',
         'exposed_to', array_remove(array_agg(DISTINCT case when pg_catalog.has_table_privilege('anon', c.oid, 'SELECT') then 'anon' when pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT') then 'authenticated' end), null)
     ) as metadata,
@@ -169,8 +169,8 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema_name', schema_,
-        'table_name', table_,
+        'schema', schema_,
+        'name', table_,
         'type', 'table'
     ) as metadata,
     format('auth_rls_init_plan_%s_%s_%s', schema_, table_, policy_name) as cache_key
@@ -207,8 +207,8 @@ select
     ) as detail,
     null as remediation,
      jsonb_build_object(
-        'schema_name', pgns.nspname,
-        'table_name', pgc.relname,
+        'schema', pgns.nspname,
+        'name', pgc.relname,
         'type', 'table'
     ) as metadata,
     format(
@@ -248,8 +248,8 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema_name', psui.schemaname,
-        'table_name', psui.relname,
+        'schema', psui.schemaname,
+        'name', psui.relname,
         'type', 'table'
     ) as metadata,
     format(
@@ -287,8 +287,8 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema_name', n.nspname,
-        'table_name', c.relname,
+        'schema', n.nspname,
+        'name', c.relname,
         'type', 'table'
     ) as metadata,
     format(

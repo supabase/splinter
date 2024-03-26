@@ -67,8 +67,8 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema_name', schema_,
-        'table_name', table_,
+        'schema', schema_,
+        'name', table_,
         'type', 'table'
     ) as metadata,
     format('auth_rls_init_plan_%s_%s_%s', schema_, table_, policy_name) as cache_key

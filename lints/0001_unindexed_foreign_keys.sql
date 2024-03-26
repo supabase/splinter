@@ -44,8 +44,8 @@ select
     ) as detail,
     null as remediation,
     jsonb_build_object(
-        'schema_name', fk.schema_,
-        'table_name', fk.table_,
+        'schema', fk.schema_,
+        'name', fk.table_,
         'type', 'table',
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
