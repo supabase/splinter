@@ -6,10 +6,10 @@ select
     'EXTERNAL' as facing,
     'Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security.' as description,
     format(
-        'View/Materialized View "%s" in the public schema may expose auth.users data to anon or authenticated roles.',
+        'View/Materialized View "%s" in the public schema may expose \`auth.users\` data to anon or authenticated roles.',
         c.relname
     ) as detail,
-    'Review the view/materialized view definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
+    'Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
     jsonb_build_object(
         'view_name', c.relname,
         'schema', 'public',

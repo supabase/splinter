@@ -6,7 +6,7 @@ select
     'EXTERNAL' as facing,
     'Detects if multiple permissive row level security policies are present on a table for the same `role` and `action` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.' as description,
     format(
-        'Table "%s"."%s" has multiple permissive policies for role "%s" for action "%s". Policies include %s',
+        'Table \`%s.%s\` has multiple permissive policies for role \`%s\` for action \`%s\`. Policies include \`%s\`',
         n.nspname,
         c.relname,
         r.rolname,
@@ -14,7 +14,10 @@ select
         array_agg(p.polname order by p.polname)
     ) as detail,
     null as remediation,
-    null as metadata,
+    jsonb_build_object(
+        'schema', n.nspname,
+        'table', c.relname
+    ) as metadata,
     format(
         'multiple_permissive_policies_%s_%s_%s_%s',
         n.nspname,
