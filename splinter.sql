@@ -41,7 +41,7 @@ select
         fk.table_,
         fk.fkey_name
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0001_unindexed_foreign_keys' as remediation,
     jsonb_build_object(
         'schema', fk.schema_,
         'name', fk.table_,
@@ -71,7 +71,7 @@ select
         'View/Materialized View "%s" in the public schema may expose \`auth.users\` data to anon or authenticated roles.',
         c.relname
     ) as detail,
-    'Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
+    'https://supabase.github.io/splinter/0002_auth_users_exposed' as remediation,
     jsonb_build_object(
         'schema', 'public',
         'name', c.relname,
@@ -167,7 +167,7 @@ select
         table_,
         policy_name
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0003_auth_rls_initplan' as remediation,
     jsonb_build_object(
         'schema', schema_,
         'name', table_,
@@ -205,7 +205,7 @@ select
         pgns.nspname,
         pgc.relname
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0004_no_primary_key' as remediation,
      jsonb_build_object(
         'schema', pgns.nspname,
         'name', pgc.relname,
@@ -246,7 +246,7 @@ select
         psui.schemaname,
         psui.relname
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0005_unused_index' as remediation,
     jsonb_build_object(
         'schema', psui.schemaname,
         'name', psui.relname,
@@ -285,7 +285,7 @@ select
         act.cmd,
         array_agg(p.polname order by p.polname)
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0006_multiple_permissive_policies' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,
