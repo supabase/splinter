@@ -70,6 +70,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#rationale" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -318,9 +323,59 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Unused Index
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Unused Index
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-an-index" class="md-nav__link">
+    What is an Index?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-are-unused-indexes" class="md-nav__link">
+    What are Unused Indexes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -365,6 +420,42 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-an-index" class="md-nav__link">
+    What is an Index?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-are-unused-indexes" class="md-nav__link">
+    What are Unused Indexes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -383,7 +474,23 @@
 
   <h1>Unused Index</h1>
 
-<p>TODO</p>
+<p>Level: INFO </p>
+<h3 id="rationale">Rationale</h3>
+<p>Unused indexes in a database are a silent performance issue. While indexes are important for speeding up search queries, every index also adds overhead to the database. This overhead occurs because the database must update each index whenever data in the indexed table are inserted, updated, or deleted. If an index is never used by your queries, it burdens the database with unnecessary work, which can slow down write operations and consume additional storage space.</p>
+<h3 id="what-is-an-index">What is an Index?</h3>
+<p>An index in a database is similar to an index in a book. It allows the database to find data without scanning the entire table. An index is created on a column or a set of columns in a table. Queries that search or sort data based on these columns can find data more quickly and efficiently by referring the index instead of each row in the table.</p>
+<h3 id="what-are-unused-indexes">What are Unused Indexes</h3>
+<p>Unused indexes are indexes that have not been accessed by any query execution plans. This might occur if indexes were created proactively to support potential future query patterns or if application usage patterns change after a schema migration.</p>
+<h3 id="how-to-resolve">How to Resolve</h3>
+<p>Before deleting an index, it's important to confirm that the index is genuinely unused and was unintentionally created:</p>
+<ul>
+<li>Consider future usage patterns. An index might be unused now but could be critical for upcoming features or during specific times of the year.</li>
+<li>Test the impact of removing the index in a development or staging environment to ensure that performance or query plans are not adversely affected.</li>
+</ul>
+<p>To remove an unused index, use the <code>drop index</code> statement:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">drop</span><span class="w"> </span><span class="k">index</span><span class="w"> </span><span class="o">&lt;</span><span class="k">schema_name</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="n">index_name</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div></td></tr></table></div>
+<p>Replacing <code>schema_name</code> and <code>index_name</code> with the actual names from your database.</p>
 
 
 

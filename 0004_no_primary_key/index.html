@@ -70,6 +70,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#rationale" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -304,9 +309,52 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          No Primary Key
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         No Primary Key
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-primary-key" class="md-nav__link">
+    What is a Primary Key?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -365,6 +413,35 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-primary-key" class="md-nav__link">
+    What is a Primary Key?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -383,7 +460,55 @@
 
   <h1>No Primary Key</h1>
 
-<p>TODO</p>
+<p>Level: INFO</p>
+<h3 id="rationale">Rationale</h3>
+<p>Tables in a relational database should ideally have a key that uniquely identifies a row within that table. Tables lacking of a primary key is often considered poor design, as it can lead to data anomalies, complicate data relationships, and degrade query performance.</p>
+<h3 id="what-is-a-primary-key">What is a Primary Key?</h3>
+<p>A primary key is a single column or a set of columns that uniquely identifies each row in a table. </p>
+<p>Primary keys are important because they enable:</p>
+<ol>
+<li><strong>Uniqueness and Integrity</strong>: Ensures that each row in the table is unique and identifiable.</li>
+<li><strong>Performance</strong>: The database automatically creates an index for the primary key, improving query performance when retrieving or manipulating data based on the primary key.</li>
+<li><strong>Relationships</strong>: Unique keys, like primary keys, are a prerequisite for defining foreign keys in other tables, which are critical for relational database design and efficient joins.</li>
+</ol>
+<h3 id="how-to-resolve">How to Resolve</h3>
+<p>For a table that lacks a primary key, the resolution involves identifying a column (or a set of columns) that can uniquely identify each row and altering the table to designate those columns as the primary key.</p>
+<p>Given a table:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="n">customer</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="p">,</span>
+<span class="w">    </span><span class="n">name</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="p">,</span>
+<span class="w">    </span><span class="n">email</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span>
+<span class="w">    </span><span class="c1">-- Notice the lack of a PRIMARY KEY constraint</span>
+<span class="p">);</span>
+</code></pre></div></td></tr></table></div>
+<p>If we assume <code>id</code> is unique for each customer, we can add a primary key constraint to the table using:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="n">customer</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="k">primary</span><span class="w"> </span><span class="k">key</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
+</code></pre></div></td></tr></table></div>
+<p>If no single column can serve as a unique identifier, consider using a composite key. A composite key combines multiple columns to form a unique identifier for each row.</p>
+<p>Example:</p>
+<p>Consider a table event_log that logs user activities without a primary key:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="n">event_log</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">user_id</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_time</span><span class="w"> </span><span class="k">timestamp</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="p">,</span>
+<span class="w">    </span><span class="n">action</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span>
+<span class="w">    </span><span class="c1">-- A combination of user_id and event_time can uniquely identify rows</span>
+<span class="p">);</span>
+</code></pre></div></td></tr></table></div>
+<p>To resolve the lack of a primary key and ensure that each log entry is uniquely identifiable, we can add a composite primary key on user_id and event_time:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="n">event_log</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="k">primary</span><span class="w"> </span><span class="k">key</span><span class="w"> </span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span><span class="w"> </span><span class="n">event_time</span><span class="p">);</span>
+</code></pre></div></td></tr></table></div>
+<p>Ensure every table has a primary key, even if it's a synthetic key that doesn't have a natural counterpart in the data model.
+When possible, use a simple fixed size types like <code>int</code>, <code>bigint</code>, and <code>uuid</code> as the primary key for maximum efficiency.</p>
 
 
 
