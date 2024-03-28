@@ -11,7 +11,7 @@ select
         psui.schemaname,
         psui.relname
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0005_unused_index' as remediation,
     jsonb_build_object(
         'schema', psui.schemaname,
         'name', psui.relname,
