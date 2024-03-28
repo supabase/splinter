@@ -65,7 +65,7 @@ select
         table_,
         policy_name
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0003_auth_rls_initplan' as remediation,
     jsonb_build_object(
         'schema', schema_,
         'name', table_,

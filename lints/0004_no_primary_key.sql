@@ -10,7 +10,7 @@ select
         pgns.nspname,
         pgc.relname
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0004_no_primary_key' as remediation,
      jsonb_build_object(
         'schema', pgns.nspname,
         'name', pgc.relname,

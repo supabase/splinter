@@ -9,7 +9,7 @@ select
         'View/Materialized View "%s" in the public schema may expose \`auth.users\` data to anon or authenticated roles.',
         c.relname
     ) as detail,
-    'Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
+    'https://supabase.github.io/splinter/0002_auth_users_exposed' as remediation,
     jsonb_build_object(
         'schema', 'public',
         'name', c.relname,
