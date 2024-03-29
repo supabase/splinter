@@ -49,7 +49,7 @@ else
 fi
 
 # Execute the test fixtures
-psql -v ON_ERROR_STOP= -f test/fixtures.sql -f lints/0001*.sql -f lints/0002*.sql -f lints/0003*.sql -f lints/0004*.sql -f lints/0005*.sql -f lints/0006*.sql -f lints/0007*.sql -d contrib_regression
+psql -v ON_ERROR_STOP= -f test/fixtures.sql -f lints/0001*.sql -f lints/0002*.sql -f lints/0003*.sql -f lints/0004*.sql -f lints/0005*.sql -f lints/0006*.sql -f lints/0007*.sql -f lints/0008*.sql -d contrib_regression
 
 # Run tests
 ${REGRESS} --use-existing --dbname=contrib_regression --inputdir=${TESTDIR} ${TESTS}

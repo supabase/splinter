@@ -20,16 +20,14 @@ Given the schema:
 
 ```sql
 create table public.blog(
-    id int primary key
+    id int primary key,
+    user_id uuid not null,
+    title text not null
 );
 
 create policy select_own_posts on public.blog
     for select
-    using (true);
-
-create policy all_own_posts on public.blog
-    for all
-    using (true);
+    using ((select auth.uid()) = user_id);
 ```
 
 A user may incorrectly believe that their policies are being applied. Before the policies will take effect, we first must enable row level security on the underlying table.
