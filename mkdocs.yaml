@@ -38,3 +38,5 @@ markdown_extensions:
     - pymdownx.snippets
     - pymdownx.tasklist
     - admonition
+    - attr_list
+    - md_in_html
