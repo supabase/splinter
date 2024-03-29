@@ -70,6 +70,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#rationale" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -276,9 +281,59 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Auth Users Exposed
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Auth Users Exposed
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-shouldnt-you-expose-authusers-with-a-view" class="md-nav__link">
+    Why shouldn't you expose auth.users with a view?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -365,6 +420,42 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-shouldnt-you-expose-authusers-with-a-view" class="md-nav__link">
+    Why shouldn't you expose auth.users with a view?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -383,7 +474,91 @@
 
   <h1>Auth Users Exposed</h1>
 
-<p>TODO. Pending feedback from auth team.</p>
+<p>Level: INFO</p>
+<h3 id="rationale">Rationale</h3>
+<p>Referencing the <code>auth.users</code> table in a view constrains future migrations within the <code>auth</code> schema which can slow down the deployment of security updates to your project.</p>
+<h3 id="why-shouldnt-you-expose-authusers-with-a-view">Why shouldn't you expose auth.users with a view?</h3>
+<p><code>auth.users</code> is the primary table that backs Supabase Auth. It contains detailed information about each of your projects users, their login methods, and other personally identifiable information. Supabase Auth periodically executes migrations against <code>auth.users</code> and other tables in the <code>auth</code> schema to:</p>
+<ul>
+<li>Enable new features</li>
+<li>Improve performance</li>
+<li>Apply security patches</li>
+</ul>
+<p>Creating views against the <code>auth.users</code> table creates enforced constraints within Postgres that can cause Supabase Auth's migrations to fail. That delays our ability to roll out updates to your project, for example, time sensitive security updates.</p>
+<h3 id="how-to-resolve">How to Resolve</h3>
+<p>The recommended solution for managing access to user data is best documented in the <a href="https://supabase.com/docs/guides/auth/managing-user-data">auth docs</a>.</p>
+<p>Summarizing from the docs, we recommend creating a table in the public schema e.g. <code>public.profiles</code> containing a subset of columns from <code>auth.users</code> that are appropriate for your application's use case. You can then set a trigger on <code>auth.users</code> to automatically insert the relevant data into <code>public.profiles</code> any time a new user is inserted into <code>auth.users</code>.</p>
+<p>Note that triggers execute in the same transaction as the insert into <code>auth.users</code> so you must check the trigger logic carefully as any errors could block user signups to your project. </p>
+<h3 id="example">Example</h3>
+<p>To start we need a location to store public user data in the <code>public</code> scheam:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">profiles</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="n">uuid</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">references</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">delete</span><span class="w"> </span><span class="k">cascade</span><span class="p">,</span>
+<span class="w">  </span><span class="n">first_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
+<span class="w">  </span><span class="n">last_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
+
+<span class="w">  </span><span class="k">primary</span><span class="w"> </span><span class="k">key</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">profiles</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
+</code></pre></div></td></tr></table></div>
+<p>Next, we create a trigger function to copy the data from <code>auth.users</code> into <code>public.profiles</code> when new rows are inserted</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">-- inserts a row into public.profiles</span>
+<span class="k">create</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">handle_new_user</span><span class="p">()</span>
+<span class="k">returns</span><span class="w"> </span><span class="k">trigger</span>
+<span class="k">language</span><span class="w"> </span><span class="n">plpgsql</span>
+<span class="k">security</span><span class="w"> </span><span class="k">definer</span><span class="w"> </span><span class="k">set</span><span class="w"> </span><span class="n">search_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">public</span>
+<span class="k">as</span><span class="w"> </span><span class="err">$$</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="k">insert</span><span class="w"> </span><span class="k">into</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">profiles</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">first_name</span><span class="p">,</span><span class="w"> </span><span class="n">age</span><span class="p">)</span>
+<span class="w">  </span><span class="k">values</span><span class="w"> </span><span class="p">(</span><span class="k">new</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="k">new</span><span class="p">.</span><span class="n">raw_user_meta_data</span><span class="w"> </span><span class="o">-&gt;&gt;</span><span class="w"> </span><span class="s1">&#39;first_name&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">new</span><span class="p">.</span><span class="n">raw_user_meta_data</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">]::</span><span class="nb">integer</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="p">;</span>
+<span class="k">end</span><span class="p">;</span>
+<span class="err">$$</span><span class="p">;</span>
+
+<span class="c1">-- trigger the function every time a user is created</span>
+<span class="k">create</span><span class="w"> </span><span class="k">trigger</span><span class="w"> </span><span class="n">on_auth_user_created</span>
+<span class="w">  </span><span class="k">after</span><span class="w"> </span><span class="k">insert</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="k">each</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">execute</span><span class="w"> </span><span class="k">procedure</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">handle_new_user</span><span class="p">();</span>
+</code></pre></div></td></tr></table></div>
+<p>Finally, we can create row level security policies on the <code>public.profiles</code> schema to restrict access to certain operations:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="ss">&quot;Public profiles are viewable by everyone.&quot;</span>
+<span class="w">  </span><span class="k">on</span><span class="w"> </span><span class="n">profiles</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="k">select</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="k">true</span><span class="w"> </span><span class="p">);</span>
+
+<span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="ss">&quot;Users can update own profile.&quot;</span>
+<span class="w">  </span><span class="k">on</span><span class="w"> </span><span class="n">profiles</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="k">update</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">uid</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="p">);</span>
+</code></pre></div></td></tr></table></div>
 
 
 
