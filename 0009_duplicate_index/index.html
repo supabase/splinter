@@ -10,20 +10,20 @@
       
       
       
-        <link rel="canonical" href="https://supabase.github.io/splinter/0003_auth_rls_initplan/">
+        <link rel="canonical" href="https://supabase.github.io/splinter/0009_duplicate_index/">
       
       
-        <link rel="prev" href="../0002_auth_users_exposed/">
+        <link rel="prev" href="../0008_rls_enabled_no_policy/">
       
       
-        <link rel="next" href="../0004_no_primary_key/">
+        <link rel="next" href="../0010_security_definer_view/">
       
       <link rel="icon" href="../assets/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
     
     
       
-        <title>Auth RLS InitPlan - splinter</title>
+        <title>Duplicate Index - splinter</title>
       
     
     
@@ -105,7 +105,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Auth RLS InitPlan
+              Duplicate Index
             
           </span>
         </div>
@@ -286,62 +286,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Auth RLS InitPlan
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../0003_auth_rls_initplan/" class="md-nav__link">
         Auth RLS InitPlan
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    Rationale
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-performance-issue" class="md-nav__link">
-    The Performance Issue
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-resolve" class="md-nav__link">
-    How to Resolve
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -421,11 +370,62 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../0009_duplicate_index/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Duplicate Index
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Duplicate Index
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-an-index" class="md-nav__link">
+    What is an Index?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -483,8 +483,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-performance-issue" class="md-nav__link">
-    The Performance Issue
+  <a href="#what-is-an-index" class="md-nav__link">
+    What is an Index?
   </a>
   
 </li>
@@ -514,32 +514,18 @@
   
 
 
-  <h1>Auth RLS InitPlan</h1>
+  <h1>Duplicate Index</h1>
 
-<p>Level: WARNING</p>
+<p>Level: WARN </p>
 <h3 id="rationale">Rationale</h3>
-<p>Row-Level Security (RLS) policies are the mechanism for controlling access to data based on user roles or attributes. These policies frequently use the provided helper functions in the <code>auth</code> schema including <code>auth.uid()</code>, <code>auth.role()</code>, <code>auth.email()</code>, and <code>auth.jwt()</code> to retrieve information about the current querying user. Improperly written RLS policies can cause these functions to execute once-per-row, rather than once-per-query. While the <code>auth.&lt;value&gt;()</code> functions are efficient, if executed once-per-row they can lead to significant performance bottlenecks at scale.</p>
-<h3 id="the-performance-issue">The Performance Issue</h3>
-<p>When an RLS policy is applied to a query, the conditions specified in the policy are evaluated for each row that the query touches. This means that if a policy condition calls a helper function like <code>auth.uid()</code>, this function is executed repeatedly for every row. In queries affecting thousands of rows, this behavior can drastically reduce query performance, as the overhead of executing these functions adds up quickly.</p>
+<p>Each index in a Postgres database adds overhead. This overhead occurs because the database must update each index whenever data in the indexed table are inserted, updated, or deleted. If two or more indexes are exact duplicates in their composition, the database incurs additional write overhead for no performance benefit.</p>
+<h3 id="what-is-an-index">What is an Index?</h3>
+<p>An index in a database is similar to an index in a book. It allows the database to find data without scanning the entire table. An index is created on a column or a set of columns in a table. Queries that search or sort data based on these columns can find data more quickly and efficiently by referring the index instead of each row in the table.</p>
 <h3 id="how-to-resolve">How to Resolve</h3>
-<p>To optimize the performance of RLS policies using <code>auth</code> helper functions we aim to reduce the number of times the helper functions are called. This can be achieved by caching the result of the function call for the duration of the query. Instead of calling the function directly in the policy condition, you can wrap the function call in a subquery. This approach executes the function once, caches the result, and compares this cached value against the column values for all subsequent rows.</p>
-<p>For example, consider the policy:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="ss">&quot;inefficient_document_access&quot;</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">documents</span>
-<span class="k">to</span><span class="w"> </span><span class="n">authenticated</span>
-<span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">uid</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">creator_id</span><span class="w"> </span><span class="p">);</span>
+<p>When a table contains a duplicate index, drop instances of the index until only one remains.</p>
+<p>For example, if the table <code>public.blog</code> has duplicate indexes <code>public.ix_id_1</code> and <code>public.ix_id_2</code> drop one using:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">drop</span><span class="w"> </span><span class="k">index</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">ix_id_2</span><span class="p">;</span>
 </code></pre></div></td></tr></table></div>
-<p>In this policy, <code>auth.uid()</code> is called for every row in the <code>documents</code> table to check if the <code>creator_id</code> matches the current user's ID. If the number of rows in <code>documents</code> is 150,000 the <code>auth.uid()</code> function will be executed 150,000, potentially incurring over 3 seconds of overhead per query.</p>
-<p>If we wrap the <code>auth.uid()</code> call in a subquery:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="ss">&quot;efficient_document_access&quot;</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">user_data</span>
-<span class="k">to</span><span class="w"> </span><span class="n">authenticated</span>
-<span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="k">select</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">uid</span><span class="p">())</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">user_id</span><span class="w"> </span><span class="p">);</span>
-</code></pre></div></td></tr></table></div>
-<p>Then auth.uid() is called only once at the beginning of the query execution, and its result is reused for each row comparison. That change reduces the overhead from a few seconds to a few microseconds with no impact on the result set.</p>
-<p>Since the output values for the <code>auth</code> helper functions are set on a per-query basis there is no downside to aggresively applying this performacne optimization.</p>
 
 
 
