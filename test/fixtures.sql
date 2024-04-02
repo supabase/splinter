@@ -5,7 +5,7 @@ set search_path = '';
 create schema lint;
 
 create schema auth;
-create view auth.users as select 1;
+create table auth.users (id uuid primary key);
 create function auth.uid() returns uuid language sql as $$select gen_random_uuid()$$;
 create function auth.jwt() returns jsonb language sql as $$select jsonb_build_object()$$;
 create function auth.role() returns text language sql as $$select ''$$;

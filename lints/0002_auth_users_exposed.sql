@@ -25,10 +25,11 @@ from
         on c.oid = r.ev_class
     join pg_namespace n
         on n.oid = c.relnamespace
+    join pg_class pg_class_auth_users
+        on d.refobjid = pg_class_auth_users.oid
 where
     d.refobjid = 'auth.users'::regclass
     and d.deptype = 'n'
-    and c.relkind in ('v', 'm') -- v for view, m for materialized view
     and n.nspname = 'public'
     and (
       pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
@@ -36,5 +37,42 @@ where
     )
     -- Exclude self
     and c.relname <> '0002_auth_users_exposed'
+    -- There are 3 insecure configurations
+    and
+    (
+        -- Materialized views don't support RLS so this is insecure by default
+        (c.relkind in ('m')) -- m for materialized view
+        or
+        -- Standard View, accessible to anon or authenticated that is security_definer
+        (
+            c.relkind = 'v' -- v for view
+            -- Exclude security invoker views 
+            and not (
+                lower(coalesce(c.reloptions::text,'{}'))::text[]
+                && array[
+                    'security_invoker=1',
+                    'security_invoker=true',
+                    'security_invoker=yes',
+                    'security_invoker=on'
+                ]
+            )
+        )
+        or
+        -- Standard View, security invoker, but no RLS enabled on auth.users
+        (
+            c.relkind in ('v') -- v for view
+            -- is security invoker 
+            and (
+                lower(coalesce(c.reloptions::text,'{}'))::text[]
+                && array[
+                    'security_invoker=1',
+                    'security_invoker=true',
+                    'security_invoker=yes',
+                    'security_invoker=on'
+                ]
+            )
+            and not pg_class_auth_users.relrowsecurity 
+        )
+    )
 group by
     c.relname, c.oid;
