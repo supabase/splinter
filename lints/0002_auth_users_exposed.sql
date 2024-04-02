@@ -18,7 +18,15 @@ select
     ) as metadata,
     format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
 from
-    pg_catalog.pg_depend d
+    -- Identify the oid for auth.users
+	pg_catalog.pg_class auth_users_pg_class
+    join pg_catalog.pg_namespace auth_users_pg_namespace
+		on auth_users_pg_class.relnamespace = auth_users_pg_namespace.oid
+		and auth_users_pg_class.relname = 'users'
+		and auth_users_pg_namespace.nspname = 'auth'
+	-- Depends on auth.users
+    join pg_catalog.pg_depend d
+    	on d.refobjid = auth_users_pg_class.oid
     join pg_catalog.pg_rewrite r
         on r.oid = d.objid
     join pg_catalog.pg_class c
@@ -28,8 +36,7 @@ from
     join pg_catalog.pg_class pg_class_auth_users
         on d.refobjid = pg_class_auth_users.oid
 where
-    d.refobjid = 'auth.users'::regclass
-    and d.deptype = 'n'
+    d.deptype = 'n'
     and n.nspname = 'public'
     and (
       pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
