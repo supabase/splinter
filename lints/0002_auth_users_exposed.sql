@@ -18,14 +18,14 @@ select
     ) as metadata,
     format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
 from
-    pg_depend d
-    join pg_rewrite r
+    pg_catalog.pg_depend d
+    join pg_catalog.pg_rewrite r
         on r.oid = d.objid
-    join pg_class c
+    join pg_catalog.pg_class c
         on c.oid = r.ev_class
-    join pg_namespace n
+    join pg_catalog.pg_namespace n
         on n.oid = c.relnamespace
-    join pg_class pg_class_auth_users
+    join pg_catalog.pg_class pg_class_auth_users
         on d.refobjid = pg_class_auth_users.oid
 where
     d.refobjid = 'auth.users'::regclass

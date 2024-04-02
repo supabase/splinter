@@ -29,7 +29,7 @@ select
         array_agg(pi.indexname order by pi.indexname)
     ) as cache_key
 from
-    pg_indexes pi
+    pg_catalog.pg_indexes pi
     join pg_catalog.pg_namespace n
         on n.nspname  = pi.schemaname
     join pg_catalog.pg_class c

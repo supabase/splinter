@@ -6,10 +6,10 @@ with foreign_keys as (
         ct.conname as fkey_name,
         ct.conkey col_attnums
     from
-        pg_constraint ct
-        join pg_class cl -- fkey owning table
+        pg_catalog.pg_constraint ct
+        join pg_catalog.pg_class cl -- fkey owning table
             on ct.conrelid = cl.oid
-        left join pg_depend d
+        left join pg_catalog.pg_depend d
             on d.objid = cl.oid
             and d.deptype = 'e'
     where
@@ -25,7 +25,7 @@ index_ as (
         indexrelid::regclass as index_,
         string_to_array(indkey::text, ' ')::smallint[] as col_attnums
     from
-        pg_index
+        pg_catalog.pg_index
     where
         indisvalid
 )
@@ -80,14 +80,14 @@ select
     ) as metadata,
     format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
 from
-    pg_depend d
-    join pg_rewrite r
+    pg_catalog.pg_depend d
+    join pg_catalog.pg_rewrite r
         on r.oid = d.objid
-    join pg_class c
+    join pg_catalog.pg_class c
         on c.oid = r.ev_class
-    join pg_namespace n
+    join pg_catalog.pg_namespace n
         on n.oid = c.relnamespace
-    join pg_class pg_class_auth_users
+    join pg_catalog.pg_class pg_class_auth_users
         on d.refobjid = pg_class_auth_users.oid
 where
     d.refobjid = 'auth.users'::regclass
@@ -185,12 +185,12 @@ with policies as (
         qual,
         with_check
     from
-        pg_policy pa
-        join pg_class pc
+        pg_catalog.pg_policy pa
+        join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
-        join pg_namespace nsp
+        join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_policies pb
+        join pg_catalog.pg_policies pb
             on pc.relname = pb.tablename
             and nsp.nspname = pb.schemaname
             and pa.polname = pb.policyname
@@ -255,10 +255,10 @@ select
         pgc.relname
     ) as cache_key
 from
-    pg_class pgc
-    join pg_namespace pgns
+    pg_catalog.pg_class pgc
+    join pg_catalog.pg_namespace pgns
         on pgns.oid = pgc.relnamespace
-    left join pg_index pgi
+    left join pg_catalog.pg_index pgi
         on pgi.indrelid = pgc.oid
 where
     pgc.relkind = 'r' -- regular tables
@@ -483,7 +483,7 @@ select
         array_agg(pi.indexname order by pi.indexname)
     ) as cache_key
 from
-    pg_indexes pi
+    pg_catalog.pg_indexes pi
     join pg_catalog.pg_namespace n
         on n.nspname  = pi.schemaname
     join pg_catalog.pg_class c
