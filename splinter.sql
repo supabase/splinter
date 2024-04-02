@@ -372,3 +372,173 @@ group by
     act.cmd
 having
     count(1) > 1)
+union all
+(
+select
+    'policy_exists_rls_disabled' as name,
+    'INFO' as level,
+    'EXTERNAL' as facing,
+    'Detects cases where row level security (RLS) policies have been created, but RLS has not been enabled for the underlying table.' as description,
+    format(
+        'Table \`%s.%s\` has RLS policies but RLS is not enabled on the table. Policies include %s.',
+        n.nspname,
+        c.relname,
+        array_agg(p.polname order by p.polname)
+    ) as detail,
+    'https://supabase.github.io/splinter/0007_policy_exists_rls_disabled' as remediation,
+    jsonb_build_object(
+        'schema', n.nspname,
+        'name', c.relname,
+        'type', 'table'
+    ) as metadata,
+    format(
+        'policy_exists_rls_disabled_%s_%s',
+        n.nspname,
+        c.relname
+    ) as cache_key
+from
+    pg_catalog.pg_policy p
+    join pg_catalog.pg_class c
+        on p.polrelid = c.oid
+    join pg_catalog.pg_namespace n
+        on c.relnamespace = n.oid
+where
+    c.relkind = 'r' -- regular tables
+    and n.nspname not in (
+        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+    )
+    -- RLS is disabled
+    and not c.relrowsecurity
+group by
+    n.nspname,
+    c.relname)
+union all
+(
+select
+    'rls_enabled_no_policy' as name,
+    'INFO' as level,
+    'EXTERNAL' as facing,
+    'Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.' as description,
+    format(
+        'Table \`%s.%s\` has RLS enabled, but no policies exist',
+        n.nspname,
+        c.relname
+    ) as detail,
+    'https://supabase.github.io/splinter/0008_rls_enabled_no_policy' as remediation,
+    jsonb_build_object(
+        'schema', n.nspname,
+        'name', c.relname,
+        'type', 'table'
+    ) as metadata,
+    format(
+        'rls_enabled_no_policy_%s_%s',
+        n.nspname,
+        c.relname
+    ) as cache_key
+from
+    pg_catalog.pg_class c
+    left join pg_catalog.pg_policy p
+        on p.polrelid = c.oid
+    join pg_catalog.pg_namespace n
+        on c.relnamespace = n.oid
+where
+    c.relkind = 'r' -- regular tables
+    and n.nspname not in (
+        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+    )
+    -- RLS is enabled
+    and c.relrowsecurity
+    and p.polname is null
+group by
+    n.nspname,
+    c.relname)
+union all
+(
+select
+    'duplicate_index' as name,
+    'WARN' as level,
+    'EXTERNAL' as facing,
+    'Detects cases where two ore more identical indexes exist.' as description,
+    format(
+        'Table \`%s.%s\` has identical indexes %s. Drop all except one of them',
+        n.nspname,
+        c.relname,
+        array_agg(pi.indexname order by pi.indexname)
+    ) as detail,
+    'https://supabase.github.io/splinter/0009_duplicate_index' as remediation,
+    jsonb_build_object(
+        'schema', n.nspname,
+        'name', c.relname,
+        'type', case
+            when c.relkind = 'r' then 'table'
+            when c.relkind = 'm' then 'materialized view'
+            else 'ERROR'
+        end,
+        'indexes', array_agg(pi.indexname order by pi.indexname)
+    ) as metadata,
+    format(
+        'duplicate_index_%s_%s_%s',
+        n.nspname,
+        c.relname,
+        array_agg(pi.indexname order by pi.indexname)
+    ) as cache_key
+from
+    pg_indexes pi
+    join pg_catalog.pg_namespace n
+        on n.nspname  = pi.schemaname
+    join pg_catalog.pg_class c
+        on pi.tablename = c.relname
+        and n.oid = c.relnamespace
+    left join pg_catalog.pg_policy p
+        on p.polrelid = c.oid
+where
+    c.relkind in ('r', 'm') -- tables and materialized views
+    and n.nspname not in (
+        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+    )
+group by
+    n.nspname,
+    c.relkind,
+    c.relname,
+    replace(pi.indexdef, pi.indexname, '')
+having
+    count(*) > 1)
+union all
+(
+select
+    'security_definer_view' as name,
+    'WARN' as level,
+    'EXTERNAL' as facing,
+    'Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies.' as description,
+    format(
+        'View \`%s.%s\` is SECURITY DEFINER',
+        n.nspname,
+        c.relname
+    ) as detail,
+    'https://supabase.github.io/splinter/0010_security_definer_view' as remediation,
+    jsonb_build_object(
+        'schema', n.nspname,
+        'name', c.relname,
+        'type', 'view'
+    ) as metadata,
+    format(
+        'security_definer_view_%s_%s',
+        n.nspname,
+        c.relname
+    ) as cache_key
+from
+    pg_catalog.pg_class c
+    join pg_catalog.pg_namespace n
+        on n.oid = c.relnamespace
+where
+    c.relkind = 'v'
+    and n.nspname = 'public'
+	and not (
+		lower(coalesce(c.reloptions::text,'{}'))::text[]
+		&& array[
+			'security_invoker=1',
+			'security_invoker=true',
+			'security_invoker=yes',
+			'security_invoker=on'
+		]
+	))

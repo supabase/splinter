@@ -14,6 +14,10 @@ nav:
       - No Primary Key: '0004_no_primary_key.md'
       - Unused Index: '0005_unused_index.md'
       - Multiple Permissive Policies: '0006_multiple_permissive_policies.md'
+      - Policy Exists RLS Disabled: '0007_policy_exists_rls_disabled.md'
+      - RLS Enabled No Policy: '0008_rls_enabled_no_policy.md'
+      - Duplicate Index: '0009_duplicate_index.md'
+      - Security Definer View: '0010_security_definer_view.md'
 
 theme:
     name: 'material'

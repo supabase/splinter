@@ -1,0 +1,24 @@
+begin;
+  -- 0 issues
+  select * from lint."0010_security_definer_view";
+ name | level | facing | description | detail | remediation | metadata | cache_key 
+------+-------+--------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  create view public.my_view as select 1;
+  -- 1 issue
+  select * from lint."0010_security_definer_view";
+         name          | level |  facing  |                                             description                                             |                   detail                    |                          remediation                           |                        metadata                         |              cache_key               
+-----------------------+-------+----------+-----------------------------------------------------------------------------------------------------+---------------------------------------------+----------------------------------------------------------------+---------------------------------------------------------+--------------------------------------
+ security_definer_view | WARN  | EXTERNAL | Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies. | View \`public.my_view\` is SECURITY DEFINER | https://supabase.github.io/splinter/0010_security_definer_view | {"name": "my_view", "type": "view", "schema": "public"} | security_definer_view_public_my_view
+(1 row)
+
+  -- Apply security_invoker
+  create or replace view public.my_view with (security_invoker=on) as select 1;
+  -- 0 issues
+  select * from lint."0010_security_definer_view";
+ name | level | facing | description | detail | remediation | metadata | cache_key 
+------+-------+--------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+rollback;
