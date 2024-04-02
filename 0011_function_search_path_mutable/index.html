@@ -10,20 +10,18 @@
       
       
       
-        <link rel="canonical" href="https://supabase.github.io/splinter/0006_multiple_permissive_policies/">
+        <link rel="canonical" href="https://supabase.github.io/splinter/0011_function_search_path_mutable/">
       
       
-        <link rel="prev" href="../0005_unused_index/">
+        <link rel="prev" href="../0010_security_definer_view/">
       
-      
-        <link rel="next" href="../0007_policy_exists_rls_disabled/">
       
       <link rel="icon" href="../assets/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
     
     
       
-        <title>Multiple Permissive Policies - splinter</title>
+        <title>Function Search Path Mutable - splinter</title>
       
     
     
@@ -105,7 +103,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Multiple Permissive Policies
+              Function Search Path Mutable
             
           </span>
         </div>
@@ -328,89 +326,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Multiple Permissive Policies
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../0006_multiple_permissive_policies/" class="md-nav__link">
         Multiple Permissive Policies
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    Rationale
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#row-level-security-policies" class="md-nav__link">
-    Row Level Security Policies
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#risks-with-multiple-permissive-policies" class="md-nav__link">
-    Risks with Multiple Permissive Policies
-  </a>
-  
-    <nav class="md-nav" aria-label="Risks with Multiple Permissive Policies">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#access-control" class="md-nav__link">
-    Access Control
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#performance" class="md-nav__link">
-    Performance
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-resolve" class="md-nav__link">
-    How to Resolve
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -476,11 +396,69 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../0011_function_search_path_mutable/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Function Search Path Mutable
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Function Search Path Mutable
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-the-search-path" class="md-nav__link">
+    What is the Search Path?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-issue-with-not-setting-the-search-path-in-functions" class="md-nav__link">
+    The Issue with Not Setting the Search Path in Functions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -524,36 +502,16 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#row-level-security-policies" class="md-nav__link">
-    Row Level Security Policies
+  <a href="#what-is-the-search-path" class="md-nav__link">
+    What is the Search Path?
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#risks-with-multiple-permissive-policies" class="md-nav__link">
-    Risks with Multiple Permissive Policies
+  <a href="#the-issue-with-not-setting-the-search-path-in-functions" class="md-nav__link">
+    The Issue with Not Setting the Search Path in Functions
   </a>
-  
-    <nav class="md-nav" aria-label="Risks with Multiple Permissive Policies">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#access-control" class="md-nav__link">
-    Access Control
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#performance" class="md-nav__link">
-    Performance
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -582,63 +540,49 @@
   
 
 
-  <h1>Multiple Permissive Policies</h1>
+  <h1>Function Search Path Mutable</h1>
 
-<p>Level: WARNING</p>
 <h3 id="rationale">Rationale</h3>
-<p>In Postgres, Row Level Security (RLS) policies control access to rows in a table based on the executing user. When multiple permissive policies are applied to the same tablequeries against the table, the user may have access to a selected row through any of the policies. This means that, in the worst case, all of the relevant RLS policies must be applied/tested before Postgres can determine if a row should be visible. At scale, these checks add significant overhead to SQL queries and can be a performance bottleneck.</p>
-<h3 id="row-level-security-policies">Row Level Security Policies</h3>
-<p>RLS policies in Postgres are rules applied to tables that determine whether rows can be selected, inserted, updated, or deleted. These policies can be set to <code>PERMISSIVE</code> or <code>RESTRICTIVE</code>. Permissive policies allow actions unless explicitly restricted by a restrictive policy. When multiple permissive policies are defined for a table, they act in a cumulative manner — if any policy allows access, the access is granted. In other words, the policies compose with <code>OR</code> semantics.</p>
-<h3 id="risks-with-multiple-permissive-policies">Risks with Multiple Permissive Policies</h3>
-<h4 id="access-control">Access Control</h4>
-<p>Multiple permissive policies on a table can make it challenging to accurately predict and control which rows are accessible to different users. This complexity can inadvertently lead to overly permissive access configurations, undermining data security and integrity.</p>
-<h4 id="performance">Performance</h4>
-<p>Since any one of N permissive policies can provide a user access to a given table's row, in the worst case Postgres must execute all N policies to determine if a row should be visible. These multiple checks raise the probability of a query falling off an index and broadly increase the resource consumption of every query on the impacted table.</p>
+<p>In PostgreSQL, the <code>search_path</code> determines the order in which schemas are searched to find unqualified objects (like tables, functions, etc.). Setting <code>search_path</code> explicitly for a function is a best practice that ensures its behavior is consistent and secure, regardless of the executing user's default <code>search_path</code> settings. This practice forces all references within the function's body to be fully qualified, preventing unexpected behavior due to changes in the <code>search_path</code> and mitigating potential security vulnerabilities.</p>
+<h3 id="what-is-the-search-path">What is the Search Path?</h3>
+<p>The search path in PostgreSQL is a list of schema names that PostgreSQL checks when trying to resolve unqualified object names like <code>profiles</code>. In contrast, a fully qualified name includes the schema like <code>public.profiles</code>, and remains constant, regardless of the user's <code>search_path</code>. By default, <code>search_path</code> includes the user's schema and the <code>public</code> schema. However, this can lead to unexpected behavior if different users have different <code>search_path</code> settings, as unqualified references will be resolved differently depending on who is executing the function.</p>
+<h3 id="the-issue-with-not-setting-the-search-path-in-functions">The Issue with Not Setting the Search Path in Functions</h3>
+<p>When a function does not have its search path explicitly set, it inherits the search path of the current session when it is invoked. This behavior can lead to several problems:</p>
+<ul>
+<li><strong>Inconsistency</strong>: The function may behave differently depending on the user's <code>search_path</code> settings.</li>
+<li><strong>Security Risks</strong>: Malicious users could potentially exploit the <code>search_path</code> to direct the function to use unexpected objects, such as tables or other functions that they control.</li>
+</ul>
 <h3 id="how-to-resolve">How to Resolve</h3>
-<p>Consider a table <code>employee_data</code> with two permissive policies:</p>
-<p>Policy A allows access to employees in the same department.
-Policy B allows access to employees at or above a certain grade level.</p>
-<p>Our intention is for users to be able to see employee data for employees within their own department who are below the querying user's grade level.</p>
+<p>To ensure that your functions are secure and behave consistently, set the search path explicitly within the function definition.</p>
+<p>Given a function like:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="n">example_function</span><span class="p">()</span>
+<span class="w">  </span><span class="k">returns</span><span class="w"> </span><span class="n">void</span>
+<span class="w">  </span><span class="k">language</span><span class="w"> </span><span class="k">sql</span>
+<span class="k">as</span><span class="w"> </span><span class="err">$$</span>
+<span class="w">  </span><span class="c1">-- Your SQL code here</span>
+<span class="err">$$</span><span class="p">;</span>
+</code></pre></div></td></tr></table></div>
+<p>You can <code>create or replace</code> the function and add a <code>search_path</code> setting.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">-- Policy A</span>
-<span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="n">department_access</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">employee_data</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="k">select</span>
-<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="n">department</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current_user_department</span><span class="p">());</span>
-
-<span class="c1">-- Policy B</span>
-<span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="n">grade_level_access</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">employee_data</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="k">select</span>
-<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="n">grade_level</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">current_user_grade_level</span><span class="p">());</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="k">replace</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="n">example_function</span><span class="p">()</span>
+<span class="w">  </span><span class="k">returns</span><span class="w"> </span><span class="n">void</span>
+<span class="w">  </span><span class="k">language</span><span class="w"> </span><span class="k">sql</span>
+<span class="w">  </span><span class="k">set</span><span class="w"> </span><span class="n">search_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="c1">-- LOOK HERE</span>
+<span class="k">as</span><span class="w"> </span><span class="err">$$</span>
+<span class="w">  </span><span class="c1">-- Your SQL code here.</span>
+<span class="err">$$</span><span class="p">;</span>
 </code></pre></div></td></tr></table></div>
-<p>The implementation contains a logic error. As written, every employee can see <code>employee_data</code> for every other employee within their departemnt. Similarly, every employee can see every other employee's data at or below their own grade level.</p>
-<p>To address this issue, we can combine the two policies.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">drop</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="n">department_access</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">employee_data</span><span class="p">;</span>
-<span class="k">drop</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="n">grade_level_access</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">employee_data</span><span class="p">;</span>
-
-<span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="n">consolidated_access</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">employee_data</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="k">select</span>
-<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="p">(</span>
-<span class="w">        </span><span class="n">department</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current_user_department</span><span class="p">()</span>
-<span class="w">        </span><span class="k">or</span><span class="w"> </span><span class="n">grade_level</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">current_user_grade_level</span><span class="p">()</span>
-<span class="w">    </span><span class="p">);</span>
-</code></pre></div></td></tr></table></div>
-<p>In addition to addressing the logic bug, we have also improved the Postgres query planner's ability to inline the policy to check access to rows, which reduces the chance of the query falling off index.</p>
-<p>While consolidating RLS policies for a given role/action combination is a best practices, it is not a hard rule. If consolidating policies leads to unreadable SQL then you may opt to have multiple policies for maintainability.</p>
+<p>Remember that once you set the <code>search_path = ''</code> all references to tables/functions/views/etc in your function's body must be qualified with a schema name.</p>
 
 
 
