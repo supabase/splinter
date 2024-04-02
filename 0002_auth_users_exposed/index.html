@@ -322,12 +322,25 @@
     How to Resolve
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
+    <nav class="md-nav" aria-label="How to Resolve">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trigger-on-authusers" class="md-nav__link">
+    Trigger on auth.users
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-invoker-view-with-rls-on-authusers" class="md-nav__link">
+    Security Invoker View with RLS on auth.users
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -501,12 +514,25 @@
     How to Resolve
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
+    <nav class="md-nav" aria-label="How to Resolve">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trigger-on-authusers" class="md-nav__link">
+    Trigger on auth.users
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-invoker-view-with-rls-on-authusers" class="md-nav__link">
+    Security Invoker View with RLS on auth.users
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -532,38 +558,31 @@
 
 <p>Level: INFO</p>
 <h3 id="rationale">Rationale</h3>
-<p>Referencing the <code>auth.users</code> table in a view constrains future migrations within the <code>auth</code> schema which can slow down the deployment of security updates to your project.</p>
+<p>Referencing the <code>auth.users</code> table in a view can inadvertently expose more data than intended.</p>
 <h3 id="why-shouldnt-you-expose-authusers-with-a-view">Why shouldn't you expose auth.users with a view?</h3>
-<p><code>auth.users</code> is the primary table that backs Supabase Auth. It contains detailed information about each of your projects users, their login methods, and other personally identifiable information. Supabase Auth periodically executes migrations against <code>auth.users</code> and other tables in the <code>auth</code> schema to:</p>
-<ul>
-<li>Enable new features</li>
-<li>Improve performance</li>
-<li>Apply security patches</li>
-</ul>
-<p>Creating views against the <code>auth.users</code> table creates enforced constraints within Postgres that can cause Supabase Auth's migrations to fail. That delays our ability to roll out updates to your project, for example, time sensitive security updates.</p>
+<p><code>auth.users</code> is the primary table that backs Supabase Auth. It contains detailed information about each of your projects users, their login methods, and other personally identifiable information.</p>
+<p>In Postgres, the built in mechanism for controlling access to rows within a table is row level security (RLS). By default, views in Postgres are "security definer" which means they do not respect RLS rules associated with the tables in the view's query. Materialized views similarly don't support RLS.</p>
+<p>As a result, a <code>public</code> security definer view referencing <code>auth.users</code> exposes all user records to all API users, which is likely not what application developers intended.</p>
 <h3 id="how-to-resolve">How to Resolve</h3>
-<p>The recommended solution for managing access to user data is best documented in the <a href="https://supabase.com/docs/guides/auth/managing-user-data">auth docs</a>.</p>
-<p>Summarizing from the docs, we recommend creating a table in the public schema e.g. <code>public.profiles</code> containing a subset of columns from <code>auth.users</code> that are appropriate for your application's use case. You can then set a trigger on <code>auth.users</code> to automatically insert the relevant data into <code>public.profiles</code> any time a new user is inserted into <code>auth.users</code>.</p>
+<p>There are 2 recommended solutions for exposing user data to your application.</p>
+<h4 id="trigger-on-authusers">Trigger on auth.users</h4>
+<p>This option involves creating a table in the public schema, e.g. <code>public.profiles</code>, containing a subset of columns from <code>auth.users</code> that are appropriate for your application's use case. You can then set a trigger on <code>auth.users</code> to automatically insert the relevant data into <code>public.profiles</code> any time a new user is inserted into <code>auth.users</code>.</p>
 <p>Note that triggers execute in the same transaction as the insert into <code>auth.users</code> so you must check the trigger logic carefully as any errors could block user signups to your project. </p>
-<h3 id="example">Example</h3>
-<p>To start we need a location to store public user data in the <code>public</code> scheam:</p>
+<p>An additional benefit of this approach is that the <code>public.profiles</code> table provides a logical place to store any additional user metadata that is needed for the application.</p>
+<p>To start we need a location to store public user data in the <code>public</code> schema:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">profiles</span><span class="w"> </span><span class="p">(</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">profiles</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="n">uuid</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">references</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">delete</span><span class="w"> </span><span class="k">cascade</span><span class="p">,</span>
 <span class="w">  </span><span class="n">first_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
 <span class="w">  </span><span class="n">last_name</span><span class="w"> </span><span class="nb">text</span><span class="p">,</span>
 
 <span class="w">  </span><span class="k">primary</span><span class="w"> </span><span class="k">key</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 <span class="p">);</span>
-
-<span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">profiles</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
 </code></pre></div></td></tr></table></div>
 <p>Next, we create a trigger function to copy the data from <code>auth.users</code> into <code>public.profiles</code> when new rows are inserted</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -607,13 +626,49 @@
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="ss">&quot;Public profiles are viewable by everyone.&quot;</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">profiles</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
+
+<span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="ss">&quot;Public profiles are viewable by everyone.&quot;</span>
 <span class="w">  </span><span class="k">on</span><span class="w"> </span><span class="n">profiles</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="k">select</span>
 <span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="k">true</span><span class="w"> </span><span class="p">);</span>
 
 <span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="ss">&quot;Users can update own profile.&quot;</span>
 <span class="w">  </span><span class="k">on</span><span class="w"> </span><span class="n">profiles</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="k">update</span>
 <span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">uid</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="p">);</span>
+</code></pre></div></td></tr></table></div>
+<p>For more information on this approach see the <a href="https://supabase.com/docs/guides/auth/managing-user-data">auth docs</a>.</p>
+<h4 id="security-invoker-view-with-rls-on-authusers">Security Invoker View with RLS on auth.users</h4>
+<p>The second recommended approach to securely exposing <code>auth.users</code> data is to create a view with the configuration option <code>security_invoker=on</code>. That setting, introduced in Postgres 15, tells the view to respect the RLS policies associated with the underlying tables from the query. Next, we can enable RLS on <code>auth.users</code> and create any policy we need to restrict access to the data.</p>
+<p>To enable security invoker mode on the view we can use the <code>with (security_invoker=on)</code> clause:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">view</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">members</span>
+<span class="w">    </span><span class="k">with</span><span class="w"> </span><span class="p">(</span><span class="n">security_invoker</span><span class="o">=</span><span class="k">on</span><span class="p">)</span>
+<span class="w">    </span><span class="k">as</span>
+<span class="k">select</span>
+<span class="w">    </span><span class="n">id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">raw_user_meta_data</span><span class="w"> </span><span class="o">-&gt;&gt;</span><span class="w"> </span><span class="s1">&#39;first_name&#39;</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">first_name</span><span class="p">,</span>
+<span class="w">    </span><span class="n">created_at</span>
+<span class="k">from</span>
+<span class="w">    </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span><span class="p">;</span>
+</code></pre></div></td></tr></table></div>
+<p>Next, enable RLS on <code>auth.users</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
+</code></pre></div></td></tr></table></div>
+<p>and finally, create a policy defining which users should be able to see each record:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="n">select_self</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="k">select</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="p">((</span><span class="k">select</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">uid</span><span class="p">())</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span><span class="p">);</span>
 </code></pre></div></td></tr></table></div>
 
 
