@@ -49,7 +49,7 @@ select
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
     ) as metadata,
-    format('0001_unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
+    format('unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
 from
     foreign_keys fk
     left join index_ idx
@@ -571,7 +571,7 @@ select
         'function_search_path_mutable_%s_%s_%s',
         n.nspname,
         p.proname,
-		p.oid -- required when function is polymorphic
+        md5(p.prosrc) -- required when function is polymorphic
     ) as cache_key
 from
     pg_catalog.pg_proc p
@@ -639,3 +639,35 @@ where
     )
     and replace(p.qual, ' ', '') !~ 'auth\.jwt\(\)->>''is_anonymous''::text'
 group by n.nspname, c.relname)
+union all
+(
+select
+    'rls_disabled_in_public' as name,
+    'ERROR' as level,
+    'EXTERNAL' as facing,
+    'Detects cases where row level security (RLS) has not been enabled on a table in the `public` schema.' as description,
+    format(
+        'Table \`%s.%s\` is in the `public` but RLS has not been enabled.',
+        n.nspname,
+        c.relname
+    ) as detail,
+    'https://supabase.github.io/splinter/0013_rls_disabled_in_public' as remediation,
+    jsonb_build_object(
+        'schema', n.nspname,
+        'name', c.relname,
+        'type', 'table'
+    ) as metadata,
+    format(
+        'rls_disabled_in_public_%s_%s',
+        n.nspname,
+        c.relname
+    ) as cache_key
+from
+    pg_catalog.pg_class c
+    join pg_catalog.pg_namespace n
+        on c.relnamespace = n.oid
+where
+    c.relkind = 'r' -- regular tables
+    and n.nspname = 'public'
+    -- RLS is disabled
+    and not c.relrowsecurity)
