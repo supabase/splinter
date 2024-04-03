@@ -19,6 +19,7 @@ nav:
       - Duplicate Index: '0009_duplicate_index.md'
       - Security Definer View: '0010_security_definer_view.md'
       - Function Search Path Mutable: '0011_function_search_path_mutable.md'
+      - RLS Disabled in Public: '0013_rls_disabled_in_public.md'
 
 theme:
     name: 'material'
