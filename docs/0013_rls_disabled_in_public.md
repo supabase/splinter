@@ -14,7 +14,7 @@ To enable RLS on a table execute:
 alter table <schema>.<table> enable row level security;
 ```
 
-Note that after enabling RLS you will not be able to read or write data to the table via Supabase APIs until you create [row level security policies](https://supabase.com/docs/guides/auth/row-level-security) to control access.
+Note that after enabling RLS you will not be able to use the `anon` role to read or write data to the table via Supabase APIs until you create [row level security policies](https://supabase.com/docs/guides/auth/row-level-security) to control access.
 
 ### Example
 
