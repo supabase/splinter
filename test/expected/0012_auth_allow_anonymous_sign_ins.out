@@ -1,8 +1,9 @@
 begin;
   -- 0 issues
-  select * from lint."0011_auth_allow_anonymous_sign_ins";
- name | level | facing | description | detail | remediation | metadata | cache_key 
-------+-------+--------+-------------+--------+-------------+----------+-----------
+  select * from lint."0012_auth_allow_anonymous_sign_ins";
+ name | level | facing | description | remediation | detail | metadata | cache_key 
+------+-------+--------+-------------+-------------+--------+----------+-----------
 (0 rows)
 
+  
 rollback;
