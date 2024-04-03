@@ -20,7 +20,7 @@ select
         'function_search_path_mutable_%s_%s_%s',
         n.nspname,
         p.proname,
-		p.oid -- required when function is polymorphic
+        md5(p.prosrc) -- required when function is polymorphic
     ) as cache_key
 from
     pg_catalog.pg_proc p
