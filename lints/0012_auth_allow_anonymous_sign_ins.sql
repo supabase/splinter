@@ -1,4 +1,4 @@
-create view lint."0011_auth_allow_anonymous_sign_ins" as
+create view lint."0012_auth_allow_anonymous_sign_ins" as
 
 with recursive role_members as (
     select

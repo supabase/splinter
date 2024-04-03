@@ -6,10 +6,10 @@ with foreign_keys as (
         ct.conname as fkey_name,
         ct.conkey col_attnums
     from
-        pg_constraint ct
-        join pg_class cl -- fkey owning table
+        pg_catalog.pg_constraint ct
+        join pg_catalog.pg_class cl -- fkey owning table
             on ct.conrelid = cl.oid
-        left join pg_depend d
+        left join pg_catalog.pg_depend d
             on d.objid = cl.oid
             and d.deptype = 'e'
     where
@@ -25,7 +25,7 @@ index_ as (
         indexrelid::regclass as index_,
         string_to_array(indkey::text, ' ')::smallint[] as col_attnums
     from
-        pg_index
+        pg_catalog.pg_index
     where
         indisvalid
 )
@@ -80,18 +80,25 @@ select
     ) as metadata,
     format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
 from
-    pg_depend d
-    join pg_rewrite r
+    -- Identify the oid for auth.users
+	pg_catalog.pg_class auth_users_pg_class
+    join pg_catalog.pg_namespace auth_users_pg_namespace
+		on auth_users_pg_class.relnamespace = auth_users_pg_namespace.oid
+		and auth_users_pg_class.relname = 'users'
+		and auth_users_pg_namespace.nspname = 'auth'
+	-- Depends on auth.users
+    join pg_catalog.pg_depend d
+    	on d.refobjid = auth_users_pg_class.oid
+    join pg_catalog.pg_rewrite r
         on r.oid = d.objid
-    join pg_class c
+    join pg_catalog.pg_class c
         on c.oid = r.ev_class
-    join pg_namespace n
+    join pg_catalog.pg_namespace n
         on n.oid = c.relnamespace
-    join pg_class pg_class_auth_users
+    join pg_catalog.pg_class pg_class_auth_users
         on d.refobjid = pg_class_auth_users.oid
 where
-    d.refobjid = 'auth.users'::regclass
-    and d.deptype = 'n'
+    d.deptype = 'n'
     and n.nspname = 'public'
     and (
       pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
@@ -185,12 +192,12 @@ with policies as (
         qual,
         with_check
     from
-        pg_policy pa
-        join pg_class pc
+        pg_catalog.pg_policy pa
+        join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
-        join pg_namespace nsp
+        join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_policies pb
+        join pg_catalog.pg_policies pb
             on pc.relname = pb.tablename
             and nsp.nspname = pb.schemaname
             and pa.polname = pb.policyname
@@ -255,10 +262,10 @@ select
         pgc.relname
     ) as cache_key
 from
-    pg_class pgc
-    join pg_namespace pgns
+    pg_catalog.pg_class pgc
+    join pg_catalog.pg_namespace pgns
         on pgns.oid = pgc.relnamespace
-    left join pg_index pgi
+    left join pg_catalog.pg_index pgi
         on pgi.indrelid = pgc.oid
 where
     pgc.relkind = 'r' -- regular tables
@@ -483,7 +490,7 @@ select
         array_agg(pi.indexname order by pi.indexname)
     ) as cache_key
 from
-    pg_indexes pi
+    pg_catalog.pg_indexes pi
     join pg_catalog.pg_namespace n
         on n.nspname  = pi.schemaname
     join pg_catalog.pg_class c
@@ -542,6 +549,40 @@ where
 			'security_invoker=on'
 		]
 	))
+union all
+(
+select
+    'function_search_path_mutable' as name,
+    'WARN' as level,
+    'EXTERNAL' as facing,
+    'Detects functions with a mutable search_path parameter which could fail to execute sucessfully for some roles.' as description,
+    format(
+        'Function \`%s.%s\` has a role mutable search_path',
+        n.nspname,
+        p.proname
+    ) as detail,
+    'https://supabase.github.io/splinter/0011_function_search_path_mutable' as remediation,
+    jsonb_build_object(
+        'schema', n.nspname,
+        'name', p.proname,
+        'type', 'function'
+    ) as metadata,
+    format(
+        'function_search_path_mutable_%s_%s_%s',
+        n.nspname,
+        p.proname,
+		p.oid -- required when function is polymorphic
+    ) as cache_key
+from
+    pg_catalog.pg_proc p
+    join pg_catalog.pg_namespace n
+        on p.pronamespace = n.oid
+where
+    n.nspname not in (
+        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium', 'graphql', 'graphql_public'
+    )
+    -- Search path not set to ''
+    and not coalesce(p.proconfig, '{}') && array['search_path=""'])
 union all
 (
 with recursive role_members as (

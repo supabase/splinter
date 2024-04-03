@@ -45,12 +45,12 @@ with policies as (
         qual,
         with_check
     from
-        pg_policy pa
-        join pg_class pc
+        pg_catalog.pg_policy pa
+        join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
-        join pg_namespace nsp
+        join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_policies pb
+        join pg_catalog.pg_policies pb
             on pc.relname = pb.tablename
             and nsp.nspname = pb.schemaname
             and pa.polname = pb.policyname

@@ -22,10 +22,10 @@ select
         pgc.relname
     ) as cache_key
 from
-    pg_class pgc
-    join pg_namespace pgns
+    pg_catalog.pg_class pgc
+    join pg_catalog.pg_namespace pgns
         on pgns.oid = pgc.relnamespace
-    left join pg_index pgi
+    left join pg_catalog.pg_index pgi
         on pgi.indrelid = pgc.oid
 where
     pgc.relkind = 'r' -- regular tables

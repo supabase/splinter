@@ -7,10 +7,10 @@ with foreign_keys as (
         ct.conname as fkey_name,
         ct.conkey col_attnums
     from
-        pg_constraint ct
-        join pg_class cl -- fkey owning table
+        pg_catalog.pg_constraint ct
+        join pg_catalog.pg_class cl -- fkey owning table
             on ct.conrelid = cl.oid
-        left join pg_depend d
+        left join pg_catalog.pg_depend d
             on d.objid = cl.oid
             and d.deptype = 'e'
     where
@@ -26,7 +26,7 @@ index_ as (
         indexrelid::regclass as index_,
         string_to_array(indkey::text, ' ')::smallint[] as col_attnums
     from
-        pg_index
+        pg_catalog.pg_index
     where
         indisvalid
 )
