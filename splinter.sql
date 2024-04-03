@@ -49,7 +49,7 @@ select
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
     ) as metadata,
-    format('0001_unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
+    format('unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
 from
     foreign_keys fk
     left join index_ idx
@@ -571,7 +571,7 @@ select
         'function_search_path_mutable_%s_%s_%s',
         n.nspname,
         p.proname,
-		p.oid -- required when function is polymorphic
+        md5(p.prosrc) -- required when function is polymorphic
     ) as cache_key
 from
     pg_catalog.pg_proc p

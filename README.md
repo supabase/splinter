@@ -54,5 +54,5 @@ All lints tests with a true positive example.
 To run the test suite:
 
 ```sh
-docker rmi -f dockerfiles-db && SUPABASE_VERSION=15.1.1.13 docker-compose -f dockerfiles/docker-compose.yml run --rm test
+docker rmi -f dockerfiles-test && SUPABASE_VERSION=15.1.1.13 docker-compose -f dockerfiles/docker-compose.yml run --rm test
 ```

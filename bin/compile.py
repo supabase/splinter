@@ -1,13 +1,15 @@
 import sys
 from pathlib import Path
+import json
+from typing import Dict
 
 
-def join_sql_files(directory_path) -> str:
+def load_sql_files(directory_path) -> Dict[str, str]:
     # Convert the directory path to a Path object
     directory = Path(directory_path)
 
-    # Initialize an empty string to store the concatenated SQL
-    queries = []
+    # Initialize an empty dict to store the concatenated SQL
+    queries: Dict[str, str] = {}
 
     # Check if directory exists
     if not directory.exists():
@@ -29,13 +31,16 @@ def join_sql_files(directory_path) -> str:
             # without syntax errors
             adjusted_contents = f"({adjusted_contents})"
 
-            queries.append(adjusted_contents)
-    return "\nunion all\n".join(queries)
+            queries[file_path.stem] = adjusted_contents
+    return queries
 
 
 # Example usage
 directory_path = "./lints"
-concatenated_sql = join_sql_files(directory_path)
+sql_map = load_sql_files(directory_path)
 
 with open("splinter.sql", "w") as f:
-    f.write(concatenated_sql)
+    f.write("\nunion all\n".join(sql_map.values()))
+
+with open("splinter.json", "w") as f:
+    json.dump(sql_map, f, indent=4)
