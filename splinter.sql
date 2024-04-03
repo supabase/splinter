@@ -609,7 +609,7 @@ select
     'INFO' as level,
     'EXTERNAL' as facing,
     'Detects row level security (RLS) policies that allow access to anonymous users.' as description,
-    'https://supabase.github.io/splinter/0011_auth_allow_anonymous_sign_ins' as remediation,
+    'https://supabase.github.io/splinter/0012_auth_allow_anonymous_sign_ins' as remediation,
     format(
         'Table \`%s.%s\` has policies enforced on roles that allow access to anonymous users. Policies include \`%s\`',
         n.nspname,
