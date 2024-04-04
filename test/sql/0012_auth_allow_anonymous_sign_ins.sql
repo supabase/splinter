@@ -25,5 +25,14 @@ begin;
 
   -- 0 issues
   select * from lint."0012_auth_allow_anonymous_sign_ins";
-  
+
+  -- Check if policy definition passes with case sensitive characters
+  create policy "allow_access_to_permanent_users_case_senstive" on documents
+    as restrictive
+    to authenticated
+    using ( (select (AUTH.JWT() ->> 'is_anonymous')::boolean) is false );
+
+  -- 0 issues
+  select * from lint."0012_auth_allow_anonymous_sign_ins";
+
 rollback;
