@@ -637,7 +637,7 @@ where
             select rolname from member_names where rolname = any(roles)
         ) -- roles that are members of authenticated
     )
-    and replace(p.qual, ' ', '') !~ 'auth\.jwt\(\)->>''is_anonymous''::text'
+    and replace(p.qual, ' ', '') not like '%auth.jwt()%->>%is_anonymous%'
 group by n.nspname, c.relname)
 union all
 (
