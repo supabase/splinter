@@ -53,3 +53,8 @@ psql -v ON_ERROR_STOP= -f test/fixtures.sql -f lints/0001*.sql -f lints/0002*.sq
 
 # Run tests
 ${REGRESS} --use-existing --dbname=contrib_regression --inputdir=${TESTDIR} ${TESTS}
+
+if [ -s /home/splinter/regression.diffs ]
+then
+    cat /home/splinter/regression.diffs
+fi
