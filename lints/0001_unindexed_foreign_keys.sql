@@ -58,6 +58,9 @@ from
         and fk.col_attnums = idx.col_attnums
 where
     idx.index_ is null
+    and fk.schema_::text not in (
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+    )
 order by
     fk.table_,
     fk.fkey_name;

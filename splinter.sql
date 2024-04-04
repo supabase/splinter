@@ -57,6 +57,9 @@ from
         and fk.col_attnums = idx.col_attnums
 where
     idx.index_ is null
+    and fk.schema_::text not in (
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+    )
 order by
     fk.table_,
     fk.fkey_name)
@@ -223,6 +226,9 @@ from
     policies
 where
     is_rls_active
+    and schema_::text not in (
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+    )
     and (
         (
             -- Example: auth.uid()
@@ -270,7 +276,7 @@ from
 where
     pgc.relkind = 'r' -- regular tables
     and pgns.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
 group by
     pgc.oid,
@@ -313,7 +319,7 @@ where
     and not pi.indisunique
     and not pi.indisprimary
     and psui.schemaname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     ))
 union all
 (
@@ -367,7 +373,7 @@ from
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
     and r.rolname not like 'pg_%'
     and r.rolname not like 'supabase%admin'
@@ -412,7 +418,7 @@ from
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
     -- RLS is disabled
     and not c.relrowsecurity
@@ -451,7 +457,7 @@ from
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
     -- RLS is enabled
     and c.relrowsecurity
@@ -501,7 +507,7 @@ from
 where
     c.relkind in ('r', 'm') -- tables and materialized views
     and n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
 group by
     n.nspname,
@@ -579,7 +585,7 @@ from
         on p.pronamespace = n.oid
 where
     n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium', 'graphql', 'graphql_public'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
     -- Search path not set to ''
     and not coalesce(p.proconfig, '{}') && array['search_path=""'])

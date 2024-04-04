@@ -76,6 +76,9 @@ from
     policies
 where
     is_rls_active
+    and schema_::text not in (
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+    )
     and (
         (
             -- Example: auth.uid()

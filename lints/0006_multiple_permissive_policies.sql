@@ -50,7 +50,7 @@ from
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
     and r.rolname not like 'pg_%'
     and r.rolname not like 'supabase%admin'
