@@ -28,7 +28,7 @@ from
         on p.pronamespace = n.oid
 where
     n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium', 'graphql', 'graphql_public'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
     -- Search path not set to ''
     and not coalesce(p.proconfig, '{}') && array['search_path=""'];
