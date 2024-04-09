@@ -502,8 +502,6 @@ from
     join pg_catalog.pg_class c
         on pi.tablename = c.relname
         and n.oid = c.relnamespace
-    left join pg_catalog.pg_policy p
-        on p.polrelid = c.oid
 where
     c.relkind in ('r', 'm') -- tables and materialized views
     and n.nspname not in (
