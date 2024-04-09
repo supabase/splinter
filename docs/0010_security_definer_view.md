@@ -3,7 +3,7 @@ Level: WARN
 
 ### Rationale
 
-Postgres' default setting for views is SECURITY DEFINER which means the ignore row level security (RLS) policies applied to the underlying table in the query. That is an unintuitive default that was chosen for backwards compatibility which makes it easy to accidentally expose more data in views than was intended. 
+Postgres' default setting for views is SECURITY DEFINER which means they use the permissions of the view's creator, rather than the permissions of the querying user when executing the view's underlying query. That is an unintuitive default, chosen for backwards compatibility with older Postgres versions, which makes it easy to accidentally expose more data in views than was intended. 
 
 ### Understanding SECURITY DEFINER and SECURITY INVOKER
 
