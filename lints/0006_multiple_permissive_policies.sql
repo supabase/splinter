@@ -13,7 +13,7 @@ select
         act.cmd,
         array_agg(p.polname order by p.polname)
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0006_multiple_permissive_policies' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,
@@ -50,7 +50,7 @@ from
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
     and r.rolname not like 'pg_%'
     and r.rolname not like 'supabase%admin'

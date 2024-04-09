@@ -45,12 +45,12 @@ with policies as (
         qual,
         with_check
     from
-        pg_policy pa
-        join pg_class pc
+        pg_catalog.pg_policy pa
+        join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
-        join pg_namespace nsp
+        join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_policies pb
+        join pg_catalog.pg_policies pb
             on pc.relname = pb.tablename
             and nsp.nspname = pb.schemaname
             and pa.polname = pb.policyname
@@ -65,7 +65,7 @@ select
         table_,
         policy_name
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0003_auth_rls_initplan' as remediation,
     jsonb_build_object(
         'schema', schema_,
         'name', table_,
@@ -76,6 +76,9 @@ from
     policies
 where
     is_rls_active
+    and schema_::text not in (
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+    )
     and (
         (
             -- Example: auth.uid()

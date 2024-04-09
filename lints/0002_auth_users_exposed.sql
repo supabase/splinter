@@ -9,7 +9,7 @@ select
         'View/Materialized View "%s" in the public schema may expose \`auth.users\` data to anon or authenticated roles.',
         c.relname
     ) as detail,
-    'Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data.' as remediation,
+    'https://supabase.github.io/splinter/0002_auth_users_exposed' as remediation,
     jsonb_build_object(
         'schema', 'public',
         'name', c.relname,
@@ -18,17 +18,25 @@ select
     ) as metadata,
     format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
 from
-    pg_depend d
-    join pg_rewrite r
+    -- Identify the oid for auth.users
+	pg_catalog.pg_class auth_users_pg_class
+    join pg_catalog.pg_namespace auth_users_pg_namespace
+		on auth_users_pg_class.relnamespace = auth_users_pg_namespace.oid
+		and auth_users_pg_class.relname = 'users'
+		and auth_users_pg_namespace.nspname = 'auth'
+	-- Depends on auth.users
+    join pg_catalog.pg_depend d
+    	on d.refobjid = auth_users_pg_class.oid
+    join pg_catalog.pg_rewrite r
         on r.oid = d.objid
-    join pg_class c
+    join pg_catalog.pg_class c
         on c.oid = r.ev_class
-    join pg_namespace n
+    join pg_catalog.pg_namespace n
         on n.oid = c.relnamespace
+    join pg_catalog.pg_class pg_class_auth_users
+        on d.refobjid = pg_class_auth_users.oid
 where
-    d.refobjid = 'auth.users'::regclass
-    and d.deptype = 'n'
-    and c.relkind in ('v', 'm') -- v for view, m for materialized view
+    d.deptype = 'n'
     and n.nspname = 'public'
     and (
       pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
@@ -36,5 +44,42 @@ where
     )
     -- Exclude self
     and c.relname <> '0002_auth_users_exposed'
+    -- There are 3 insecure configurations
+    and
+    (
+        -- Materialized views don't support RLS so this is insecure by default
+        (c.relkind in ('m')) -- m for materialized view
+        or
+        -- Standard View, accessible to anon or authenticated that is security_definer
+        (
+            c.relkind = 'v' -- v for view
+            -- Exclude security invoker views 
+            and not (
+                lower(coalesce(c.reloptions::text,'{}'))::text[]
+                && array[
+                    'security_invoker=1',
+                    'security_invoker=true',
+                    'security_invoker=yes',
+                    'security_invoker=on'
+                ]
+            )
+        )
+        or
+        -- Standard View, security invoker, but no RLS enabled on auth.users
+        (
+            c.relkind in ('v') -- v for view
+            -- is security invoker 
+            and (
+                lower(coalesce(c.reloptions::text,'{}'))::text[]
+                && array[
+                    'security_invoker=1',
+                    'security_invoker=true',
+                    'security_invoker=yes',
+                    'security_invoker=on'
+                ]
+            )
+            and not pg_class_auth_users.relrowsecurity 
+        )
+    )
 group by
     c.relname, c.oid;

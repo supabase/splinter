@@ -7,10 +7,10 @@ with foreign_keys as (
         ct.conname as fkey_name,
         ct.conkey col_attnums
     from
-        pg_constraint ct
-        join pg_class cl -- fkey owning table
+        pg_catalog.pg_constraint ct
+        join pg_catalog.pg_class cl -- fkey owning table
             on ct.conrelid = cl.oid
-        left join pg_depend d
+        left join pg_catalog.pg_depend d
             on d.objid = cl.oid
             and d.deptype = 'e'
     where
@@ -26,7 +26,7 @@ index_ as (
         indexrelid::regclass as index_,
         string_to_array(indkey::text, ' ')::smallint[] as col_attnums
     from
-        pg_index
+        pg_catalog.pg_index
     where
         indisvalid
 )
@@ -42,7 +42,7 @@ select
         fk.table_,
         fk.fkey_name
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0001_unindexed_foreign_keys' as remediation,
     jsonb_build_object(
         'schema', fk.schema_,
         'name', fk.table_,
@@ -50,7 +50,7 @@ select
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
     ) as metadata,
-    format('0001_unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
+    format('unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
 from
     foreign_keys fk
     left join index_ idx
@@ -58,6 +58,9 @@ from
         and fk.col_attnums = idx.col_attnums
 where
     idx.index_ is null
+    and fk.schema_::text not in (
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+    )
 order by
     fk.table_,
     fk.fkey_name;

@@ -5,13 +5,43 @@ begin;
 ------+-------+--------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
-    -- Create a view that exposes auth.users
-    create view public.oops as
-    select * from auth.users;
+    savepoint a;
+    -- Failure mode 1: A materialized view
+    -- Materialized views can not support row level security so they are always an overexposure risk
+    create materialized view public.foo as select * from auth.users;
+    -- 1 entry
     select * from lint."0002_auth_users_exposed";
-        name        | level |  facing  |                                                                            description                                                                             |                                                      detail                                                       |                                                                                                  remediation                                                                                                  |                                   metadata                                   |           cache_key            
---------------------+-------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------+--------------------------------
- auth_users_exposed | WARN  | EXTERNAL | Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security. | View/Materialized View "oops" in the public schema may expose \`auth.users\` data to anon or authenticated roles. | Review the View/Materialized View definition to ensure it does not unintentionally expose sensitive user data. Apply proper role permissions and consider using row-level security to protect sensitive data. | {"name": "oops", "type": "view", "schema": "public", "exposed_to": ["anon"]} | auth_users_exposed_public_oops
+        name        | level |  facing  |                                                                            description                                                                             |                                                      detail                                                      |                         remediation                         |                                  metadata                                   |           cache_key           
+--------------------+-------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+-----------------------------------------------------------------------------+-------------------------------
+ auth_users_exposed | WARN  | EXTERNAL | Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security. | View/Materialized View "foo" in the public schema may expose \`auth.users\` data to anon or authenticated roles. | https://supabase.github.io/splinter/0002_auth_users_exposed | {"name": "foo", "type": "view", "schema": "public", "exposed_to": ["anon"]} | auth_users_exposed_public_foo
 (1 row)
+
+    rollback to savepoint a;
+    -- Failure mode 2: View that is security definer
+    create view public.bar as select * from auth.users;
+    -- 1 entry
+    select * from lint."0002_auth_users_exposed";
+        name        | level |  facing  |                                                                            description                                                                             |                                                      detail                                                      |                         remediation                         |                                  metadata                                   |           cache_key           
+--------------------+-------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+-----------------------------------------------------------------------------+-------------------------------
+ auth_users_exposed | WARN  | EXTERNAL | Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security. | View/Materialized View "bar" in the public schema may expose \`auth.users\` data to anon or authenticated roles. | https://supabase.github.io/splinter/0002_auth_users_exposed | {"name": "bar", "type": "view", "schema": "public", "exposed_to": ["anon"]} | auth_users_exposed_public_bar
+(1 row)
+
+    rollback to savepoint a;
+    -- Failure mode 3: View that is security invoker, but RLS not enabled on auth.user
+    create view public.baz with (security_invoker=on) as select * from auth.users;
+    -- 1 entry
+    select * from lint."0002_auth_users_exposed";
+        name        | level |  facing  |                                                                            description                                                                             |                                                      detail                                                      |                         remediation                         |                                  metadata                                   |           cache_key           
+--------------------+-------+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+-----------------------------------------------------------------------------+-------------------------------
+ auth_users_exposed | WARN  | EXTERNAL | Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security. | View/Materialized View "baz" in the public schema may expose \`auth.users\` data to anon or authenticated roles. | https://supabase.github.io/splinter/0002_auth_users_exposed | {"name": "baz", "type": "view", "schema": "public", "exposed_to": ["anon"]} | auth_users_exposed_public_baz
+(1 row)
+
+    -- resolve the issue by enabling RLS on auth.users
+    alter table auth.users enable row level security;
+    -- 0 entries
+    select * from lint."0002_auth_users_exposed";
+ name | level | facing | description | detail | remediation | metadata | cache_key 
+------+-------+--------+-------------+--------+-------------+----------+-----------
+(0 rows)
 
 rollback;

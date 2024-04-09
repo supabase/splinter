@@ -11,7 +11,7 @@ select
         psui.schemaname,
         psui.relname
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0005_unused_index' as remediation,
     jsonb_build_object(
         'schema', psui.schemaname,
         'name', psui.relname,
@@ -33,5 +33,5 @@ where
     and not pi.indisunique
     and not pi.indisprimary
     and psui.schemaname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     );

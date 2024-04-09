@@ -10,7 +10,7 @@ select
         pgns.nspname,
         pgc.relname
     ) as detail,
-    null as remediation,
+    'https://supabase.github.io/splinter/0004_no_primary_key' as remediation,
      jsonb_build_object(
         'schema', pgns.nspname,
         'name', pgc.relname,
@@ -22,15 +22,15 @@ select
         pgc.relname
     ) as cache_key
 from
-    pg_class pgc
-    join pg_namespace pgns
+    pg_catalog.pg_class pgc
+    join pg_catalog.pg_namespace pgns
         on pgns.oid = pgc.relnamespace
-    left join pg_index pgi
+    left join pg_catalog.pg_index pgi
         on pgi.indrelid = pgc.oid
 where
     pgc.relkind = 'r' -- regular tables
     and pgns.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'pgsodium'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
     )
 group by
     pgc.oid,
