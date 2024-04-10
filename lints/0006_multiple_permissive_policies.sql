@@ -13,7 +13,7 @@ select
         act.cmd,
         array_agg(p.polname order by p.polname)
     ) as detail,
-    'https://supabase.github.io/splinter/0006_multiple_permissive_policies' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,

@@ -11,7 +11,7 @@ select
         c.relname,
         array_agg(pi.indexname order by pi.indexname)
     ) as detail,
-    'https://supabase.github.io/splinter/0009_duplicate_index' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,
