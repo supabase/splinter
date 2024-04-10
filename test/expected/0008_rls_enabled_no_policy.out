@@ -5,9 +5,9 @@ begin;
   alter table public.blog enable row level security;
   -- 1 issue
   select * from lint."0008_rls_enabled_no_policy";
-         name          | level |  facing  |                                                   description                                                   |                            detail                            |                          remediation                           |                       metadata                        |             cache_key             
------------------------+-------+----------+-----------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------+----------------------------------------------------------------+-------------------------------------------------------+-----------------------------------
- rls_enabled_no_policy | INFO  | EXTERNAL | Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created. | Table \`public.blog\` has RLS enabled, but no policies exist | https://supabase.github.io/splinter/0008_rls_enabled_no_policy | {"name": "blog", "type": "table", "schema": "public"} | rls_enabled_no_policy_public_blog
+         name          | level |  facing  |                                                   description                                                   |                            detail                            |                                        remediation                                        |                       metadata                        |             cache_key             
+-----------------------+-------+----------+-----------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------+-------------------------------------------------------------------------------------------+-------------------------------------------------------+-----------------------------------
+ rls_enabled_no_policy | INFO  | EXTERNAL | Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created. | Table \`public.blog\` has RLS enabled, but no policies exist | https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy | {"name": "blog", "type": "table", "schema": "public"} | rls_enabled_no_policy_public_blog
 (1 row)
 
   -- resolve the issue
