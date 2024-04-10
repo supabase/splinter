@@ -10,7 +10,7 @@ select
         n.nspname,
         p.proname
     ) as detail,
-    'https://supabase.github.io/splinter/0011_function_search_path_mutable' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', p.proname,

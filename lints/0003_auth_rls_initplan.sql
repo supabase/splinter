@@ -65,7 +65,7 @@ select
         table_,
         policy_name
     ) as detail,
-    'https://supabase.github.io/splinter/0003_auth_rls_initplan' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan' as remediation,
     jsonb_build_object(
         'schema', schema_,
         'name', table_,

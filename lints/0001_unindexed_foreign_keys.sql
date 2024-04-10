@@ -41,7 +41,7 @@ select
         fk.table_,
         fk.fkey_name
     ) as detail,
-    'https://supabase.github.io/splinter/0001_unindexed_foreign_keys' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys' as remediation,
     jsonb_build_object(
         'schema', fk.schema_,
         'name', fk.table_,

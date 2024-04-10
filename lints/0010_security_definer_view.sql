@@ -10,7 +10,7 @@ select
         n.nspname,
         c.relname
     ) as detail,
-    'https://supabase.github.io/splinter/0010_security_definer_view' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,

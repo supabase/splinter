@@ -11,7 +11,7 @@ select
         c.relname,
         array_agg(p.polname order by p.polname)
     ) as detail,
-    'https://supabase.github.io/splinter/0007_policy_exists_rls_disabled' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0007_policy_exists_rls_disabled' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,
