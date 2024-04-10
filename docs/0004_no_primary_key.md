@@ -3,7 +3,7 @@ Level: INFO
 
 ### Rationale
 
-Tables in a relational database should ideally have a key that uniquely identifies a row within that table. Tables lacking of a primary key is often considered poor design, as it can lead to data anomalies, complicate data relationships, and degrade query performance.
+Tables in a relational database should ideally have a key that uniquely identifies a row within that table. Tables lacking a primary key is often considered poor design, as it can lead to data anomalies, complicate data relationships, and degrade query performance.
 
 ### What is a Primary Key?
 

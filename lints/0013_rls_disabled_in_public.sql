@@ -6,7 +6,7 @@ select
     'EXTERNAL' as facing,
     'Detects cases where row level security (RLS) has not been enabled on a table in the `public` schema.' as description,
     format(
-        'Table \`%s.%s\` is in the `public` but RLS has not been enabled.',
+        'Table \`%s.%s\` is public, but RLS has not been enabled.',
         n.nspname,
         c.relname
     ) as detail,

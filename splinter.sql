@@ -502,8 +502,6 @@ from
     join pg_catalog.pg_class c
         on pi.tablename = c.relname
         and n.oid = c.relnamespace
-    left join pg_catalog.pg_policy p
-        on p.polrelid = c.oid
 where
     c.relkind in ('r', 'm') -- tables and materialized views
     and n.nspname not in (
@@ -597,7 +595,7 @@ select
     'EXTERNAL' as facing,
     'Detects cases where row level security (RLS) has not been enabled on a table in the `public` schema.' as description,
     format(
-        'Table \`%s.%s\` is in the `public` but RLS has not been enabled.',
+        'Table \`%s.%s\` is public, but RLS has not been enabled.',
         n.nspname,
         c.relname
     ) as detail,
