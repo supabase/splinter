@@ -38,7 +38,6 @@ select
         'Table \`%s.%s\` has a foreign key \`%s\` without a covering index. This can lead to suboptimal query performance.',
         fk.schema_,
         fk.table_,
-        fk.table_,
         fk.fkey_name
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys' as remediation,
@@ -292,7 +291,7 @@ select
     'EXTERNAL' as facing,
     'Detects if an index has never been used and may be a candidate for removal.' as description,
     format(
-        'Index `\%s\` on table \`%s.%s\` has not been used',
+        'Index \`%s\` on table \`%s.%s\` has not been used',
         psui.indexrelname,
         psui.schemaname,
         psui.relname

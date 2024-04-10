@@ -6,7 +6,7 @@ select
     'EXTERNAL' as facing,
     'Detects if an index has never been used and may be a candidate for removal.' as description,
     format(
-        'Index `\%s\` on table \`%s.%s\` has not been used',
+        'Index \`%s\` on table \`%s.%s\` has not been used',
         psui.indexrelname,
         psui.schemaname,
         psui.relname

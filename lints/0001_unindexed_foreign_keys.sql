@@ -39,7 +39,6 @@ select
         'Table \`%s.%s\` has a foreign key \`%s\` without a covering index. This can lead to suboptimal query performance.',
         fk.schema_,
         fk.table_,
-        fk.table_,
         fk.fkey_name
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys' as remediation,
