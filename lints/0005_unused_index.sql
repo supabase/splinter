@@ -33,5 +33,5 @@ where
     and not pi.indisunique
     and not pi.indisprimary
     and psui.schemaname not in (
-        'pg_catalog', 'information_schema', 'auth', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
     );
