@@ -58,7 +58,7 @@ from
 where
     idx.index_ is null
     and fk.schema_::text not in (
-        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'realtime', 'storage', 'supabase_functions', 'vault'
     )
 order by
     fk.table_,

@@ -38,7 +38,7 @@ from
 where
     c.relkind in ('r', 'm') -- tables and materialized views
     and n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'realtime', 'storage', 'supabase_functions', 'vault'
     )
 group by
     n.nspname,

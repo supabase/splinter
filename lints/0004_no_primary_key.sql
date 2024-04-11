@@ -30,7 +30,7 @@ from
 where
     pgc.relkind = 'r' -- regular tables
     and pgns.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'realtime', 'storage', 'supabase_functions', 'vault'
     )
 group by
     pgc.oid,
