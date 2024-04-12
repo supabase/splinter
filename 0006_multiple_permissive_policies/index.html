@@ -500,6 +500,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../0014_extension_in_public/" class="md-nav__link">
+        Extension in Public
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -598,9 +612,9 @@
 
   <h1>Multiple Permissive Policies</h1>
 
-<p>Level: WARNING</p>
+<p>Level: WARN</p>
 <h3 id="rationale">Rationale</h3>
-<p>In Postgres, Row Level Security (RLS) policies control access to rows in a table based on the executing user. When multiple permissive policies are applied to the same tablequeries against the table, the user may have access to a selected row through any of the policies. This means that, in the worst case, all of the relevant RLS policies must be applied/tested before Postgres can determine if a row should be visible. At scale, these checks add significant overhead to SQL queries and can be a performance bottleneck.</p>
+<p>In Postgres, Row Level Security (RLS) policies control access to rows in a table based on the executing user. When multiple permissive policies are applied to the same table the user may have access to a selected row through any of those policies. This means that, in the worst case, all of the relevant RLS policies must be applied/tested before Postgres can determine if a row should be visible. At scale, these checks add significant overhead to SQL queries and can be a performance bottleneck.</p>
 <h3 id="row-level-security-policies">Row Level Security Policies</h3>
 <p>RLS policies in Postgres are rules applied to tables that determine whether rows can be selected, inserted, updated, or deleted. These policies can be set to <code>PERMISSIVE</code> or <code>RESTRICTIVE</code>. Permissive policies allow actions unless explicitly restricted by a restrictive policy. When multiple permissive policies are defined for a table, they act in a cumulative manner — if any policy allows access, the access is granted. In other words, the policies compose with <code>OR</code> semantics.</p>
 <h3 id="risks-with-multiple-permissive-policies">Risks with Multiple Permissive Policies</h3>

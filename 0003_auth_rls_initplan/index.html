@@ -473,6 +473,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../0014_extension_in_public/" class="md-nav__link">
+        Extension in Public
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -544,7 +558,7 @@
 
   <h1>Auth RLS InitPlan</h1>
 
-<p>Level: WARNING</p>
+<p>Level: WARN</p>
 <h3 id="rationale">Rationale</h3>
 <p>Row-Level Security (RLS) policies are the mechanism for controlling access to data based on user roles or attributes. These policies frequently use the provided helper functions in the <code>auth</code> schema including <code>auth.uid()</code>, <code>auth.role()</code>, <code>auth.email()</code>, and <code>auth.jwt()</code> to retrieve information about the current querying user. Improperly written RLS policies can cause these functions to execute once-per-row, rather than once-per-query. While the <code>auth.&lt;value&gt;()</code> functions are efficient, if executed once-per-row they can lead to significant performance bottlenecks at scale.</p>
 <h3 id="the-performance-issue">The Performance Issue</h3>

@@ -480,6 +480,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../0014_extension_in_public/" class="md-nav__link">
+        Extension in Public
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -560,7 +574,7 @@
 
 <p>Level: WARN</p>
 <h3 id="rationale">Rationale</h3>
-<p>Postgres' default setting for views is SECURITY DEFINER which means the ignore row level security (RLS) policies applied to the underlying table in the query. That is an unintuitive default that was chosen for backwards compatibility which makes it easy to accidentally expose more data in views than was intended. </p>
+<p>Postgres' default setting for views is SECURITY DEFINER which means they use the permissions of the view's creator, rather than the permissions of the querying user when executing the view's underlying query. That is an unintuitive default, chosen for backwards compatibility with older Postgres versions, which makes it easy to accidentally expose more data in views than was intended. </p>
 <h3 id="understanding-security-definer-and-security-invoker">Understanding SECURITY DEFINER and SECURITY INVOKER</h3>
 <p>In PostgreSQL, a view can be defined with either the SECURITY DEFINER or SECURITY INVOKER option. </p>
 <ul>

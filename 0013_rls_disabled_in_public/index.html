@@ -16,6 +16,8 @@
         <link rel="prev" href="../0011_function_search_path_mutable/">
       
       
+        <link rel="next" href="../0014_extension_in_public/">
+      
       <link rel="icon" href="../assets/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
     
@@ -471,6 +473,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../0014_extension_in_public/" class="md-nav__link">
+        Extension in Public
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -549,7 +565,7 @@
 <p>To enable RLS on a table execute:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="o">&lt;</span><span class="k">schema</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="k">table</span><span class="o">&gt;</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
 </code></pre></div></td></tr></table></div>
-<p>Note that after enabling RLS you will not be able to read or write data to the table via Supabase APIs until you create <a href="https://supabase.com/docs/guides/auth/row-level-security">row level security policies</a> to control access.</p>
+<p>Note that after enabling RLS you will not be able to use the <code>anon</code> role to read or write data to the table via Supabase APIs until you create <a href="https://supabase.com/docs/guides/auth/row-level-security">row level security policies</a> to control access.</p>
 <h3 id="example">Example</h3>
 <p>Given the schema:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
