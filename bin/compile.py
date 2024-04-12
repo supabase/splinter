@@ -40,7 +40,7 @@ directory_path = "./lints"
 sql_map = load_sql_files(directory_path)
 
 with open("splinter.sql", "w") as f:
-    f.write("\nunion all\n".join(sql_map.values()))
+    f.write("set local search_path = '';\n\n" + "\nunion all\n".join(sql_map.values()))
 
 with open("splinter.json", "w") as f:
     json.dump(sql_map, f, indent=4)
