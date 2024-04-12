@@ -35,6 +35,14 @@ Each lint creates a view that returns a common interface. The interface is:
 - metadata (jsonb) optional -- Lint specific information, for example referenced entities, or entity types 
 - cache_key (text) not null -- A short, uniquely identifiable string that users can add to an exclusion list to avoid repeatedly seeing the same lint failures. It should identify the releavnt table/column/constraint. The string should be prefixed with the lint name. For example a lint named "unindexed_foreign_key" might have a unique key "unindexed_foreign_key_public_user_created_by_id"
 
+## Deploying to supabase/supabase
+
+To deploy lints to Supabase prod, open a PR against `supabase/supabase` updating [the lint query](https://github.com/supabase/supabase/blob/76d10d789fcd1b3e02a62d67d2d8edce78f81903/apps/studio/data/lint/lint-query.ts#L6)
+
+If the update includes a new lint, update [getHumanReadableTitle](https://github.com/supabase/supabase/blob/76d10d789fcd1b3e02a62d67d2d8edce78f81903/apps/studio/components/interfaces/Reports/ReportLints.utils.tsx#L9) and [LINT_TYPES](https://github.com/supabase/supabase/blob/76d10d789fcd1b3e02a62d67d2d8edce78f81903/apps/studio/data/lint/lint-query.ts#L694).
+
+[Example PR](https://github.com/supabase/supabase/pull/22682)
+
 
 ## Development
 
