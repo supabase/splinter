@@ -3,9 +3,10 @@ create view lint."0014_extension_in_public" as
 select 
     'extension_in_public' as name,
     'WARN' as level,
-    'Detects extensions installed in the `public` schema.' as description,
+    'EXTERNAL' as facing,
+    'Detects extensions installed in the \`public\` schema.' as description,
     format(
-        'Extension \`%s\` is installed in the public schema. Move it another schema.',
+        'Extension \`%s\` is installed in the public schema. Move it to another schema.',
         pe.extname
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public' as remediation,

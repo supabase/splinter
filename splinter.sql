@@ -339,7 +339,7 @@ select
     'multiple_permissive_policies' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
-    'Detects if multiple permissive row level security policies are present on a table for the same `role` and `action` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.' as description,
+    'Detects if multiple permissive row level security policies are present on a table for the same \`role\` and \`action\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.' as description,
     format(
         'Table \`%s.%s\` has multiple permissive policies for role \`%s\` for action \`%s\`. Policies include \`%s\`',
         n.nspname,
@@ -593,7 +593,7 @@ select
     'function_search_path_mutable' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
-    'Detects functions with a mutable search_path parameter which could fail to execute sucessfully for some roles.' as description,
+    'Detects functions with a mutable search_path parameter which could fail to execute successfully for some roles.' as description,
     format(
         'Function \`%s.%s\` has a role mutable search_path',
         n.nspname,
@@ -631,7 +631,7 @@ select
     'rls_disabled_in_public' as name,
     'ERROR' as level,
     'EXTERNAL' as facing,
-    'Detects cases where row level security (RLS) has not been enabled on a table in the `public` schema.' as description,
+    'Detects cases where row level security (RLS) has not been enabled on a table in the \`public\` schema.' as description,
     format(
         'Table \`%s.%s\` is public, but RLS has not been enabled.',
         n.nspname,
@@ -662,9 +662,10 @@ union all
 select 
     'extension_in_public' as name,
     'WARN' as level,
-    'Detects extensions installed in the `public` schema.' as description,
+    'EXTERNAL' as facing,
+    'Detects extensions installed in the \`public\` schema.' as description,
     format(
-        'Extension \`%s\` is installed in the public schema. Move it another schema.',
+        'Extension \`%s\` is installed in the public schema. Move it to another schema.',
         pe.extname
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public' as remediation,
