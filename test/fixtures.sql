@@ -4,6 +4,8 @@ set search_path = '';
 -- Dummy schema to hold views during testing
 create schema lint;
 
+create schema extensions;
+
 create schema auth;
 create table auth.users (id uuid primary key);
 create function auth.uid() returns uuid language sql as $$select gen_random_uuid()$$;
