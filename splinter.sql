@@ -22,6 +22,7 @@ with foreign_keys as (
 index_ as (
     select
         indrelid::regclass as table_,
+        indrelid as table_oid,
         indexrelid::regclass as index_,
         string_to_array(indkey::text, ' ')::smallint[] as col_attnums
     from
@@ -54,11 +55,15 @@ from
     left join index_ idx
         on fk.table_ = idx.table_
         and fk.col_attnums = idx.col_attnums
+    left join pg_catalog.pg_depend dep
+        on idx.table_oid = dep.objid
+        and dep.deptype = 'e'
 where
     idx.index_ is null
     and fk.schema_::text not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
+    and dep.objid is null -- exclude tables owned by extensions
 order by
     fk.table_,
     fk.fkey_name)
@@ -226,7 +231,7 @@ from
 where
     is_rls_active
     and schema_::text not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
         (
@@ -272,11 +277,15 @@ from
         on pgns.oid = pgc.relnamespace
     left join pg_catalog.pg_index pgi
         on pgi.indrelid = pgc.oid
+    left join pg_catalog.pg_depend dep
+        on pgc.oid = dep.objid
+        and dep.deptype = 'e'
 where
     pgc.relkind = 'r' -- regular tables
     and pgns.nspname not in (
         'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
     )
+    and dep.objid is null -- exclude tables owned by extensions
 group by
     pgc.oid,
     pgns.nspname,
@@ -313,12 +322,16 @@ from
     pg_catalog.pg_stat_user_indexes psui
     join pg_catalog.pg_index pi
         on psui.indexrelid = pi.indexrelid
+    left join pg_catalog.pg_depend dep
+        on psui.relid = dep.objid
+        and dep.deptype = 'e'
 where
     psui.idx_scan = 0
     and not pi.indisunique
     and not pi.indisprimary
+    and dep.objid is null -- exclude tables owned by extensions
     and psui.schemaname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     ))
 union all
 (
@@ -350,11 +363,16 @@ select
     ) as cache_key
 from
     pg_catalog.pg_policy p
-    join pg_catalog.pg_class c on p.polrelid = c.oid
-    join pg_catalog.pg_namespace n on c.relnamespace = n.oid
+    join pg_catalog.pg_class c
+        on p.polrelid = c.oid
+    join pg_catalog.pg_namespace n
+        on c.relnamespace = n.oid
     join pg_catalog.pg_roles r
         on p.polroles @> array[r.oid]
-        or p.polroles = array[0::oid],
+        or p.polroles = array[0::oid]
+    left join pg_catalog.pg_depend dep
+        on c.oid = dep.objid
+        and dep.deptype = 'e',
     lateral (
         select x.cmd
         from unnest((
@@ -372,11 +390,12 @@ from
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and r.rolname not like 'pg_%'
     and r.rolname not like 'supabase%admin'
     and not r.rolbypassrls
+    and dep.objid is null -- exclude tables owned by extensions
 group by
     n.nspname,
     c.relname,
@@ -414,13 +433,17 @@ from
         on p.polrelid = c.oid
     join pg_catalog.pg_namespace n
         on c.relnamespace = n.oid
+    left join pg_catalog.pg_depend dep
+        on c.oid = dep.objid
+        and dep.deptype = 'e'
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     -- RLS is disabled
     and not c.relrowsecurity
+    and dep.objid is null -- exclude tables owned by extensions
 group by
     n.nspname,
     c.relname)
@@ -453,14 +476,18 @@ from
         on p.polrelid = c.oid
     join pg_catalog.pg_namespace n
         on c.relnamespace = n.oid
+    left join pg_catalog.pg_depend dep
+        on c.oid = dep.objid
+        and dep.deptype = 'e'
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     -- RLS is enabled
     and c.relrowsecurity
     and p.polname is null
+    and dep.objid is null -- exclude tables owned by extensions
 group by
     n.nspname,
     c.relname)
@@ -501,11 +528,15 @@ from
     join pg_catalog.pg_class c
         on pi.tablename = c.relname
         and n.oid = c.relnamespace
+    left join pg_catalog.pg_depend dep
+        on c.oid = dep.objid
+        and dep.deptype = 'e'
 where
     c.relkind in ('r', 'm') -- tables and materialized views
     and n.nspname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
+    and dep.objid is null -- exclude tables owned by extensions
 group by
     n.nspname,
     c.relkind,
@@ -540,9 +571,13 @@ from
     pg_catalog.pg_class c
     join pg_catalog.pg_namespace n
         on n.oid = c.relnamespace
+    left join pg_catalog.pg_depend dep
+        on c.oid = dep.objid
+        and dep.deptype = 'e'
 where
     c.relkind = 'v'
     and n.nspname = 'public'
+    and dep.objid is null -- exclude views owned by extensions
 	and not (
 		lower(coalesce(c.reloptions::text,'{}'))::text[]
 		&& array[
@@ -580,10 +615,14 @@ from
     pg_catalog.pg_proc p
     join pg_catalog.pg_namespace n
         on p.pronamespace = n.oid
+    left join pg_catalog.pg_depend dep
+        on p.oid = dep.objid
+        and dep.deptype = 'e'
 where
     n.nspname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
+    and dep.objid is null -- exclude functions owned by extensions
     -- Search path not set to ''
     and not coalesce(p.proconfig, '{}') && array['search_path=""'])
 union all

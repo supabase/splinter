@@ -23,6 +23,7 @@ with foreign_keys as (
 index_ as (
     select
         indrelid::regclass as table_,
+        indrelid as table_oid,
         indexrelid::regclass as index_,
         string_to_array(indkey::text, ' ')::smallint[] as col_attnums
     from
@@ -55,11 +56,15 @@ from
     left join index_ idx
         on fk.table_ = idx.table_
         and fk.col_attnums = idx.col_attnums
+    left join pg_catalog.pg_depend dep
+        on idx.table_oid = dep.objid
+        and dep.deptype = 'e'
 where
     idx.index_ is null
     and fk.schema_::text not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
+    and dep.objid is null -- exclude tables owned by extensions
 order by
     fk.table_,
     fk.fkey_name;

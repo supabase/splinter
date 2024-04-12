@@ -25,9 +25,13 @@ from
     pg_catalog.pg_class c
     join pg_catalog.pg_namespace n
         on n.oid = c.relnamespace
+    left join pg_catalog.pg_depend dep
+        on c.oid = dep.objid
+        and dep.deptype = 'e'
 where
     c.relkind = 'v'
     and n.nspname = 'public'
+    and dep.objid is null -- exclude views owned by extensions
 	and not (
 		lower(coalesce(c.reloptions::text,'{}'))::text[]
 		&& array[
