@@ -28,10 +28,14 @@ from
     pg_catalog.pg_stat_user_indexes psui
     join pg_catalog.pg_index pi
         on psui.indexrelid = pi.indexrelid
+    left join pg_catalog.pg_depend dep
+        on psui.relid = dep.objid
+        and dep.deptype = 'e'
 where
     psui.idx_scan = 0
     and not pi.indisunique
     and not pi.indisprimary
+    and dep.objid is null -- exclude tables owned by extensions
     and psui.schemaname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     );

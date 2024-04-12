@@ -27,14 +27,18 @@ from
         on p.polrelid = c.oid
     join pg_catalog.pg_namespace n
         on c.relnamespace = n.oid
+    left join pg_catalog.pg_depend dep
+        on c.oid = dep.objid
+        and dep.deptype = 'e'
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     -- RLS is enabled
     and c.relrowsecurity
     and p.polname is null
+    and dep.objid is null -- exclude tables owned by extensions
 group by
     n.nspname,
     c.relname;

@@ -26,9 +26,13 @@ from
     pg_catalog.pg_proc p
     join pg_catalog.pg_namespace n
         on p.pronamespace = n.oid
+    left join pg_catalog.pg_depend dep
+        on p.oid = dep.objid
+        and dep.deptype = 'e'
 where
     n.nspname not in (
-        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
+    and dep.objid is null -- exclude functions owned by extensions
     -- Search path not set to ''
     and not coalesce(p.proconfig, '{}') && array['search_path=""'];
