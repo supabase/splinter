@@ -1,5 +1,7 @@
 begin;
 
+    savepoint a;
+
     -- No issues
     select * from lint."0003_auth_rls_initplan";
 
@@ -59,6 +61,18 @@ begin;
     alter table public.foo enable row level security;
 
     -- 4 entries, 1 per "bad_" policy
+    select * from lint."0003_auth_rls_initplan";
+
+    rollback to savepoint a;
+
+    create table public.test_profil( id int primary key);
+
+    create policy "SELECT policy" on "public"."test_profil" 
+      as permissive
+      for select
+          to public
+          using ((( SELECT auth.uid() AS uid) IS NOT NULL));
+
     select * from lint."0003_auth_rls_initplan";
 
 rollback;
