@@ -1,3 +1,5 @@
+set local search_path = '';
+
 (
 with foreign_keys as (
     select
