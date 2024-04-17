@@ -4,6 +4,7 @@ select
     'no_primary_key' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects if a table does not have a primary key. Tables without a primary key can be inefficient to interact with at scale.' as description,
     format(
         'Table \`%s.%s\` does not have a primary key',

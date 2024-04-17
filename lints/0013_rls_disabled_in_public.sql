@@ -4,6 +4,7 @@ select
     'rls_disabled_in_public' as name,
     'ERROR' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects cases where row level security (RLS) has not been enabled on a table in the \`public\` schema.' as description,
     format(
         'Table \`%s.%s\` is public, but RLS has not been enabled.',

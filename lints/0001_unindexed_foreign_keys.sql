@@ -35,6 +35,7 @@ select
     'unindexed_foreign_keys' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
     format(
         'Table \`%s.%s\` has a foreign key \`%s\` without a covering index. This can lead to suboptimal query performance.',

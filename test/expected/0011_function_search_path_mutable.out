@@ -1,8 +1,8 @@
 begin;
   -- 0 issues
   select * from lint."0011_function_search_path_mutable";
- name | level | facing | description | detail | remediation | metadata | cache_key 
-------+-------+--------+-------------+--------+-------------+----------+-----------
+ name | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
   create or replace function abc()
@@ -13,9 +13,9 @@ begin;
   $$;
   -- 1 issue
   select * from lint."0011_function_search_path_mutable";
-             name             | level |  facing  |                                                   description                                                   |                         detail                         |                                           remediation                                            |                        metadata                         |                                cache_key                                 
-------------------------------+-------+----------+-----------------------------------------------------------------------------------------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------+---------------------------------------------------------+--------------------------------------------------------------------------
- function_search_path_mutable | WARN  | EXTERNAL | Detects functions with a mutable search_path parameter which could fail to execute successfully for some roles. | Function \`public.abc\` has a role mutable search_path | https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable | {"name": "abc", "type": "function", "schema": "public"} | function_search_path_mutable_public_abc_d859abc2e564f01aec8fe94638390925
+             name             | level |  facing  | categories |                                                   description                                                   |                         detail                         |                                           remediation                                            |                        metadata                         |                                cache_key                                 
+------------------------------+-------+----------+------------+-----------------------------------------------------------------------------------------------------------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------+---------------------------------------------------------+--------------------------------------------------------------------------
+ function_search_path_mutable | WARN  | EXTERNAL | {SECURITY} | Detects functions with a mutable search_path parameter which could fail to execute successfully for some roles. | Function \`public.abc\` has a role mutable search_path | https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable | {"name": "abc", "type": "function", "schema": "public"} | function_search_path_mutable_public_abc_d859abc2e564f01aec8fe94638390925
 (1 row)
 
   -- Replace function and set search_path
@@ -28,8 +28,8 @@ begin;
   $$;
   -- 1 issue
   select * from lint."0011_function_search_path_mutable";
- name | level | facing | description | detail | remediation | metadata | cache_key 
-------+-------+--------+-------------+--------+-------------+----------+-----------
+ name | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
 rollback;
