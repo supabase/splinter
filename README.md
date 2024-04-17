@@ -29,6 +29,7 @@ Each lint creates a view that returns a common interface. The interface is:
 - name (text) not null -- Name of the lint
 - level (text) not null -- The level of issue. One of ERROR/WARN/INFO
 - facing (text) not null -- Is it an internal (to supabase) or an external (user centric)  lint. One of INTERNAL/EXTERNAL
+- categories (text[]) not null -- Relevant tags for the issue. Any/All of SECURITY/PERFORMANCE (list may grow)
 - description (text) not null -- This is a description of the lint and why its an issue
 - detail (text) not null -- A text description of the issue that includes references to the specific table/column/constraint/whatever that fails the lint
 - remediation (text) optional -- A reference to documentation to describe the issue and how to resolve it

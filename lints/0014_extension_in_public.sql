@@ -4,6 +4,7 @@ select
     'extension_in_public' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects extensions installed in the \`public\` schema.' as description,
     format(
         'Extension \`%s\` is installed in the public schema. Move it to another schema.',

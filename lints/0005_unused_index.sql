@@ -4,6 +4,7 @@ select
     'unused_index' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects if an index has never been used and may be a candidate for removal.' as description,
     format(
         'Index \`%s\` on table \`%s.%s\` has not been used',

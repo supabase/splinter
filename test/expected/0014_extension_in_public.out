@@ -1,16 +1,16 @@
 begin;
   -- 0 issues
   select * from lint."0014_extension_in_public";
- name | level | facing | description | detail | remediation | metadata | cache_key 
-------+-------+--------+-------------+--------+-------------+----------+-----------
+ name | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
   create extension ltree schema public;
   -- 1 issues
   select * from lint."0014_extension_in_public";
-        name         | level |  facing  |                      description                       |                                      detail                                       |                                       remediation                                       |                          metadata                          |         cache_key         
----------------------+-------+----------+--------------------------------------------------------+-----------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------+------------------------------------------------------------+---------------------------
- extension_in_public | WARN  | EXTERNAL | Detects extensions installed in the \`public\` schema. | Extension \`ltree\` is installed in the public schema. Move it to another schema. | https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public | {"name": "ltree", "type": "extension", "schema": "public"} | extension_in_public_ltree
+        name         | level |  facing  | categories |                      description                       |                                      detail                                       |                                       remediation                                       |                          metadata                          |         cache_key         
+---------------------+-------+----------+------------+--------------------------------------------------------+-----------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------+------------------------------------------------------------+---------------------------
+ extension_in_public | WARN  | EXTERNAL | {SECURITY} | Detects extensions installed in the \`public\` schema. | Extension \`ltree\` is installed in the public schema. Move it to another schema. | https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public | {"name": "ltree", "type": "extension", "schema": "public"} | extension_in_public_ltree
 (1 row)
 
   -- resolve the problem
@@ -18,8 +18,8 @@ begin;
   
   -- 0 issues
   select * from lint."0014_extension_in_public";
- name | level | facing | description | detail | remediation | metadata | cache_key 
-------+-------+--------+-------------+--------+-------------+----------+-----------
+ name | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
 rollback;
