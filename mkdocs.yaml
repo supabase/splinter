@@ -21,6 +21,7 @@ nav:
       - Function Search Path Mutable: '0011_function_search_path_mutable.md'
       - RLS Disabled in Public: '0013_rls_disabled_in_public.md'
       - Extension in Public: '0014_extension_in_public.md'
+      - RLS References user_metadata: '0015_rls_references_user_metadata.md'
 
 theme:
     name: 'material'
