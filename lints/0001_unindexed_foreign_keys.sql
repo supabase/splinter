@@ -62,7 +62,7 @@ from
         and dep.deptype = 'e'
 where
     idx.index_ is null
-    and fk.schema_name::text not in (
+    and fk.schema_name not in (
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude tables owned by extensions
