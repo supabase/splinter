@@ -3,7 +3,7 @@ Level: ERROR
 
 ### Rationale
 
-Supabase Auth [user_metadata](https://supabase.com/docs/guides/auth/managing-user-data#accessing-user-metadata) allows you to assign metadata to users on sign up. That metadata can also be manipulated by the relevant user, making it inapropriate in a security context like row level security (RLS).
+Supabase Auth [user_metadata](https://supabase.com/docs/guides/auth/managing-user-data#accessing-user-metadata) is used to set metadata about the user on sign up. It is designed to be manipulated by the user themselves. Because the user can change it (either directly or indirectly by sending a user update API call) to any value (there is no validation) this should not be used to base security policies.
 
 ### The Risk
 
