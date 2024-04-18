@@ -5,6 +5,8 @@ begin;
 
     savepoint a;
 
+    set local search_path = '';
+
     -- Failure mode 1: A materialized view
     -- Materialized views can not support row level security so they are always an overexposure risk
     create materialized view public.foo as select * from auth.users;

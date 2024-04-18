@@ -3,10 +3,11 @@ set local search_path = '';
 (
 with foreign_keys as (
     select
-        cl.relnamespace::regnamespace as schema_,
-        cl.oid::regclass as table_,
+        cl.relnamespace::regnamespace::text as schema_name,
+        cl.relname as table_name,
+        cl.oid as table_oid,
         ct.conname as fkey_name,
-        ct.conkey col_attnums
+        ct.conkey as col_attnums
     from
         pg_catalog.pg_constraint ct
         join pg_catalog.pg_class cl -- fkey owning table
@@ -23,12 +24,11 @@ with foreign_keys as (
 ),
 index_ as (
     select
-        indrelid::regclass as table_,
-        indrelid as table_oid,
+        pi.indrelid as table_oid,
         indexrelid::regclass as index_,
         string_to_array(indkey::text, ' ')::smallint[] as col_attnums
     from
-        pg_catalog.pg_index
+        pg_catalog.pg_index pi
     where
         indisvalid
 )
@@ -40,35 +40,36 @@ select
     'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
     format(
         'Table \`%s.%s\` has a foreign key \`%s\` without a covering index. This can lead to suboptimal query performance.',
-        fk.schema_,
-        fk.table_,
+        fk.schema_name,
+        fk.table_name,
         fk.fkey_name
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys' as remediation,
     jsonb_build_object(
-        'schema', fk.schema_,
-        'name', fk.table_,
+        'schema', fk.schema_name,
+        'name', fk.table_name,
         'type', 'table',
         'fkey_name', fk.fkey_name,
         'fkey_columns', fk.col_attnums
     ) as metadata,
-    format('unindexed_foreign_keys_%s_%s_%s', fk.schema_, fk.table_, fk.fkey_name) as cache_key
+    format('unindexed_foreign_keys_%s_%s_%s', fk.schema_name, fk.table_name, fk.fkey_name) as cache_key
 from
     foreign_keys fk
     left join index_ idx
-        on fk.table_ = idx.table_
+        on fk.table_oid = idx.table_oid
         and fk.col_attnums = idx.col_attnums
     left join pg_catalog.pg_depend dep
         on idx.table_oid = dep.objid
         and dep.deptype = 'e'
 where
     idx.index_ is null
-    and fk.schema_::text not in (
+    and fk.schema_name not in (
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude tables owned by extensions
 order by
-    fk.table_,
+    fk.schema_name,
+    fk.table_name,
     fk.fkey_name)
 union all
 (
@@ -187,9 +188,9 @@ NOTE:
 
 with policies as (
     select
-        nsp.nspname as schema_,
-        polrelid::regclass table_,
-        pc.relrowsecurity is_rls_active,
+        nsp.nspname as schema_name,
+        pb.tablename as table_name,
+        pc.relrowsecurity as is_rls_active,
         polname as policy_name,
         polpermissive as is_permissive, -- if not, then restrictive
         (select array_agg(r::regrole) from unnest(polroles) as x(r)) as roles,
@@ -220,22 +221,23 @@ select
     array['PERFORMANCE'] as categories,
     'Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row' as description,
     format(
-        'Table \`%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.',
-        table_,
+        'Table \`%s.%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.',
+        schema_name,
+        table_name,
         policy_name
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan' as remediation,
     jsonb_build_object(
-        'schema', schema_,
-        'name', table_,
+        'schema', schema_name,
+        'name', table_name,
         'type', 'table'
     ) as metadata,
-    format('auth_rls_init_plan_%s_%s_%s', schema_, table_, policy_name) as cache_key
+    format('auth_rls_init_plan_%s_%s_%s', schema_name, table_name, policy_name) as cache_key
 from
     policies
 where
     is_rls_active
-    and schema_::text not in (
+    and schema_name not in (
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
@@ -724,8 +726,8 @@ NOTE:
 
 with policies as (
     select
-        nsp.nspname as schema_,
-        polrelid::regclass table_,
+        nsp.nspname as schema_name,
+        pb.tablename as table_name,
         polname as policy_name,
         qual,
         with_check
@@ -746,23 +748,24 @@ select
     'EXTERNAL' as facing,
     'Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.' as description,
     format(
-        'Table \`%s\` has a row level security policy \`%s\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context.',
-        table_,
+        'Table \`%s.%s\` has a row level security policy \`%s\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context.',
+        schema_name,
+        table_name,
         policy_name
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata' as remediation,
     jsonb_build_object(
-        'schema', schema_,
-        'name', table_,
+        'schema', schema_name,
+        'name', table_name,
         'type', 'table'
     ) as metadata,
-    format('rls_references_user_metadata_%s_%s_%s', schema_, table_, policy_name) as cache_key,
+    format('rls_references_user_metadata_%s_%s_%s', schema_name, table_name, policy_name) as cache_key,
 	with_check,
 	qual
 from
     policies
 where
-    schema_::text not in (
+    schema_name not in (
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (

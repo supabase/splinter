@@ -1,4 +1,5 @@
 begin;
+    set local search_path = '';
 
   -- No issues
   select * from lint."0006_multiple_permissive_policies";

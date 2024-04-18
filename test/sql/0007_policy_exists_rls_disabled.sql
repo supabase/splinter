@@ -1,4 +1,5 @@
 begin;
+  set local search_path = '';
 
   create table public.blog(
     id int primary key

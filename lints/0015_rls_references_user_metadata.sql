@@ -22,8 +22,8 @@ create view lint."0015_rls_references_user_metadata" as
 
 with policies as (
     select
-        nsp.nspname as schema_,
-        polrelid::regclass table_,
+        nsp.nspname as schema_name,
+        pb.tablename as table_name,
         polname as policy_name,
         qual,
         with_check
@@ -44,23 +44,24 @@ select
     'EXTERNAL' as facing,
     'Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.' as description,
     format(
-        'Table \`%s\` has a row level security policy \`%s\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context.',
-        table_,
+        'Table \`%s.%s\` has a row level security policy \`%s\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context.',
+        schema_name,
+        table_name,
         policy_name
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata' as remediation,
     jsonb_build_object(
-        'schema', schema_,
-        'name', table_,
+        'schema', schema_name,
+        'name', table_name,
         'type', 'table'
     ) as metadata,
-    format('rls_references_user_metadata_%s_%s_%s', schema_, table_, policy_name) as cache_key,
+    format('rls_references_user_metadata_%s_%s_%s', schema_name, table_name, policy_name) as cache_key,
 	with_check,
 	qual
 from
     policies
 where
-    schema_::text not in (
+    schema_name not in (
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
