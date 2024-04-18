@@ -30,8 +30,8 @@ create view lint."0003_auth_rls_initplan" as
 with policies as (
     select
         nsp.nspname as schema_name,
-        pb.tablename table_name,
-        pc.relrowsecurity is_rls_active,
+        pb.tablename as table_name,
+        pc.relrowsecurity as is_rls_active,
         polname as policy_name,
         polpermissive as is_permissive, -- if not, then restrictive
         (select array_agg(r::regrole) from unnest(polroles) as x(r)) as roles,

@@ -7,7 +7,7 @@ with foreign_keys as (
         cl.relname as table_name,
         cl.oid as table_oid,
         ct.conname as fkey_name,
-        ct.conkey col_attnums
+        ct.conkey as col_attnums
     from
         pg_catalog.pg_constraint ct
         join pg_catalog.pg_class cl -- fkey owning table
@@ -189,8 +189,8 @@ NOTE:
 with policies as (
     select
         nsp.nspname as schema_name,
-        pb.tablename table_name,
-        pc.relrowsecurity is_rls_active,
+        pb.tablename as table_name,
+        pc.relrowsecurity as is_rls_active,
         polname as policy_name,
         polpermissive as is_permissive, -- if not, then restrictive
         (select array_agg(r::regrole) from unnest(polroles) as x(r)) as roles,

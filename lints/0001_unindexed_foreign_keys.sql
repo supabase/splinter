@@ -6,7 +6,7 @@ with foreign_keys as (
         cl.relname as table_name,
         cl.oid as table_oid,
         ct.conname as fkey_name,
-        ct.conkey col_attnums
+        ct.conkey as col_attnums
     from
         pg_catalog.pg_constraint ct
         join pg_catalog.pg_class cl -- fkey owning table
