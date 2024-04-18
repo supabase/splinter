@@ -1,5 +1,6 @@
 begin;
     savepoint a;
+    set local search_path = '';
     -- Simple Case
     -- No index on bbb.aaa_id produces an error
     create table public.aaa(
@@ -10,9 +11,9 @@ begin;
         aaa_id int references public.aaa(id) -- no index
     );
     select * from lint."0001_unindexed_foreign_keys";
-          name          | level |  facing  |  categories   |                                             description                                             |                                                               detail                                                                |                                        remediation                                         |                                                 metadata                                                  |                     cache_key                     
-------------------------+-------+----------+---------------+-----------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+---------------------------------------------------
- unindexed_foreign_keys | INFO  | EXTERNAL | {PERFORMANCE} | Identifies foreign key constraints without a covering index, which can impact database performance. | Table \`public.bbb\` has a foreign key \`bbb_aaa_id_fkey\` without a covering index. This can lead to suboptimal query performance. | https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys | {"name": "bbb", "type": "table", "schema": "public", "fkey_name": "bbb_aaa_id_fkey", "fkey_columns": [2]} | unindexed_foreign_keys_public_bbb_bbb_aaa_id_fkey
+          name          | level |  facing  |  categories   |                                             description                                             |                                                                   detail                                                                   |                                        remediation                                         |                                                     metadata                                                     |                        cache_key                         
+------------------------+-------+----------+---------------+-----------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------
+ unindexed_foreign_keys | INFO  | EXTERNAL | {PERFORMANCE} | Identifies foreign key constraints without a covering index, which can impact database performance. | Table \`public.public.bbb\` has a foreign key \`bbb_aaa_id_fkey\` without a covering index. This can lead to suboptimal query performance. | https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys | {"name": "public.bbb", "type": "table", "schema": "public", "fkey_name": "bbb_aaa_id_fkey", "fkey_columns": [2]} | unindexed_foreign_keys_public_public.bbb_bbb_aaa_id_fkey
 (1 row)
 
     -- When a covering index is created, the error goes away
@@ -44,7 +45,7 @@ begin;
 
     -- Confirm that an index on the correct columns but in the wrong order
     -- does NOT resolve the issue
-    create index on bbb(bar, foo);
+    create index on public.bbb(bar, foo);
     select * from lint."0001_unindexed_foreign_keys";
           name          | level |  facing  |  categories   |                                             description                                             |                                                                detail                                                                |                                        remediation                                         |                                                   metadata                                                    |                     cache_key                      
 ------------------------+-------+----------+---------------+-----------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------+----------------------------------------------------
@@ -52,7 +53,7 @@ begin;
 (1 row)
 
     -- When we create a multi-column index in the correct order the issue is resolved
-    create index on bbb(foo, bar);
+    create index on public.bbb(foo, bar);
     select * from lint."0001_unindexed_foreign_keys";
  name | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+--------+------------+-------------+--------+-------------+----------+-----------

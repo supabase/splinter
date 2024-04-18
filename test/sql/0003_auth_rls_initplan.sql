@@ -1,4 +1,5 @@
 begin;
+    set local search_path = '';
 
     -- No issues
     select * from lint."0003_auth_rls_initplan";

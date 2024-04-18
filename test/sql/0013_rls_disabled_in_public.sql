@@ -1,4 +1,5 @@
 begin;
+  set local search_path = '';
 
   -- 0 issues
   select * from lint."0013_rls_disabled_in_public";
