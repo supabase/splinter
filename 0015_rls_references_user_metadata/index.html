@@ -10,20 +10,18 @@
       
       
       
-        <link rel="canonical" href="https://supabase.github.io/splinter/0007_policy_exists_rls_disabled/">
+        <link rel="canonical" href="https://supabase.github.io/splinter/0015_rls_references_user_metadata/">
       
       
-        <link rel="prev" href="../0006_multiple_permissive_policies/">
+        <link rel="prev" href="../0014_extension_in_public/">
       
-      
-        <link rel="next" href="../0008_rls_enabled_no_policy/">
       
       <link rel="icon" href="../assets/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
     
     
       
-        <title>Policy Exists RLS Disabled - splinter</title>
+        <title>RLS References user_metadata - splinter</title>
       
     
     
@@ -105,7 +103,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Policy Exists RLS Disabled
+              RLS References user_metadata
             
           </span>
         </div>
@@ -342,62 +340,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Policy Exists RLS Disabled
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../0007_policy_exists_rls_disabled/" class="md-nav__link">
         Policy Exists RLS Disabled
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    Rationale
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-resolve" class="md-nav__link">
-    How to Resolve
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -491,11 +438,62 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../0015_rls_references_user_metadata/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          RLS References user_metadata
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         RLS References user_metadata
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    Rationale
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-risk" class="md-nav__link">
+    The Risk
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -539,15 +537,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-resolve" class="md-nav__link">
-    How to Resolve
+  <a href="#the-risk" class="md-nav__link">
+    The Risk
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
+  <a href="#how-to-resolve" class="md-nav__link">
+    How to Resolve
   </a>
   
 </li>
@@ -570,38 +568,29 @@
   
 
 
-  <h1>Policy Exists RLS Disabled</h1>
+  <h1>RLS References user_metadata</h1>
 
-<p>Level: INFO</p>
+<p>Level: ERROR</p>
 <h3 id="rationale">Rationale</h3>
-<p>In Postgres, Row Level Security (RLS) policies control access to rows in a table based on the executing user. Policies can be created, but will not be enforced until the table is updated to enable row level security. Failing to enable row level security is a common misconfiguration that can lead to data leaks. </p>
-<h3 id="how-to-resolve">How to Resolve</h3>
-<p>To enable existing policies on a table execute:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="o">&lt;</span><span class="k">schema</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="k">table</span><span class="o">&gt;</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
+<p>Supabase Auth <a href="https://supabase.com/docs/guides/auth/managing-user-data#accessing-user-metadata">user_metadata</a> is used to set metadata about the user on sign up. It is designed to be manipulated by the user themselves. Because the user can change it (either directly or indirectly by sending a user update API call) to any value (there is no validation) this should not be used to base security policies.</p>
+<h3 id="the-risk">The Risk</h3>
+<p>Row-Level Security (RLS) policies are the mechanism for controlling access to data based on user roles or attributes. Supabase Auth <a href="https://supabase.com/docs/guides/auth/managing-user-data#accessing-user-metadata">user_metadata</a> allows metadata to be assigned to users, but that metadata can also be manipulated by the end user using client libraries. For example, in supabase-js:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nx">updateUser</span><span class="p">({</span><span class="w"> </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">is_admin</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">})</span><span class="w"> </span>
 </code></pre></div></td></tr></table></div>
-<h3 id="example">Example</h3>
-<p>Given the schema:</p>
+<p>For that reason, it is not safe to rely on the contents of <code>user_metadata</code> in row level security policies.</p>
+<p>An example insecure policy could be:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">blog</span><span class="p">(</span>
-<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">int</span><span class="w"> </span><span class="k">primary</span><span class="w"> </span><span class="k">key</span><span class="p">,</span>
-<span class="w">    </span><span class="n">user_id</span><span class="w"> </span><span class="n">uuid</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="p">,</span>
-<span class="w">    </span><span class="n">title</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span>
-<span class="p">);</span>
-
-<span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="n">select_own_posts</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">blog</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="k">select</span>
-<span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="p">((</span><span class="k">select</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">uid</span><span class="p">())</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">user_id</span><span class="p">);</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="n">policy</span><span class="w"> </span><span class="n">bad_policy</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">foo</span>
+<span class="k">for</span><span class="w"> </span><span class="k">select</span>
+<span class="w">  </span><span class="k">to</span><span class="w"> </span><span class="n">authenticated</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">((</span><span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">jwt</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s1">&#39;user_metadata&#39;</span><span class="w"> </span><span class="o">-&gt;&gt;</span><span class="w"> </span><span class="s1">&#39;is_admin&#39;</span><span class="w"> </span><span class="p">)::</span><span class="n">bool</span><span class="w"> </span><span class="p">);</span>
 </code></pre></div></td></tr></table></div>
-<p>A user may incorrectly believe that their policies are being applied. Before the policies will take effect, we first must enable row level security on the underlying table.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">blog</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
-</code></pre></div></td></tr></table></div>
+<p>The policy is insecure because end users could execute <code>updateUser({ data: { is_admin: true } })</code> to bypass the security check.</p>
+<h3 id="how-to-resolve">How to Resolve</h3>
+<p>There is no one-size-fits-all solution to replacing a RLS policy that references <code>user_metadata</code>.</p>
+<p>If you're unsure how to refactor your policy to remove its dependance on <code>user_metadata</code> <a href="https://supabase.com/dashboard/support/new">open a ticket with support</a> for assistance.</p>
 
 
 
