@@ -29,8 +29,8 @@ create view lint."0003_auth_rls_initplan" as
 
 with policies as (
     select
-        nsp.nspname as schema_,
-        polrelid::regclass table_,
+        nsp.nspname as schema_name,
+        pb.tablename table_name,
         pc.relrowsecurity is_rls_active,
         polname as policy_name,
         polpermissive as is_permissive, -- if not, then restrictive
@@ -62,22 +62,23 @@ select
     array['PERFORMANCE'] as categories,
     'Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row' as description,
     format(
-        'Table \`%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.',
-        table_,
+        'Table \`%s.%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.',
+        schema_name,
+        table_name,
         policy_name
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan' as remediation,
     jsonb_build_object(
-        'schema', schema_,
-        'name', table_,
+        'schema', schema_name,
+        'name', table_name,
         'type', 'table'
     ) as metadata,
-    format('auth_rls_init_plan_%s_%s_%s', schema_, table_, policy_name) as cache_key
+    format('auth_rls_init_plan_%s_%s_%s', schema_name, table_name, policy_name) as cache_key
 from
     policies
 where
     is_rls_active
-    and schema_::text not in (
+    and schema_name::text not in (
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
