@@ -1,3 +1,5 @@
+set local search_path = '';
+
 (
 with foreign_keys as (
     select
@@ -34,6 +36,7 @@ select
     'unindexed_foreign_keys' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Identifies foreign key constraints without a covering index, which can impact database performance.' as description,
     format(
         'Table \`%s.%s\` has a foreign key \`%s\` without a covering index. This can lead to suboptimal query performance.',
@@ -73,6 +76,7 @@ select
     'auth_users_exposed' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security.' as description,
     format(
         'View/Materialized View "%s" in the public schema may expose \`auth.users\` data to anon or authenticated roles.',
@@ -213,9 +217,10 @@ select
     'auth_rls_initplan' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row' as description,
     format(
-        'Table \`%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select for more.',
+        'Table \`%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.',
         table_,
         policy_name
     ) as detail,
@@ -254,6 +259,7 @@ select
     'no_primary_key' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects if a table does not have a primary key. Tables without a primary key can be inefficient to interact with at scale.' as description,
     format(
         'Table \`%s.%s\` does not have a primary key',
@@ -298,6 +304,7 @@ select
     'unused_index' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects if an index has never been used and may be a candidate for removal.' as description,
     format(
         'Index \`%s\` on table \`%s.%s\` has not been used',
@@ -339,6 +346,7 @@ select
     'multiple_permissive_policies' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects if multiple permissive row level security policies are present on a table for the same \`role\` and \`action\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.' as description,
     format(
         'Table \`%s.%s\` has multiple permissive policies for role \`%s\` for action \`%s\`. Policies include \`%s\`',
@@ -409,6 +417,7 @@ select
     'policy_exists_rls_disabled' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects cases where row level security (RLS) policies have been created, but RLS has not been enabled for the underlying table.' as description,
     format(
         'Table \`%s.%s\` has RLS policies but RLS is not enabled on the table. Policies include %s.',
@@ -453,6 +462,7 @@ select
     'rls_enabled_no_policy' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.' as description,
     format(
         'Table \`%s.%s\` has RLS enabled, but no policies exist',
@@ -497,6 +507,7 @@ select
     'duplicate_index' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects cases where two ore more identical indexes exist.' as description,
     format(
         'Table \`%s.%s\` has identical indexes %s. Drop all except one of them',
@@ -550,6 +561,7 @@ select
     'security_definer_view' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies.' as description,
     format(
         'View \`%s.%s\` is SECURITY DEFINER',
@@ -593,6 +605,7 @@ select
     'function_search_path_mutable' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects functions with a mutable search_path parameter which could fail to execute successfully for some roles.' as description,
     format(
         'Function \`%s.%s\` has a role mutable search_path',
@@ -631,6 +644,7 @@ select
     'rls_disabled_in_public' as name,
     'ERROR' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects cases where row level security (RLS) has not been enabled on a table in the \`public\` schema.' as description,
     format(
         'Table \`%s.%s\` is public, but RLS has not been enabled.',
@@ -663,6 +677,7 @@ select
     'extension_in_public' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects extensions installed in the \`public\` schema.' as description,
     format(
         'Extension \`%s\` is installed in the public schema. Move it to another schema.',

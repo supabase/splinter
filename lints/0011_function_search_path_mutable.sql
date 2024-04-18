@@ -4,6 +4,7 @@ select
     'function_search_path_mutable' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects functions with a mutable search_path parameter which could fail to execute successfully for some roles.' as description,
     format(
         'Function \`%s.%s\` has a role mutable search_path',

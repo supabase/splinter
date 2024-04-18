@@ -4,6 +4,7 @@ select
     'rls_enabled_no_policy' as name,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.' as description,
     format(
         'Table \`%s.%s\` has RLS enabled, but no policies exist',

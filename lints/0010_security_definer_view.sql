@@ -4,6 +4,7 @@ select
     'security_definer_view' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies.' as description,
     format(
         'View \`%s.%s\` is SECURITY DEFINER',
