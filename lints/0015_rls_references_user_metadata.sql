@@ -1,23 +1,3 @@
-/*
-auth.jwt() -> 'user_metadata' should not be referenced in a security context.
-
-End users have control over the contents of `user_metadata` via
-`updateUser({ data: { role: 'admin' } })` in the client libraries.
-
-If a project creator is not aware that end users have control over the value, they
-may have a security check like:
-
-```
-    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' 
-```
-which would be insecure.
-
-NOTE:
-    This lint requires search_path = '' or 'auth' not in search_path;
-    because qual and with_check are dependent on search_path to determine if function calls include the "auth" schema
-*/
-
-
 create view lint."0015_rls_references_user_metadata" as
 
 with policies as (

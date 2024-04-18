@@ -1,30 +1,3 @@
-/*
-Usage of auth.uid(), auth.role() ... are common in RLS policies.
-
-A naive policy like
-
-    create policy "rls_test_select" on test_table
-    to authenticated
-    using ( auth.uid() = user_id );
-
-will re-evaluate the auth.uid() function for every row. That can result in 100s of times slower performance
-https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select
-
-To resolve that issue, the function calls can be wrapped like "(select auth.uid())" which causes the value to
-be executed exactly 1 time per query
-
-For example:
-
-    create policy "rls_test_select" on test_table
-    to authenticated
-    using ( (select auth.uid()) = user_id );
-
-NOTE:
-    This lint requires search_path = '' or 'auth' not in search_path;
-    because qual and with_check are dependent on search_path to determine if function calls include the "auth" schema
-*/
-
-
 create view lint."0003_auth_rls_initplan" as
 
 with policies as (
