@@ -96,9 +96,10 @@ from
     auth.users;
 ```
 
-Next, enable RLS on `auth.users`:
+Next, grant permissions and enable RLS on `auth.users`:
 
 ```sql
+grant select on auth.users to authenticated;
 alter table auth.users enable row level security;
 ```
 
