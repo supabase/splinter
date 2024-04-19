@@ -22,6 +22,7 @@ select
     'rls_references_user_metadata' as name,
     'ERROR' as level,
     'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
     'Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy.' as description,
     format(
         'Table \`%s.%s\` has a row level security policy \`%s\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context.',
@@ -35,9 +36,7 @@ select
         'name', table_name,
         'type', 'table'
     ) as metadata,
-    format('rls_references_user_metadata_%s_%s_%s', schema_name, table_name, policy_name) as cache_key,
-	with_check,
-	qual
+    format('rls_references_user_metadata_%s_%s_%s', schema_name, table_name, policy_name) as cache_key
 from
     policies
 where
