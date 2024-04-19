@@ -26,6 +26,8 @@ begin;
     union all
     select * from lint."0013_rls_disabled_in_public"
     union all
-    select * from lint."0014_extension_in_public";
+    select * from lint."0014_extension_in_public"
+    union all
+    select * from lint."0015_rls_references_user_metadata";
 
 rollback;
