@@ -13,6 +13,8 @@ begin;
         email text
     );
 
+    savepoint a;
+
     create policy bad_policy_uid on public.foo
     for select
         to authenticated
@@ -60,6 +62,42 @@ begin;
     alter table public.foo enable row level security;
 
     -- 4 entries, 1 per "bad_" policy
+    select * from lint."0003_auth_rls_initplan";
+
+    rollback to savepoint a;
+
+    create table public.lessons (
+        id int primary key,
+        userid uuid
+    );
+
+    alter table public.lessons enable row level security;
+
+    create policy "users control their lessons" on "public"."lessons"
+        as permissive
+        for all to public
+        using
+            (userid = (SELECT auth.uid()))
+        with check
+            (userid = (SELECT auth.uid()));
+
+    select
+        qual,
+        with_check
+    from
+        pg_catalog.pg_policy pa
+        join pg_catalog.pg_class pc
+            on pa.polrelid = pc.oid
+        join pg_catalog.pg_namespace nsp
+            on pc.relnamespace = nsp.oid
+        join pg_catalog.pg_policies pb
+            on pc.relname = pb.tablename
+            and nsp.nspname = pb.schemaname
+            and pa.polname = pb.policyname
+    where
+        polname = 'users control their lessons';
+
+    -- Should be empty
     select * from lint."0003_auth_rls_initplan";
 
 rollback;

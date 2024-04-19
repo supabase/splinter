@@ -14,6 +14,7 @@ begin;
         role text,
         email text
     );
+    savepoint a;
     create policy bad_policy_uid on public.foo
     for select
         to authenticated
@@ -62,5 +63,44 @@ begin;
  auth_rls_initplan | WARN  | EXTERNAL | {PERFORMANCE} | Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row | Table \`public.foo\` has a row level security policy \`bad_policy_role\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.  | https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan | {"name": "foo", "type": "table", "schema": "public"} | auth_rls_init_plan_public_foo_bad_policy_role
  auth_rls_initplan | WARN  | EXTERNAL | {PERFORMANCE} | Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row | Table \`public.foo\` has a row level security policy \`bad_policy_email\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info. | https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan | {"name": "foo", "type": "table", "schema": "public"} | auth_rls_init_plan_public_foo_bad_policy_email
 (4 rows)
+
+    rollback to savepoint a;
+    create table public.lessons (
+        id int primary key,
+        userid uuid
+    );
+    alter table public.lessons enable row level security;
+    create policy "users control their lessons" on "public"."lessons"
+        as permissive
+        for all to public
+        using
+            (userid = (SELECT auth.uid()))
+        with check
+            (userid = (SELECT auth.uid()));
+    select
+        qual,
+        with_check
+    from
+        pg_catalog.pg_policy pa
+        join pg_catalog.pg_class pc
+            on pa.polrelid = pc.oid
+        join pg_catalog.pg_namespace nsp
+            on pc.relnamespace = nsp.oid
+        join pg_catalog.pg_policies pb
+            on pc.relname = pb.tablename
+            and nsp.nspname = pb.schemaname
+            and pa.polname = pb.policyname
+    where
+        polname = 'users control their lessons';
+                  qual                  |               with_check               
+----------------------------------------+----------------------------------------
+ (userid = ( SELECT auth.uid() AS uid)) | (userid = ( SELECT auth.uid() AS uid))
+(1 row)
+
+    -- Should be empty
+    select * from lint."0003_auth_rls_initplan";
+ name | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
 
 rollback;
