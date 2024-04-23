@@ -55,17 +55,37 @@ where
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
+        -- Example: auth.uid()
         (
-            -- Example: auth.uid()
-            qual  ~ '(auth)\.(uid|jwt|role|email)\(\)'
-            -- Example: select auth.uid()
-            and lower(qual) !~ 'select\s+(auth)\.(uid|jwt|role|email)\(\)'
+            qual like '%auth.uid()%'
+            and lower(qual) not like '%select auth.uid()%'
         )
-        or
-        (
-            -- Example: auth.uid()
-            with_check  ~ '(auth)\.(uid|jwt|role|email)\(\)'
-            -- Example: select auth.uid()
-            and lower(with_check) !~ 'select\s+(auth)\.(uid|jwt|role|email)\(\)'
+        or (
+            qual like '%auth.jwt()%'
+            and lower(qual) not like '%select auth.jwt()%'
+        )
+        or (
+            qual like '%auth.role()%'
+            and lower(qual) not like '%select auth.role()%'
+        )
+        or (
+            qual like '%auth.email()%'
+            and lower(qual) not like '%select auth.email()%'
+        )
+        or (
+            with_check like '%auth.uid()%'
+            and lower(with_check) not like '%select auth.uid()%'
+        )
+        or (
+            with_check like '%auth.jwt()%'
+            and lower(with_check) not like '%select auth.jwt()%'
+        )
+        or (
+            with_check like '%auth.role()%'
+            and lower(with_check) not like '%select auth.role()%'
+        )
+        or (
+            with_check like '%auth.email()%'
+            and lower(with_check) not like '%select auth.email()%'
         )
     );
