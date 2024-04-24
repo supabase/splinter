@@ -11,7 +11,7 @@ begin;
 
   -- resolve the problem
   alter extension ltree set schema extensions;
-  
+
   -- 0 issues
   select * from lint."0014_extension_in_public";
 

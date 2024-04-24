@@ -1,6 +1,6 @@
 create view lint."0014_extension_in_public" as
 
-select 
+select
     'extension_in_public' as name,
     'WARN' as level,
     'EXTERNAL' as facing,

@@ -38,6 +38,6 @@ begin;
   -- No issues, the policies are restrictive, which is fine
   select * from lint."0006_multiple_permissive_policies";
 
-  
+
 
 rollback;

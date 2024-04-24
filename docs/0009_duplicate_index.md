@@ -1,5 +1,5 @@
 
-Level: WARN 
+Level: WARN
 
 ### Rationale
 

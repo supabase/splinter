@@ -3,11 +3,11 @@ Level: WARN
 
 ### Rationale
 
-Postgres' default setting for views is SECURITY DEFINER which means they use the permissions of the view's creator, rather than the permissions of the querying user when executing the view's underlying query. That is an unintuitive default, chosen for backwards compatibility with older Postgres versions, which makes it easy to accidentally expose more data in views than was intended. 
+Postgres' default setting for views is SECURITY DEFINER which means they use the permissions of the view's creator, rather than the permissions of the querying user when executing the view's underlying query. That is an unintuitive default, chosen for backwards compatibility with older Postgres versions, which makes it easy to accidentally expose more data in views than was intended.
 
 ### Understanding SECURITY DEFINER and SECURITY INVOKER
 
-In PostgreSQL, a view can be defined with either the SECURITY DEFINER or SECURITY INVOKER option. 
+In PostgreSQL, a view can be defined with either the SECURITY DEFINER or SECURITY INVOKER option.
 
 - **SECURITY DEFINER**: This setting causes the view or function to run with the privileges of the user who created it, regardless of the user who invokes it. This can be useful for allowing a less-privileged user to perform specific tasks that require higher privileges but poses a significant security risk if not handled carefully. It is common for views to be created by highly privileged users with the ability to bypass row level security which further exacerbates the risk.
 
@@ -15,7 +15,7 @@ In PostgreSQL, a view can be defined with either the SECURITY DEFINER or SECURIT
 
 ### The Risk of SECURITY DEFINER Views in Public Schema
 
-Creating a view in the public schema makes that view accessible via your project's APIs. If the view is created through Supabase Studio or using the Supabase CLI in SECURITY DEFINER mode, the view will bypass row level security rules and could expose more data publically over the project's APIs than the developer intended. 
+Creating a view in the public schema makes that view accessible via your project's APIs. If the view is created through Supabase Studio or using the Supabase CLI in SECURITY DEFINER mode, the view will bypass row level security rules and could expose more data publically over the project's APIs than the developer intended.
 
 ### How to Resolve
 

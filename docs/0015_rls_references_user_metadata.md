@@ -10,7 +10,7 @@ Supabase Auth [user_metadata](https://supabase.com/docs/guides/auth/managing-use
 Row-Level Security (RLS) policies are the mechanism for controlling access to data based on user roles or attributes. Supabase Auth [user_metadata](https://supabase.com/docs/guides/auth/managing-user-data#accessing-user-metadata) allows metadata to be assigned to users, but that metadata can also be manipulated by the end user using client libraries. For example, in supabase-js:
 
 ```js
-updateUser({ data: { is_admin: true } }) 
+updateUser({ data: { is_admin: true } })
 ```
 
 For that reason, it is not safe to rely on the contents of `user_metadata` in row level security policies.

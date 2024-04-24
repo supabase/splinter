@@ -45,10 +45,10 @@ where
     )
     and (
             -- Example: auth.jwt() -> 'user_metadata'
-			-- False positives are possible, but it isn't practical to string match
-			-- If false positive rate is too high, this expression can iterate
+            -- False positives are possible, but it isn't practical to string match
+            -- If false positive rate is too high, this expression can iterate
             qual like '%auth.jwt()%user_metadata%'
-			or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
-			or with_check like '%auth.jwt()%user_metadata%'
-			or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
+            or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
+            or with_check like '%auth.jwt()%user_metadata%'
+            or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
     );

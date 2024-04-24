@@ -93,14 +93,14 @@ select
     format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
 from
     -- Identify the oid for auth.users
-	pg_catalog.pg_class auth_users_pg_class
+    pg_catalog.pg_class auth_users_pg_class
     join pg_catalog.pg_namespace auth_users_pg_namespace
-		on auth_users_pg_class.relnamespace = auth_users_pg_namespace.oid
-		and auth_users_pg_class.relname = 'users'
-		and auth_users_pg_namespace.nspname = 'auth'
-	-- Depends on auth.users
+        on auth_users_pg_class.relnamespace = auth_users_pg_namespace.oid
+        and auth_users_pg_class.relname = 'users'
+        and auth_users_pg_namespace.nspname = 'auth'
+    -- Depends on auth.users
     join pg_catalog.pg_depend d
-    	on d.refobjid = auth_users_pg_class.oid
+        on d.refobjid = auth_users_pg_class.oid
     join pg_catalog.pg_rewrite r
         on r.oid = d.objid
     join pg_catalog.pg_class c
@@ -114,7 +114,7 @@ where
     and (
         pg_catalog.has_schema_privilege('anon', n.nspname, 'USAGE')
         or pg_catalog.has_schema_privilege('authenticated', n.nspname, 'USAGE')
-	)
+    )
     and (
       pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
       or pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT')
@@ -130,7 +130,7 @@ where
         -- Standard View, accessible to anon or authenticated that is security_definer
         (
             c.relkind = 'v' -- v for view
-            -- Exclude security invoker views 
+            -- Exclude security invoker views
             and not (
                 lower(coalesce(c.reloptions::text,'{}'))::text[]
                 && array[
@@ -145,7 +145,7 @@ where
         -- Standard View, security invoker, but no RLS enabled on auth.users
         (
             c.relkind in ('v') -- v for view
-            -- is security invoker 
+            -- is security invoker
             and (
                 lower(coalesce(c.reloptions::text,'{}'))::text[]
                 && array[
@@ -155,7 +155,7 @@ where
                     'security_invoker=on'
                 ]
             )
-            and not pg_class_auth_users.relrowsecurity 
+            and not pg_class_auth_users.relrowsecurity
         )
     )
 group by
@@ -589,15 +589,15 @@ where
     c.relkind = 'v'
     and n.nspname = 'public'
     and dep.objid is null -- exclude views owned by extensions
-	and not (
-		lower(coalesce(c.reloptions::text,'{}'))::text[]
-		&& array[
-			'security_invoker=1',
-			'security_invoker=true',
-			'security_invoker=yes',
-			'security_invoker=on'
-		]
-	))
+    and not (
+        lower(coalesce(c.reloptions::text,'{}'))::text[]
+        && array[
+            'security_invoker=1',
+            'security_invoker=true',
+            'security_invoker=yes',
+            'security_invoker=on'
+        ]
+    ))
 union all
 (
 select
@@ -672,7 +672,7 @@ where
     and not c.relrowsecurity)
 union all
 (
-select 
+select
     'extension_in_public' as name,
     'WARN' as level,
     'EXTERNAL' as facing,
@@ -746,10 +746,10 @@ where
     )
     and (
             -- Example: auth.jwt() -> 'user_metadata'
-			-- False positives are possible, but it isn't practical to string match
-			-- If false positive rate is too high, this expression can iterate
+            -- False positives are possible, but it isn't practical to string match
+            -- If false positive rate is too high, this expression can iterate
             qual like '%auth.jwt()%user_metadata%'
-			or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
-			or with_check like '%auth.jwt()%user_metadata%'
-			or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
+            or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
+            or with_check like '%auth.jwt()%user_metadata%'
+            or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
     ))

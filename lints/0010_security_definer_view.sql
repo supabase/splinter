@@ -33,12 +33,12 @@ where
     c.relkind = 'v'
     and n.nspname = 'public'
     and dep.objid is null -- exclude views owned by extensions
-	and not (
-		lower(coalesce(c.reloptions::text,'{}'))::text[]
-		&& array[
-			'security_invoker=1',
-			'security_invoker=true',
-			'security_invoker=yes',
-			'security_invoker=on'
-		]
-	);
+    and not (
+        lower(coalesce(c.reloptions::text,'{}'))::text[]
+        && array[
+            'security_invoker=1',
+            'security_invoker=true',
+            'security_invoker=yes',
+            'security_invoker=on'
+        ]
+    );
