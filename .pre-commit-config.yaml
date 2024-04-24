@@ -32,7 +32,6 @@ repos:
   hooks:
   - id: remove-tabs
     name: Tabs-to-Spaces
-    exclude: test/expected
 
 - repo: local
   hooks:

@@ -26,4 +26,8 @@ where
     -- plpgsql is installed by default in public and outside user control
     -- confirmed safe
     pe.extname not in ('plpgsql')
+    -- Scoping this to public is not optimal. Ideally we would use the postgres
+    -- search path. That currently isn't available via SQL. In other lints
+    -- we have used has_schema_privilege('anon', 'extensions', 'USAGE') but that
+    -- is not appropriate here as it would evaluate true for the extensions schema
     and pe.extnamespace::regnamespace::text = 'public';

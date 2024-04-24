@@ -700,6 +700,10 @@ where
     -- plpgsql is installed by default in public and outside user control
     -- confirmed safe
     pe.extname not in ('plpgsql')
+    -- Scoping this to public is not optimal. Ideally we would use the postgres
+    -- search path. That currently isn't available via SQL. In other lints
+    -- we have used has_schema_privilege('anon', 'extensions', 'USAGE') but that
+    -- is not appropriate here as it would evaluate true for the extensions schema
     and pe.extnamespace::regnamespace::text = 'public')
 union all
 (
@@ -747,11 +751,11 @@ where
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
-            -- Example: auth.jwt() -> 'user_metadata'
-            -- False positives are possible, but it isn't practical to string match
-            -- If false positive rate is too high, this expression can iterate
-            qual like '%auth.jwt()%user_metadata%'
-            or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
-            or with_check like '%auth.jwt()%user_metadata%'
-            or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
+        -- Example: auth.jwt() -> 'user_metadata'
+        -- False positives are possible, but it isn't practical to string match
+        -- If false positive rate is too high, this expression can iterate
+        qual like '%auth.jwt()%user_metadata%'
+        or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
+        or with_check like '%auth.jwt()%user_metadata%'
+        or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
     ))
