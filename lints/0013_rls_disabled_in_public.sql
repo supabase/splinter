@@ -28,6 +28,13 @@ from
         on c.relnamespace = n.oid
 where
     c.relkind = 'r' -- regular tables
-    and n.nspname = 'public'
     -- RLS is disabled
-    and not c.relrowsecurity;
+    and not c.relrowsecurity
+    and (
+        pg_catalog.has_schema_privilege('anon', n.nspname, 'USAGE')
+        or pg_catalog.has_schema_privilege('authenticated', n.nspname, 'USAGE')
+    )
+    and n.nspname not in (
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+    );
+

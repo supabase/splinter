@@ -44,11 +44,11 @@ where
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
-            -- Example: auth.jwt() -> 'user_metadata'
-			-- False positives are possible, but it isn't practical to string match
-			-- If false positive rate is too high, this expression can iterate
-            qual like '%auth.jwt()%user_metadata%'
-			or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
-			or with_check like '%auth.jwt()%user_metadata%'
-			or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
+        -- Example: auth.jwt() -> 'user_metadata'
+        -- False positives are possible, but it isn't practical to string match
+        -- If false positive rate is too high, this expression can iterate
+        qual like '%auth.jwt()%user_metadata%'
+        or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
+        or with_check like '%auth.jwt()%user_metadata%'
+        or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
     );

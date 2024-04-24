@@ -6,9 +6,9 @@ begin;
 
   create or replace function public.abc()
     returns int
-	language sql
+    language sql
   as $$
-	select 1;
+    select 1;
   $$;
 
   -- 1 issue
@@ -17,10 +17,10 @@ begin;
   -- Replace function and set search_path
   create or replace function public.abc()
     returns int
-	set search_path=''
-	language sql
+    set search_path=''
+    language sql
   as $$
-	select 1;
+    select 1;
   $$;
 
   -- 1 issue

@@ -31,14 +31,20 @@ from
         and dep.deptype = 'e'
 where
     c.relkind = 'v'
-    and n.nspname = 'public'
+    and (
+        pg_catalog.has_schema_privilege('anon', n.nspname, 'USAGE')
+        or pg_catalog.has_schema_privilege('authenticated', n.nspname, 'USAGE')
+    )
+    and n.nspname not in (
+        'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
+    )
     and dep.objid is null -- exclude views owned by extensions
-	and not (
-		lower(coalesce(c.reloptions::text,'{}'))::text[]
-		&& array[
-			'security_invoker=1',
-			'security_invoker=true',
-			'security_invoker=yes',
-			'security_invoker=on'
-		]
-	);
+    and not (
+        lower(coalesce(c.reloptions::text,'{}'))::text[]
+        && array[
+            'security_invoker=1',
+            'security_invoker=true',
+            'security_invoker=yes',
+            'security_invoker=on'
+        ]
+    );

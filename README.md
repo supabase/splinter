@@ -33,7 +33,7 @@ Each lint creates a view that returns a common interface. The interface is:
 - description (text) not null -- This is a description of the lint and why its an issue
 - detail (text) not null -- A text description of the issue that includes references to the specific table/column/constraint/whatever that fails the lint
 - remediation (text) optional -- A reference to documentation to describe the issue and how to resolve it
-- metadata (jsonb) optional -- Lint specific information, for example referenced entities, or entity types 
+- metadata (jsonb) optional -- Lint specific information, for example referenced entities, or entity types
 - cache_key (text) not null -- A short, uniquely identifiable string that users can add to an exclusion list to avoid repeatedly seeing the same lint failures. It should identify the releavnt table/column/constraint. The string should be prefixed with the lint name. For example a lint named "unindexed_foreign_key" might have a unique key "unindexed_foreign_key_public_user_created_by_id"
 
 ## Deploying to supabase/supabase

@@ -21,7 +21,7 @@ There are 2 recommended solutions for exposing user data to your application.
 
 This option involves creating a table in the public schema, e.g. `public.profiles`, containing a subset of columns from `auth.users` that are appropriate for your application's use case. You can then set a trigger on `auth.users` to automatically insert the relevant data into `public.profiles` any time a new user is inserted into `auth.users`.
 
-Note that triggers execute in the same transaction as the insert into `auth.users` so you must check the trigger logic carefully as any errors could block user signups to your project. 
+Note that triggers execute in the same transaction as the insert into `auth.users` so you must check the trigger logic carefully as any errors could block user signups to your project.
 
 An additional benefit of this approach is that the `public.profiles` table provides a logical place to store any additional user metadata that is needed for the application.
 

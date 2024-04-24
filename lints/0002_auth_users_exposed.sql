@@ -12,22 +12,22 @@ select
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0002_auth_users_exposed' as remediation,
     jsonb_build_object(
-        'schema', 'public',
+        'schema', n.nspname,
         'name', c.relname,
         'type', 'view',
         'exposed_to', array_remove(array_agg(DISTINCT case when pg_catalog.has_table_privilege('anon', c.oid, 'SELECT') then 'anon' when pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT') then 'authenticated' end), null)
     ) as metadata,
-    format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
+    format('auth_users_exposed_%s_%s', n.nspname, c.relname) as cache_key
 from
     -- Identify the oid for auth.users
-	pg_catalog.pg_class auth_users_pg_class
+    pg_catalog.pg_class auth_users_pg_class
     join pg_catalog.pg_namespace auth_users_pg_namespace
-		on auth_users_pg_class.relnamespace = auth_users_pg_namespace.oid
-		and auth_users_pg_class.relname = 'users'
-		and auth_users_pg_namespace.nspname = 'auth'
-	-- Depends on auth.users
+        on auth_users_pg_class.relnamespace = auth_users_pg_namespace.oid
+        and auth_users_pg_class.relname = 'users'
+        and auth_users_pg_namespace.nspname = 'auth'
+    -- Depends on auth.users
     join pg_catalog.pg_depend d
-    	on d.refobjid = auth_users_pg_class.oid
+        on d.refobjid = auth_users_pg_class.oid
     join pg_catalog.pg_rewrite r
         on r.oid = d.objid
     join pg_catalog.pg_class c
@@ -38,7 +38,6 @@ from
         on d.refobjid = pg_class_auth_users.oid
 where
     d.deptype = 'n'
-    and n.nspname = 'public'
     and (
       pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
       or pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT')
@@ -54,7 +53,7 @@ where
         -- Standard View, accessible to anon or authenticated that is security_definer
         (
             c.relkind = 'v' -- v for view
-            -- Exclude security invoker views 
+            -- Exclude security invoker views
             and not (
                 lower(coalesce(c.reloptions::text,'{}'))::text[]
                 && array[
@@ -69,7 +68,7 @@ where
         -- Standard View, security invoker, but no RLS enabled on auth.users
         (
             c.relkind in ('v') -- v for view
-            -- is security invoker 
+            -- is security invoker
             and (
                 lower(coalesce(c.reloptions::text,'{}'))::text[]
                 && array[
@@ -79,8 +78,10 @@ where
                     'security_invoker=on'
                 ]
             )
-            and not pg_class_auth_users.relrowsecurity 
+            and not pg_class_auth_users.relrowsecurity
         )
     )
 group by
-    c.relname, c.oid;
+    n.nspname,
+    c.relname,
+    c.oid;
