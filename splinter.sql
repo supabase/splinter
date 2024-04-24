@@ -85,12 +85,12 @@ select
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0002_auth_users_exposed' as remediation,
     jsonb_build_object(
-        'schema', 'public',
+        'schema', n.nspname,
         'name', c.relname,
         'type', 'view',
         'exposed_to', array_remove(array_agg(DISTINCT case when pg_catalog.has_table_privilege('anon', c.oid, 'SELECT') then 'anon' when pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT') then 'authenticated' end), null)
     ) as metadata,
-    format('auth_users_exposed_%s_%s', 'public', c.relname) as cache_key
+    format('auth_users_exposed_%s_%s', n.nspname, c.relname) as cache_key
 from
     -- Identify the oid for auth.users
     pg_catalog.pg_class auth_users_pg_class
@@ -155,7 +155,9 @@ where
         )
     )
 group by
-    c.relname, c.oid)
+    n.nspname,
+    c.relname,
+    c.oid)
 union all
 (
 with policies as (
@@ -669,9 +671,15 @@ from
         on c.relnamespace = n.oid
 where
     c.relkind = 'r' -- regular tables
-    and n.nspname = 'public'
     -- RLS is disabled
-    and not c.relrowsecurity)
+    and not c.relrowsecurity
+    and (
+        pg_catalog.has_schema_privilege('anon', n.nspname, 'USAGE')
+        or pg_catalog.has_schema_privilege('authenticated', n.nspname, 'USAGE')
+    )
+    and n.nspname not in (
+        '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+    ))
 union all
 (
 select
