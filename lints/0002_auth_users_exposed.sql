@@ -39,10 +39,6 @@ from
 where
     d.deptype = 'n'
     and (
-        pg_catalog.has_schema_privilege('anon', n.nspname, 'USAGE')
-        or pg_catalog.has_schema_privilege('authenticated', n.nspname, 'USAGE')
-    )
-    and (
       pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
       or pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT')
     )
