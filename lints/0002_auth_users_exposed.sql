@@ -2,7 +2,7 @@ create view lint."0002_auth_users_exposed" as
 
 select
     'auth_users_exposed' as name,
-    'WARN' as level,
+    'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
     'Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security.' as description,

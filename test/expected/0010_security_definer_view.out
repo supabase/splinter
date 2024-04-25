@@ -11,7 +11,7 @@ begin;
   select * from lint."0010_security_definer_view";
          name          | level |  facing  | categories |                                             description                                             |                   detail                    |                                        remediation                                        |                        metadata                         |              cache_key               
 -----------------------+-------+----------+------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------+-------------------------------------------------------------------------------------------+---------------------------------------------------------+--------------------------------------
- security_definer_view | WARN  | EXTERNAL | {SECURITY} | Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies. | View \`public.my_view\` is SECURITY DEFINER | https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view | {"name": "my_view", "type": "view", "schema": "public"} | security_definer_view_public_my_view
+ security_definer_view | ERROR | EXTERNAL | {SECURITY} | Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies. | View \`public.my_view\` is SECURITY DEFINER | https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view | {"name": "my_view", "type": "view", "schema": "public"} | security_definer_view_public_my_view
 (1 row)
 
   -- Apply security_invoker

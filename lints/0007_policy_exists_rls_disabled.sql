@@ -2,7 +2,7 @@ create view lint."0007_policy_exists_rls_disabled" as
 
 select
     'policy_exists_rls_disabled' as name,
-    'INFO' as level,
+    'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
     'Detects cases where row level security (RLS) policies have been created, but RLS has not been enabled for the underlying table.' as description,
