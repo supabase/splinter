@@ -2,7 +2,7 @@ create view lint."0010_security_definer_view" as
 
 select
     'security_definer_view' as name,
-    'WARN' as level,
+    'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
     'Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies.' as description,
@@ -32,8 +32,8 @@ from
 where
     c.relkind = 'v'
     and (
-        pg_catalog.has_schema_privilege('anon', n.nspname, 'USAGE')
-        or pg_catalog.has_schema_privilege('authenticated', n.nspname, 'USAGE')
+        pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
+        or pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT')
     )
     and n.nspname not in (
         'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'storage', 'supabase_functions', 'supabase_migrations', 'vault'
