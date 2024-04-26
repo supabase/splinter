@@ -10,7 +10,7 @@ An anonymous user is a user created through Supabase Auth. It is just like a per
 
 ### How to Resolve
 
-To mitigate the risk, determine if existing row level security (RLS) policies are meant to allow access to anonymous users. Affected policies include those that are associated to the `authenticated` or `public` roles, and members of those roles that inherit privileges.
+Determine if existing row level security (RLS) policies are meant to allow access to anonymous users. Affected policies include those that are associated to the `authenticated` or `public` roles, and members of those roles that inherit privileges.
 
 For example, consider the policy:
 
