@@ -28,6 +28,8 @@ begin;
     union all
     select * from lint."0014_extension_in_public"
     union all
-    select * from lint."0015_rls_references_user_metadata";
+    select * from lint."0015_rls_references_user_metadata"
+    union all
+    select * from lint."0016_materialized_view_in_api";
 
 rollback;
