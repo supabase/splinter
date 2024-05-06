@@ -10,20 +10,16 @@
       
       
       
-        <link rel="canonical" href="https://supabase.github.io/splinter/0009_duplicate_index/">
+        <link rel="canonical" href="https://supabase.github.io/splinter/0017_foreign_table_in_api/">
       
       
-        <link rel="prev" href="../0008_rls_enabled_no_policy/">
-      
-      
-        <link rel="next" href="../0010_security_definer_view/">
       
       <link rel="icon" href="../assets/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
     
     
       
-        <title>Duplicate Index - splinter</title>
+        <title>0017 foreign table in api - splinter</title>
       
     
     
@@ -105,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Duplicate Index
+              0017 foreign table in api
             
           </span>
         </div>
@@ -229,16 +225,16 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
       
       
       
@@ -247,7 +243,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Lints
@@ -370,62 +366,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Duplicate Index
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../0009_duplicate_index/" class="md-nav__link">
         Duplicate Index
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#rationale" class="md-nav__link">
-    Rationale
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-is-an-index" class="md-nav__link">
-    What is an Index?
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-resolve" class="md-nav__link">
-    How to Resolve
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -539,8 +484,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-is-an-index" class="md-nav__link">
-    What is an Index?
+  <a href="#understanding-security-definer-and-security-invoker" class="md-nav__link">
+    Understanding SECURITY DEFINER and SECURITY INVOKER
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-risk-of-security-definer-views-in-public-schema" class="md-nav__link">
+    The Risk of SECURITY DEFINER Views in Public Schema
   </a>
   
 </li>
@@ -570,17 +522,56 @@
   
 
 
-  <h1>Duplicate Index</h1>
+  <h1>0017 foreign table in api</h1>
 
 <p>Level: WARN</p>
 <h3 id="rationale">Rationale</h3>
-<p>Each index in a Postgres database adds overhead. This overhead occurs because the database must update each index whenever data in the indexed table are inserted, updated, or deleted. If two or more indexes are exact duplicates in their composition, the database incurs additional write overhead for no performance benefit.</p>
-<h3 id="what-is-an-index">What is an Index?</h3>
-<p>An index in a database is similar to an index in a book. It allows the database to find data without scanning the entire table. An index is created on a column or a set of columns in a table. Queries that search or sort data based on these columns can find data more quickly and efficiently by referring the index instead of each row in the table.</p>
+<p>Postgres' default setting for views is SECURITY DEFINER which means they use the permissions of the view's creator, rather than the permissions of the querying user when executing the view's underlying query. That is an unintuitive default, chosen for backwards compatibility with older Postgres versions, which makes it easy to accidentally expose more data in views than was intended.</p>
+<h3 id="understanding-security-definer-and-security-invoker">Understanding SECURITY DEFINER and SECURITY INVOKER</h3>
+<p>In PostgreSQL, a view can be defined with either the SECURITY DEFINER or SECURITY INVOKER option.</p>
+<ul>
+<li>
+<p><strong>SECURITY DEFINER</strong>: This setting causes the view or function to run with the privileges of the user who created it, regardless of the user who invokes it. This can be useful for allowing a less-privileged user to perform specific tasks that require higher privileges but poses a significant security risk if not handled carefully. It is common for views to be created by highly privileged users with the ability to bypass row level security which further exacerbates the risk.</p>
+</li>
+<li>
+<p><strong>SECURITY INVOKER</strong>: Conversely, with SECURITY INVOKER, the view or function executes with the privileges of the user calling it, respecting the principle of least privilege and significantly reducing the risk of unintentional privilege escalation.</p>
+</li>
+</ul>
+<h3 id="the-risk-of-security-definer-views-in-public-schema">The Risk of SECURITY DEFINER Views in Public Schema</h3>
+<p>Creating a view in the public schema makes that view accessible via your project's APIs. If the view is created through Supabase Studio or using the Supabase CLI in SECURITY DEFINER mode, the view will bypass row level security rules and could expose more data publically over the project's APIs than the developer intended.</p>
 <h3 id="how-to-resolve">How to Resolve</h3>
-<p>When a table contains a duplicate index, drop instances of the index until only one remains.</p>
-<p>For example, if the table <code>public.blog</code> has duplicate indexes <code>public.ix_id_1</code> and <code>public.ix_id_2</code> drop one using:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">drop</span><span class="w"> </span><span class="k">index</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">ix_id_2</span><span class="p">;</span>
+<p>To mitigate the risk, always set <code>with (security_invoker=on)</code> when a view should respect RLS policies.</p>
+<p>Given the view:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">view</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">order_items</span>
+<span class="w">    </span><span class="k">as</span>
+<span class="k">select</span>
+<span class="w">    </span><span class="n">id</span><span class="p">,</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="k">from</span>
+<span class="w">    </span><span class="n">app</span><span class="p">.</span><span class="n">order_items</span><span class="p">;</span>
+</code></pre></div></td></tr></table></div>
+<p>Enable SECURITY INVOKER mode using:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">create</span><span class="w"> </span><span class="k">view</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">order_items</span>
+<span class="w">    </span><span class="k">with</span><span class="w"> </span><span class="p">(</span><span class="n">security_invoker</span><span class="o">=</span><span class="k">on</span><span class="p">)</span>
+<span class="w">    </span><span class="k">as</span>
+<span class="k">select</span>
+<span class="w">    </span><span class="n">id</span><span class="p">,</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="k">from</span>
+<span class="w">    </span><span class="n">app</span><span class="p">.</span><span class="n">order_items</span><span class="p">;</span>
 </code></pre></div></td></tr></table></div>
 
 

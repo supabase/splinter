@@ -623,7 +623,7 @@
 <p>There are 2 recommended solutions for exposing user data to your application.</p>
 <h4 id="trigger-on-authusers">Trigger on auth.users</h4>
 <p>This option involves creating a table in the public schema, e.g. <code>public.profiles</code>, containing a subset of columns from <code>auth.users</code> that are appropriate for your application's use case. You can then set a trigger on <code>auth.users</code> to automatically insert the relevant data into <code>public.profiles</code> any time a new user is inserted into <code>auth.users</code>.</p>
-<p>Note that triggers execute in the same transaction as the insert into <code>auth.users</code> so you must check the trigger logic carefully as any errors could block user signups to your project. </p>
+<p>Note that triggers execute in the same transaction as the insert into <code>auth.users</code> so you must check the trigger logic carefully as any errors could block user signups to your project.</p>
 <p>An additional benefit of this approach is that the <code>public.profiles</code> table provides a logical place to store any additional user metadata that is needed for the application.</p>
 <p>To start we need a location to store public user data in the <code>public</code> schema:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -716,8 +716,10 @@
 <span class="k">from</span>
 <span class="w">    </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span><span class="p">;</span>
 </code></pre></div></td></tr></table></div>
-<p>Next, enable RLS on <code>auth.users</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
+<p>Next, grant permissions and enable RLS on <code>auth.users</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">grant</span><span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">authenticated</span><span class="p">;</span>
+<span class="k">alter</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="n">auth</span><span class="p">.</span><span class="n">users</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="k">row</span><span class="w"> </span><span class="k">level</span><span class="w"> </span><span class="k">security</span><span class="p">;</span>
 </code></pre></div></td></tr></table></div>
 <p>and finally, create a policy defining which users should be able to see each record:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
