@@ -1,5 +1,6 @@
 begin;
   set local search_path = '';
+  set local pgrst.db_schemas = 'public';
   -- 0 issues
   select * from lint."0016_materialized_view_in_api";
  name | level | facing | categories | description | detail | remediation | metadata | cache_key 
