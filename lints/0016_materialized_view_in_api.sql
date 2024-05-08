@@ -1,45 +1,42 @@
-create view lint."0008_rls_enabled_no_policy" as
+create view lint."0016_materialized_view_in_api" as
 
 select
-    'rls_enabled_no_policy' as name,
-    'INFO' as level,
+    'materialized_view_in_api' as name,
+    'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.' as description,
+    'Detects materialized views that are potentially accessible over APIs.' as description,
     format(
-        'Table \`%s.%s\` has RLS enabled, but no policies exist',
+        'Materialized view \`%s.%s\` is selectable by anon or authenticated roles',
         n.nspname,
         c.relname
     ) as detail,
-    'https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0016_materialized_view_in_api' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,
-        'type', 'table'
+        'type', 'materialized view'
     ) as metadata,
     format(
-        'rls_enabled_no_policy_%s_%s',
+        'materialized_view_in_api_%s_%s',
         n.nspname,
         c.relname
     ) as cache_key
 from
     pg_catalog.pg_class c
-    left join pg_catalog.pg_policy p
-        on p.polrelid = c.oid
     join pg_catalog.pg_namespace n
-        on c.relnamespace = n.oid
+        on n.oid = c.relnamespace
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
         and dep.deptype = 'e'
 where
-    c.relkind = 'r' -- regular tables
+    c.relkind = 'm'
+    and (
+        pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
+        or pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT')
+    )
+    and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
     and n.nspname not in (
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
-    -- RLS is enabled
-    and c.relrowsecurity
-    and p.polname is null
-    and dep.objid is null -- exclude tables owned by extensions
-group by
-    n.nspname,
-    c.relname;
+    and dep.objid is null;
