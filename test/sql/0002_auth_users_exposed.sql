@@ -1,11 +1,12 @@
 begin;
+    set local search_path = '';
+    set local pgrst.db_schemas = 'public';
 
     -- No issues
     select * from lint."0002_auth_users_exposed";
 
     savepoint a;
 
-    set local search_path = '';
 
     -- Failure mode 1: A materialized view
     -- Materialized views can not support row level security so they are always an overexposure risk

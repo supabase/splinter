@@ -42,6 +42,7 @@ where
       pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
       or pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT')
     )
+    and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
     -- Exclude self
     and c.relname <> '0002_auth_users_exposed'
     -- There are 3 insecure configurations
