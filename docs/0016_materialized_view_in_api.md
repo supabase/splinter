@@ -2,7 +2,7 @@ Level: WARN
 
 ### Rationale
 
-Materialized views in Postgres can present a security risk if they are accessible to API roles `anon` and `authenticated`. Unlike regular views, materialized views can not be configured to respect Row Level Security (RLS) policies of the underlying tables they are built upon, and they cannot be secured with RLS themselves. Therefore, if materialized views are accessible over APIs, all rows are always visible, which may not be intended.
+Materialized views in Postgres can present a security risk if they are accessible to API roles `anon` and `authenticated`. Unlike regular views, materialized views can not be configured to respect Row Level Security (RLS) policies of the underlying tables they are built upon, nor can they cannot be secured with RLS directly. Therefore, if materialized views are accessible over APIs, all rows are always visible, which may not be intended.
 
 ### The Risk of Materialized Views Accessible by Anon or Authenticated Roles
 
