@@ -2,6 +2,7 @@ create view lint."0007_policy_exists_rls_disabled" as
 
 select
     'policy_exists_rls_disabled' as name,
+    'Policy Exists RLS Disabled' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

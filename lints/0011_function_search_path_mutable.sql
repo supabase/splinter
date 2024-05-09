@@ -2,6 +2,7 @@ create view lint."0011_function_search_path_mutable" as
 
 select
     'function_search_path_mutable' as name,
+    'Function Search Path Mutable' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

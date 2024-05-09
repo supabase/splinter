@@ -2,6 +2,7 @@ create view lint."0005_unused_index" as
 
 select
     'unused_index' as name,
+    'Unused Index' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,

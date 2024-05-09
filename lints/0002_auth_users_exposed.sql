@@ -2,6 +2,7 @@ create view lint."0002_auth_users_exposed" as
 
 select
     'auth_users_exposed' as name,
+    'Exposed Auth Users' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

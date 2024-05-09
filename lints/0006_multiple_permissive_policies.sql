@@ -2,6 +2,7 @@ create view lint."0006_multiple_permissive_policies" as
 
 select
     'multiple_permissive_policies' as name,
+    'Multiple Permissive Policies' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,

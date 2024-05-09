@@ -33,6 +33,7 @@ index_ as (
 )
 select
     'unindexed_foreign_keys' as name,
+    'Unindexed foreign keys' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,

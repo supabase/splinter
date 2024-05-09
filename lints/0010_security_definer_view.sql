@@ -2,6 +2,7 @@ create view lint."0010_security_definer_view" as
 
 select
     'security_definer_view' as name,
+    'Security Definer View' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

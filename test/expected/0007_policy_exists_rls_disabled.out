@@ -11,17 +11,17 @@ begin;
   using (true);
   -- 1 issue
   select * from lint."0007_policy_exists_rls_disabled";
-            name            | level |  facing  | categories |                                                           description                                                           |                                                             detail                                                             |                                          remediation                                           |                       metadata                        |               cache_key                
-----------------------------+-------+----------+------------+---------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------------------------------------------------------+----------------------------------------
- policy_exists_rls_disabled | ERROR | EXTERNAL | {SECURITY} | Detects cases where row level security (RLS) policies have been created, but RLS has not been enabled for the underlying table. | Table \`public.blog\` has RLS policies but RLS is not enabled on the table. Policies include {all_own_posts,select_own_posts}. | https://supabase.com/docs/guides/database/database-linter?lint=0007_policy_exists_rls_disabled | {"name": "blog", "type": "table", "schema": "public"} | policy_exists_rls_disabled_public_blog
+            name            |           title            | level |  facing  | categories |                                                           description                                                           |                                                             detail                                                             |                                          remediation                                           |                       metadata                        |               cache_key                
+----------------------------+----------------------------+-------+----------+------------+---------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------------------------------------------------------+----------------------------------------
+ policy_exists_rls_disabled | Policy Exists RLS Disabled | ERROR | EXTERNAL | {SECURITY} | Detects cases where row level security (RLS) policies have been created, but RLS has not been enabled for the underlying table. | Table \`public.blog\` has RLS policies but RLS is not enabled on the table. Policies include {all_own_posts,select_own_posts}. | https://supabase.com/docs/guides/database/database-linter?lint=0007_policy_exists_rls_disabled | {"name": "blog", "type": "table", "schema": "public"} | policy_exists_rls_disabled_public_blog
 (1 row)
 
   -- resolve the issue
   alter table public.blog enable row level security;
   -- 0 issue
   select * from lint."0007_policy_exists_rls_disabled";
- name | level | facing | categories | description | detail | remediation | metadata | cache_key 
-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
 rollback;
