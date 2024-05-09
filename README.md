@@ -27,6 +27,7 @@ If you are only interested in linting a project, a single query containing the l
 Each lint creates a view that returns a common interface. The interface is:
 
 - name (text) not null -- Name of the lint
+- title (text) not null -- Human readable title of the lint
 - level (text) not null -- The level of issue. One of ERROR/WARN/INFO
 - facing (text) not null -- Is it an internal (to supabase) or an external (user centric)  lint. One of INTERNAL/EXTERNAL
 - categories (text[]) not null -- Relevant tags for the issue. Any/All of SECURITY/PERFORMANCE (list may grow)
