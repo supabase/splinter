@@ -2,6 +2,7 @@ create view lint."0013_rls_disabled_in_public" as
 
 select
     'rls_disabled_in_public' as name,
+    'RLS Disabled in Public' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

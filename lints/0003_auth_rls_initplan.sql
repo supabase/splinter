@@ -30,6 +30,7 @@ with policies as (
 )
 select
     'auth_rls_initplan' as name,
+    'Auth RLS Initialization Plan' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,

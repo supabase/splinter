@@ -2,6 +2,7 @@ create view lint."0016_materialized_view_in_api" as
 
 select
     'materialized_view_in_api' as name,
+    'Materialized View in API' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

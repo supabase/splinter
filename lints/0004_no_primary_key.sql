@@ -2,6 +2,7 @@ create view lint."0004_no_primary_key" as
 
 select
     'no_primary_key' as name,
+    'No Primary Key' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,

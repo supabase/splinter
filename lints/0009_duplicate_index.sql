@@ -2,6 +2,7 @@ create view lint."0009_duplicate_index" as
 
 select
     'duplicate_index' as name,
+    'Duplicate Index' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,

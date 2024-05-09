@@ -34,6 +34,7 @@ index_ as (
 )
 select
     'unindexed_foreign_keys' as name,
+    'Unindexed foreign keys' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -75,6 +76,7 @@ union all
 (
 select
     'auth_users_exposed' as name,
+    'Exposed Auth Users' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -191,6 +193,7 @@ with policies as (
 )
 select
     'auth_rls_initplan' as name,
+    'Auth RLS Initialization Plan' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -254,6 +257,7 @@ union all
 (
 select
     'no_primary_key' as name,
+    'No Primary Key' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -299,6 +303,7 @@ union all
 (
 select
     'unused_index' as name,
+    'Unused Index' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -341,6 +346,7 @@ union all
 (
 select
     'multiple_permissive_policies' as name,
+    'Multiple Permissive Policies' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -413,6 +419,7 @@ union all
 (
 select
     'policy_exists_rls_disabled' as name,
+    'Policy Exists RLS Disabled' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -458,6 +465,7 @@ union all
 (
 select
     'rls_enabled_no_policy' as name,
+    'RLS Enabled No Policy' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -503,6 +511,7 @@ union all
 (
 select
     'duplicate_index' as name,
+    'Duplicate Index' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -557,6 +566,7 @@ union all
 (
 select
     'security_definer_view' as name,
+    'Security Definer View' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -608,6 +618,7 @@ union all
 (
 select
     'function_search_path_mutable' as name,
+    'Function Search Path Mutable' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -647,6 +658,7 @@ union all
 (
 select
     'rls_disabled_in_public' as name,
+    'RLS Disabled in Public' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -687,6 +699,7 @@ union all
 (
 select
     'extension_in_public' as name,
+    'Extension in Public' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -738,6 +751,7 @@ with policies as (
 )
 select
     'rls_references_user_metadata' as name,
+    'RLS references user metadata' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -774,6 +788,7 @@ union all
 (
 select
     'materialized_view_in_api' as name,
+    'Materialized View in API' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

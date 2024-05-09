@@ -3,24 +3,24 @@ begin;
   set local pgrst.db_schemas = 'public';
   -- 0 issues
   select * from lint."0013_rls_disabled_in_public";
- name | level | facing | categories | description | detail | remediation | metadata | cache_key 
-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
   create table public.foo( it int primary key );
   -- 1 issue
   select * from lint."0013_rls_disabled_in_public";
-          name          | level |  facing  | categories |                                              description                                               |                            detail                             |                                        remediation                                         |                       metadata                       |             cache_key             
-------------------------+-------+----------+------------+--------------------------------------------------------------------------------------------------------+---------------------------------------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------+-----------------------------------
- rls_disabled_in_public | ERROR | EXTERNAL | {SECURITY} | Detects cases where row level security (RLS) has not been enabled on a table in the \`public\` schema. | Table \`public.foo\` is public, but RLS has not been enabled. | https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public | {"name": "foo", "type": "table", "schema": "public"} | rls_disabled_in_public_public_foo
+          name          |         title          | level |  facing  | categories |                                              description                                               |                            detail                             |                                        remediation                                         |                       metadata                       |             cache_key             
+------------------------+------------------------+-------+----------+------------+--------------------------------------------------------------------------------------------------------+---------------------------------------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------+-----------------------------------
+ rls_disabled_in_public | RLS Disabled in Public | ERROR | EXTERNAL | {SECURITY} | Detects cases where row level security (RLS) has not been enabled on a table in the \`public\` schema. | Table \`public.foo\` is public, but RLS has not been enabled. | https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public | {"name": "foo", "type": "table", "schema": "public"} | rls_disabled_in_public_public_foo
 (1 row)
 
   -- Resolve the issue by enabling RLS
   alter table public.foo enable row level security;
   -- 0 issue
   select * from lint."0013_rls_disabled_in_public";
- name | level | facing | categories | description | detail | remediation | metadata | cache_key 
-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
   -- Confirm that the lint only applies to `public` tables
@@ -30,8 +30,8 @@ begin;
   create table xyz.bar( it int primary key );
   -- 0 issue
   select * from lint."0013_rls_disabled_in_public";
- name | level | facing | categories | description | detail | remediation | metadata | cache_key 
-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
 rollback;
