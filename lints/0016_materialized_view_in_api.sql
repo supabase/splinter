@@ -6,7 +6,7 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects materialized views that are potentially accessible over APIs.' as description,
+    'Detects materialized views that are potentially accessible over the Data APIs.' as description,
     format(
         'Materialized view \`%s.%s\` is selectable by anon or authenticated roles',
         n.nspname,
