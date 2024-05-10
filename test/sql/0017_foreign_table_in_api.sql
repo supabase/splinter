@@ -2,19 +2,44 @@ begin;
   set local search_path = '';
   set local pgrst.db_schemas = 'public';
 
-  -- 0 issues
-  select * from lint."0016_materialized_view_in_api";
+  create extension postgres_fdw schema extensions;
 
-  create materialized view public.my_view as select 1;
+  -- 0 issues
+  select * from lint."0017_foreign_table_in_api";
+
+  -- Setup
+  create server foreign_server
+    foreign data wrapper postgres_fdw
+    options (host 'foreignhost', port '5432', dbname 'foreign_db');
+
+  create user mapping for current_user
+    server foreign_server
+    options (user 'foreign_user', password 'foreign_password');
+
+  create foreign table public.fdw_table (
+    id integer,
+    data text
+  )
+    server foreign_server
+    options (table_name 'foreign_table');
+
 
   -- 1 issue
-  select * from lint."0016_materialized_view_in_api";
+  select * from lint."0017_foreign_table_in_api";
+
+  savepoint a;
+
+  -- When not on API path, no problem reported
+  -- 0 issues
+  set local pgrst.db_schemas = '';
+  select * from lint."0017_foreign_table_in_api";
+
+  rollback to savepoint a;
 
   -- Resolve the issue with permissions
-  revoke select on public.my_view from anon, authenticated, public;
+  revoke select on public.fdw_table from anon, authenticated, public;
 
   -- 0 issues
-  select * from lint."0016_materialized_view_in_api";
-
+  select * from lint."0017_foreign_table_in_api";
 
 rollback;

@@ -1,24 +1,25 @@
-create view lint."0016_materialized_view_in_api" as
+create view lint."0017_foreign_table_in_api" as
 
 select
-    'materialized_view_in_api' as name,
+    'foreign_table_in_api' as name,
+    'Foreign Table in API' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects materialized views that are potentially accessible over APIs.' as description,
+    'Detects foreign tables that are accessible over APIs.' as description,
     format(
-        'Materialized view \`%s.%s\` is selectable by anon or authenticated roles',
+        'Foreign table \`%s.%s\` is accessible over APIs',
         n.nspname,
         c.relname
     ) as detail,
-    'https://supabase.com/docs/guides/database/database-linter?lint=0016_materialized_view_in_api' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0017_foreign_table_in_api' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,
-        'type', 'materialized view'
+        'type', 'foreign table'
     ) as metadata,
     format(
-        'materialized_view_in_api_%s_%s',
+        'foreign_table_in_api_%s_%s',
         n.nspname,
         c.relname
     ) as cache_key
@@ -30,7 +31,7 @@ from
         on c.oid = dep.objid
         and dep.deptype = 'e'
 where
-    c.relkind = 'm'
+    c.relkind = 'f'
     and (
         pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
         or pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT')
