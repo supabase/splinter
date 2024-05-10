@@ -20,6 +20,7 @@ with policies as (
 )
 select
     'rls_references_user_metadata' as name,
+    'RLS references user metadata' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

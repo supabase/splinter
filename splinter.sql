@@ -34,6 +34,7 @@ index_ as (
 )
 select
     'unindexed_foreign_keys' as name,
+    'Unindexed foreign keys' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -75,10 +76,11 @@ union all
 (
 select
     'auth_users_exposed' as name,
+    'Exposed Auth Users' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security.' as description,
+    'Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in schemas exposed to PostgREST, potentially compromising user data security.' as description,
     format(
         'View/Materialized View "%s" in the public schema may expose \`auth.users\` data to anon or authenticated roles.',
         c.relname
@@ -191,6 +193,7 @@ with policies as (
 )
 select
     'auth_rls_initplan' as name,
+    'Auth RLS Initialization Plan' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -254,6 +257,7 @@ union all
 (
 select
     'no_primary_key' as name,
+    'No Primary Key' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -299,6 +303,7 @@ union all
 (
 select
     'unused_index' as name,
+    'Unused Index' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -341,6 +346,7 @@ union all
 (
 select
     'multiple_permissive_policies' as name,
+    'Multiple Permissive Policies' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -413,6 +419,7 @@ union all
 (
 select
     'policy_exists_rls_disabled' as name,
+    'Policy Exists RLS Disabled' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -458,6 +465,7 @@ union all
 (
 select
     'rls_enabled_no_policy' as name,
+    'RLS Enabled No Policy' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -503,6 +511,7 @@ union all
 (
 select
     'duplicate_index' as name,
+    'Duplicate Index' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
@@ -557,12 +566,13 @@ union all
 (
 select
     'security_definer_view' as name,
+    'Security Definer View' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies.' as description,
+    'Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user' as description,
     format(
-        'View \`%s.%s\` is SECURITY DEFINER',
+        'View \`%s.%s\` is defined with the SECURITY DEFINER property',
         n.nspname,
         c.relname
     ) as detail,
@@ -608,6 +618,7 @@ union all
 (
 select
     'function_search_path_mutable' as name,
+    'Function Search Path Mutable' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -647,10 +658,11 @@ union all
 (
 select
     'rls_disabled_in_public' as name,
+    'RLS Disabled in Public' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects cases where row level security (RLS) has not been enabled on a table in the \`public\` schema.' as description,
+    'Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST' as description,
     format(
         'Table \`%s.%s\` is public, but RLS has not been enabled.',
         n.nspname,
@@ -687,6 +699,7 @@ union all
 (
 select
     'extension_in_public' as name,
+    'Extension in Public' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -738,6 +751,7 @@ with policies as (
 )
 select
     'rls_references_user_metadata' as name,
+    'RLS references user metadata' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
@@ -774,10 +788,11 @@ union all
 (
 select
     'materialized_view_in_api' as name,
+    'Materialized View in API' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects materialized views that are potentially accessible over APIs.' as description,
+    'Detects materialized views that are potentially accessible over the Data APIs.' as description,
     format(
         'Materialized view \`%s.%s\` is selectable by anon or authenticated roles',
         n.nspname,

@@ -2,6 +2,7 @@ create view lint."0008_rls_enabled_no_policy" as
 
 select
     'rls_enabled_no_policy' as name,
+    'RLS Enabled No Policy' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

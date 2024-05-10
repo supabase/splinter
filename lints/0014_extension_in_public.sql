@@ -2,6 +2,7 @@ create view lint."0014_extension_in_public" as
 
 select
     'extension_in_public' as name,
+    'Extension in Public' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,

@@ -2,10 +2,11 @@ create view lint."0016_materialized_view_in_api" as
 
 select
     'materialized_view_in_api' as name,
+    'Materialized View in API' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects materialized views that are potentially accessible over APIs.' as description,
+    'Detects materialized views that are potentially accessible over the Data APIs.' as description,
     format(
         'Materialized view \`%s.%s\` is selectable by anon or authenticated roles',
         n.nspname,

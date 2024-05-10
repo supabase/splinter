@@ -6,31 +6,31 @@ begin;
   create index ix_1 on public.blog (id);
   -- 0 issue
   select * from lint."0009_duplicate_index";
- name | level | facing | categories | description | detail | remediation | metadata | cache_key 
-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
   create index ix_2 on public.blog (id);
   -- 1 issue
   select * from lint."0009_duplicate_index";
-      name       | level |  facing  |  categories   |                        description                        |                                        detail                                        |                                     remediation                                     |                                      metadata                                      |                cache_key                
------------------+-------+----------+---------------+-----------------------------------------------------------+--------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+-----------------------------------------
- duplicate_index | WARN  | EXTERNAL | {PERFORMANCE} | Detects cases where two ore more identical indexes exist. | Table \`public.blog\` has identical indexes {ix_1,ix_2}. Drop all except one of them | https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index | {"name": "blog", "type": "table", "schema": "public", "indexes": ["ix_1", "ix_2"]} | duplicate_index_public_blog_{ix_1,ix_2}
+      name       |      title      | level |  facing  |  categories   |                        description                        |                                        detail                                        |                                     remediation                                     |                                      metadata                                      |                cache_key                
+-----------------+-----------------+-------+----------+---------------+-----------------------------------------------------------+--------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+-----------------------------------------
+ duplicate_index | Duplicate Index | WARN  | EXTERNAL | {PERFORMANCE} | Detects cases where two ore more identical indexes exist. | Table \`public.blog\` has identical indexes {ix_1,ix_2}. Drop all except one of them | https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index | {"name": "blog", "type": "table", "schema": "public", "indexes": ["ix_1", "ix_2"]} | duplicate_index_public_blog_{ix_1,ix_2}
 (1 row)
 
   create index ix_3 on public.blog (id);
   -- 1 issue
   select * from lint."0009_duplicate_index";
-      name       | level |  facing  |  categories   |                        description                        |                                          detail                                           |                                     remediation                                     |                                          metadata                                          |                  cache_key                   
------------------+-------+----------+---------------+-----------------------------------------------------------+-------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------+----------------------------------------------
- duplicate_index | WARN  | EXTERNAL | {PERFORMANCE} | Detects cases where two ore more identical indexes exist. | Table \`public.blog\` has identical indexes {ix_1,ix_2,ix_3}. Drop all except one of them | https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index | {"name": "blog", "type": "table", "schema": "public", "indexes": ["ix_1", "ix_2", "ix_3"]} | duplicate_index_public_blog_{ix_1,ix_2,ix_3}
+      name       |      title      | level |  facing  |  categories   |                        description                        |                                          detail                                           |                                     remediation                                     |                                          metadata                                          |                  cache_key                   
+-----------------+-----------------+-------+----------+---------------+-----------------------------------------------------------+-------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------+----------------------------------------------
+ duplicate_index | Duplicate Index | WARN  | EXTERNAL | {PERFORMANCE} | Detects cases where two ore more identical indexes exist. | Table \`public.blog\` has identical indexes {ix_1,ix_2,ix_3}. Drop all except one of them | https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index | {"name": "blog", "type": "table", "schema": "public", "indexes": ["ix_1", "ix_2", "ix_3"]} | duplicate_index_public_blog_{ix_1,ix_2,ix_3}
 (1 row)
 
   drop index public.ix_3;
   drop index public.ix_2;
   select * from lint."0009_duplicate_index";
- name | level | facing | categories | description | detail | remediation | metadata | cache_key 
-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
 rollback;
