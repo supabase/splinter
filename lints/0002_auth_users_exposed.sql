@@ -6,7 +6,7 @@ select
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in the public schema, potentially compromising user data security.' as description,
+    'Detects if auth.users is exposed to anon or authenticated roles via a view or materialized view in schemas exposed to PostgREST, potentially compromising user data security.' as description,
     format(
         'View/Materialized View "%s" in the public schema may expose \`auth.users\` data to anon or authenticated roles.',
         c.relname

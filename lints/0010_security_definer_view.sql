@@ -6,9 +6,9 @@ select
     'ERROR' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects views that are SECURITY DEFINER meaning that they ignore row level security (RLS) policies.' as description,
+    'Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user' as description,
     format(
-        'View \`%s.%s\` is SECURITY DEFINER',
+        'View \`%s.%s\` is defined with the SECURITY DEFINER property',
         n.nspname,
         c.relname
     ) as detail,
