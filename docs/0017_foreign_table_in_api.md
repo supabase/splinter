@@ -29,7 +29,7 @@ If you do need to access data from the foreign table over APIs we recommend movi
 -- Create a new schema
 create schema private;
 
--- Move the foreign table out of the API search path
+-- Move the foreign table out of the API's exposed schemas
 alter foreign table public.some_foreign_table set schema private;
 
 -- Make sure the API roles still have access to the FDW
