@@ -30,6 +30,8 @@ begin;
     union all
     select * from lint."0015_rls_references_user_metadata"
     union all
-    select * from lint."0016_materialized_view_in_api";
+    select * from lint."0016_materialized_view_in_api"
+    union all
+    select * from lint."0017_foreign_table_in_api";
 
 rollback;
