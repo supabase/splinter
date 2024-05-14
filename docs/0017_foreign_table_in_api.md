@@ -23,7 +23,7 @@ select pg_catalog.has_table_privilege('anon', 'public.some_foreign_table'::regcl
 
 Substituting in the appropriate role and view name.
 
-If you do need to access data from the foreign table over APIs we recommend moving the foreign table out of the API's search path and then creating a function, accessible [over RPC](https://supabase.com/docs/reference/javascript/rpc), that implements security rules on top of the foreign table. For example, if we wanted to confirm that the Supabase Auth user matches the `author_id` column of the foreign table the function might look like:
+If you do need to access data from the foreign table over APIs we recommend moving the foreign table out of the API's exposed schemas and then creating a function, accessible [over RPC](https://supabase.com/docs/reference/javascript/rpc), that implements security rules on top of the foreign table. For example, if we wanted to confirm that the Supabase Auth user matches the `author_id` column of the foreign table the function might look like:xt
 
 ```sql
 -- Create a new schema
