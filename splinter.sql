@@ -835,7 +835,7 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects foreign tables that are accessible over APIs.' as description,
+    'Detects foreign tables that are accessible over APIs. Foreign tables do not respect row level security policies.' as description,
     format(
         'Foreign table \`%s.%s\` is accessible over APIs',
         n.nspname,
