@@ -35,4 +35,4 @@ Any user with access to the project's URL will be able to perform CRUD operation
 alter table public.blog enable row level security;
 ```
 
-
+If data APIs are not being used, another option is to remove the relevant schema, e.g. `public`, from the [Exposed schemas in API settings](https://supabase.com/dashboard/project/_/settings/api). That change secures your project by making all entities in the removed schema inaccessible over APIs.
