@@ -33,4 +33,4 @@ using ( (select auth.uid()) = user_id );
 
 Then auth.uid() is called only once at the beginning of the query execution, and its result is reused for each row comparison. That change reduces the overhead from a few seconds to a few microseconds with no impact on the result set.
 
-Since the output values for the `auth` helper functions are set on a per-query basis there is no downside to aggresively applying this performacne optimization.
+Since the output values for the `auth` helper functions are set on a per-query basis there is no downside to aggressively applying this performance optimization.
