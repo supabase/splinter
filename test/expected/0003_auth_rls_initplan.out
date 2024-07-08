@@ -1,5 +1,6 @@
 begin;
     set local search_path = '';
+    savepoint a;
     -- No issues
     select * from lint."0003_auth_rls_initplan";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
@@ -62,5 +63,21 @@ begin;
  auth_rls_initplan | Auth RLS Initialization Plan | WARN  | EXTERNAL | {PERFORMANCE} | Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row | Table \`public.foo\` has a row level security policy \`bad_policy_role\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.  | https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan | {"name": "foo", "type": "table", "schema": "public"} | auth_rls_init_plan_public_foo_bad_policy_role
  auth_rls_initplan | Auth RLS Initialization Plan | WARN  | EXTERNAL | {PERFORMANCE} | Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row | Table \`public.foo\` has a row level security policy \`bad_policy_email\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info. | https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan | {"name": "foo", "type": "table", "schema": "public"} | auth_rls_init_plan_public_foo_bad_policy_email
 (4 rows)
+
+    rollback to savepoint a;
+    -- Confirm that realtime.messages will be scanned
+    create schema realtime;
+    create table realtime.messages( id int primary key);
+    create policy realtime_check on realtime.messages
+    for insert
+        to authenticated
+        with check ('foo' = auth.role());
+    alter table realtime.messages enable row level security;
+    -- 1 entry for realtime.messages
+    select * from lint."0003_auth_rls_initplan";
+       name        |            title             | level |  facing  |  categories   |                                                 description                                                 |                                                                                                                                                                                                     detail                                                                                                                                                                                                     |                                      remediation                                      |                          metadata                           |                      cache_key                      
+-------------------+------------------------------+-------+----------+---------------+-------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------+-------------------------------------------------------------+-----------------------------------------------------
+ auth_rls_initplan | Auth RLS Initialization Plan | WARN  | EXTERNAL | {PERFORMANCE} | Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row | Table \`realtime.messages\` has a row level security policy \`realtime_check\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info. | https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan | {"name": "messages", "type": "table", "schema": "realtime"} | auth_rls_init_plan_realtime_messages_realtime_check
+(1 row)
 
 rollback;
