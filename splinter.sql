@@ -882,7 +882,7 @@ select
     array['SECURITY'] as categories,
     'Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade.' as description,
     format(
-        'Table `%s.%s` has a column `%s` with unsupported reg* type `%s`.',
+        'Table \`%s.%s\` has a column \`%s\` with unsupported reg* type \`%s\`.',
         n.nspname,
         c.relname,
         a.attname,
