@@ -2,15 +2,17 @@ create view lint."0004_no_primary_key" as
 
 select
     'no_primary_key' as name,
+    'No Primary Key' as title,
     'INFO' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects if a table does not have a primary key. Tables without a primary key can be inefficient to interact with at scale.' as description,
     format(
         'Table \`%s.%s\` does not have a primary key',
         pgns.nspname,
         pgc.relname
     ) as detail,
-    'https://supabase.github.io/splinter/0004_no_primary_key' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0004_no_primary_key' as remediation,
      jsonb_build_object(
         'schema', pgns.nspname,
         'name', pgc.relname,
@@ -27,11 +29,15 @@ from
         on pgns.oid = pgc.relnamespace
     left join pg_catalog.pg_index pgi
         on pgi.indrelid = pgc.oid
+    left join pg_catalog.pg_depend dep
+        on pgc.oid = dep.objid
+        and dep.deptype = 'e'
 where
     pgc.relkind = 'r' -- regular tables
     and pgns.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
+    and dep.objid is null -- exclude tables owned by extensions
 group by
     pgc.oid,
     pgns.nspname,

@@ -1,37 +1,10 @@
-/*
-Usage of auth.uid(), auth.role() ... are common in RLS policies.
-
-A naive policy like
-
-    create policy "rls_test_select" on test_table
-    to authenticated
-    using ( auth.uid() = user_id );
-
-will re-evaluate the auth.uid() function for every row. That can result in 100s of times slower performance
-https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select
-
-To resolve that issue, the function calls can be wrapped like "(select auth.uid())" which causes the value to
-be executed exactly 1 time per query
-
-For example:
-
-    create policy "rls_test_select" on test_table
-    to authenticated
-    using ( (select auth.uid()) = user_id );
-
-NOTE:
-    This lint requires search_path = '' or 'auth' not in search_path;
-    because qual and with_check are dependent on search_path to determine if function calls include the "auth" schema
-*/
-
-
 create view lint."0003_auth_rls_initplan" as
 
 with policies as (
     select
-        nsp.nspname as schema_,
-        polrelid::regclass table_,
-        pc.relrowsecurity is_rls_active,
+        nsp.nspname as schema_name,
+        pb.tablename as table_name,
+        pc.relrowsecurity as is_rls_active,
         polname as policy_name,
         polpermissive as is_permissive, -- if not, then restrictive
         (select array_agg(r::regrole) from unnest(polroles) as x(r)) as roles,
@@ -57,40 +30,64 @@ with policies as (
 )
 select
     'auth_rls_initplan' as name,
+    'Auth RLS Initialization Plan' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
+    array['PERFORMANCE'] as categories,
     'Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row' as description,
     format(
-        'Table \`%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select for more.',
-        table_,
+        'Table \`%s.%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.',
+        schema_name,
+        table_name,
         policy_name
     ) as detail,
-    'https://supabase.github.io/splinter/0003_auth_rls_initplan' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan' as remediation,
     jsonb_build_object(
-        'schema', schema_,
-        'name', table_,
+        'schema', schema_name,
+        'name', table_name,
         'type', 'table'
     ) as metadata,
-    format('auth_rls_init_plan_%s_%s_%s', schema_, table_, policy_name) as cache_key
+    format('auth_rls_init_plan_%s_%s_%s', schema_name, table_name, policy_name) as cache_key
 from
     policies
 where
     is_rls_active
-    and schema_::text not in (
-        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+    -- NOTE: does not include realtime in support of monitoring policies on realtime.messages
+    and schema_name not in (
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
+        -- Example: auth.uid()
         (
-            -- Example: auth.uid()
-            qual  ~ '(auth)\.(uid|jwt|role|email)\(\)'
-            -- Example: select auth.uid()
-            and lower(qual) !~ 'select\s+(auth)\.(uid|jwt|role|email)\(\)'
+            qual like '%auth.uid()%'
+            and lower(qual) not like '%select auth.uid()%'
         )
-        or
-        (
-            -- Example: auth.uid()
-            with_check  ~ '(auth)\.(uid|jwt|role|email)\(\)'
-            -- Example: select auth.uid()
-            and lower(with_check) !~ 'select\s+(auth)\.(uid|jwt|role|email)\(\)'
+        or (
+            qual like '%auth.jwt()%'
+            and lower(qual) not like '%select auth.jwt()%'
+        )
+        or (
+            qual like '%auth.role()%'
+            and lower(qual) not like '%select auth.role()%'
+        )
+        or (
+            qual like '%auth.email()%'
+            and lower(qual) not like '%select auth.email()%'
+        )
+        or (
+            with_check like '%auth.uid()%'
+            and lower(with_check) not like '%select auth.uid()%'
+        )
+        or (
+            with_check like '%auth.jwt()%'
+            and lower(with_check) not like '%select auth.jwt()%'
+        )
+        or (
+            with_check like '%auth.role()%'
+            and lower(with_check) not like '%select auth.role()%'
+        )
+        or (
+            with_check like '%auth.email()%'
+            and lower(with_check) not like '%select auth.email()%'
         )
     );

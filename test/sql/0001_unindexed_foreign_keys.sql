@@ -2,6 +2,8 @@ begin;
 
     savepoint a;
 
+    set local search_path = '';
+
     -- Simple Case
     -- No index on bbb.aaa_id produces an error
     create table public.aaa(
@@ -44,11 +46,11 @@ begin;
     -- Confirm that an index on the correct columns but in the wrong order
     -- does NOT resolve the issue
 
-    create index on bbb(bar, foo);
+    create index on public.bbb(bar, foo);
     select * from lint."0001_unindexed_foreign_keys";
 
     -- When we create a multi-column index in the correct order the issue is resolved
-    create index on bbb(foo, bar);
+    create index on public.bbb(foo, bar);
     select * from lint."0001_unindexed_foreign_keys";
 
 

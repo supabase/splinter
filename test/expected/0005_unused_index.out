@@ -1,8 +1,9 @@
 begin;
+    set local search_path = '';
   -- No issues
   select * from lint."0005_unused_index";
- name | level | facing | description | detail | remediation | metadata | cache_key 
-------+-------+--------+-------------+--------+-------------+----------+-----------
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
   create table public.foo (
@@ -13,9 +14,9 @@ begin;
   create index some_unused_index on public.foo (bar);
   -- Only the "bar" table is listed
   select * from lint."0005_unused_index";
-     name     | level |  facing  |                                 description                                 |                                detail                                 |                      remediation                      |                       metadata                       |                 cache_key                 
---------------+-------+----------+-----------------------------------------------------------------------------+-----------------------------------------------------------------------+-------------------------------------------------------+------------------------------------------------------+-------------------------------------------
- unused_index | INFO  | EXTERNAL | Detects if an index has never been used and may be a candidate for removal. | Index `\some_unused_index\` on table \`public.foo\` has not been used | https://supabase.github.io/splinter/0005_unused_index | {"name": "foo", "type": "table", "schema": "public"} | unused_index_public_foo_some_unused_index
+     name     |    title     | level |  facing  |  categories   |                                 description                                 |                                detail                                 |                                   remediation                                    |                       metadata                       |                 cache_key                 
+--------------+--------------+-------+----------+---------------+-----------------------------------------------------------------------------+-----------------------------------------------------------------------+----------------------------------------------------------------------------------+------------------------------------------------------+-------------------------------------------
+ unused_index | Unused Index | INFO  | EXTERNAL | {PERFORMANCE} | Detects if an index has never been used and may be a candidate for removal. | Index \`some_unused_index\` on table \`public.foo\` has not been used | https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index | {"name": "foo", "type": "table", "schema": "public"} | unused_index_public_foo_some_unused_index
 (1 row)
 
 rollback;

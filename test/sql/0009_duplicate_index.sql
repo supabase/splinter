@@ -1,4 +1,5 @@
 begin;
+  set local search_path = '';
 
   create table public.blog(
     id int primary key
@@ -19,8 +20,8 @@ begin;
   -- 1 issue
   select * from lint."0009_duplicate_index";
 
-  drop index ix_3;
-  drop index ix_2;
+  drop index public.ix_3;
+  drop index public.ix_2;
   select * from lint."0009_duplicate_index";
 
 

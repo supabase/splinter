@@ -1,0 +1,26 @@
+begin;
+  set local search_path = '';
+  set local pgrst.db_schemas = 'public';
+  -- 0 issues
+  select * from lint."0016_materialized_view_in_api";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  create materialized view public.my_view as select 1;
+  -- 1 issue
+  select * from lint."0016_materialized_view_in_api";
+           name           |          title           | level |  facing  | categories |                            description                             |                                      detail                                       |                                         remediation                                          |                               metadata                               |                cache_key                
+--------------------------+--------------------------+-------+----------+------------+--------------------------------------------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+----------------------------------------------------------------------+-----------------------------------------
+ materialized_view_in_api | Materialized View in API | WARN  | EXTERNAL | {SECURITY} | Detects materialized views that are accessible over the Data APIs. | Materialized view \`public.my_view\` is selectable by anon or authenticated roles | https://supabase.com/docs/guides/database/database-linter?lint=0016_materialized_view_in_api | {"name": "my_view", "type": "materialized view", "schema": "public"} | materialized_view_in_api_public_my_view
+(1 row)
+
+  -- Resolve the issue with permissions
+  revoke select on public.my_view from anon, authenticated, public;
+  -- 0 issues
+  select * from lint."0016_materialized_view_in_api";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+rollback;

@@ -1,4 +1,5 @@
 begin;
+    set local search_path = '';
 
     -- No issues
     select * from lint."0004_no_primary_key";

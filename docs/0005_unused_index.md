@@ -1,5 +1,5 @@
 
-Level: INFO 
+Level: INFO
 
 ### Rationale
 

@@ -1,4 +1,6 @@
 begin;
+  set local search_path = '';
+  set local pgrst.db_schemas = 'public';
 
   -- 0 issues
   select * from lint."0010_security_definer_view";

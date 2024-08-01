@@ -1,4 +1,7 @@
 begin;
+    set local search_path = '';
+
+    savepoint a;
 
     -- No issues
     select * from lint."0003_auth_rls_initplan";
@@ -59,6 +62,22 @@ begin;
     alter table public.foo enable row level security;
 
     -- 4 entries, 1 per "bad_" policy
+    select * from lint."0003_auth_rls_initplan";
+
+    rollback to savepoint a;
+
+    -- Confirm that realtime.messages will be scanned
+    create schema realtime;
+    create table realtime.messages( id int primary key);
+
+    create policy realtime_check on realtime.messages
+    for insert
+        to authenticated
+        with check ('foo' = auth.role());
+
+    alter table realtime.messages enable row level security;
+
+    -- 1 entry for realtime.messages
     select * from lint."0003_auth_rls_initplan";
 
 rollback;

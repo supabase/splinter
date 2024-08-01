@@ -2,15 +2,17 @@ create view lint."0011_function_search_path_mutable" as
 
 select
     'function_search_path_mutable' as name,
+    'Function Search Path Mutable' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
-    'Detects functions with a mutable search_path parameter which could fail to execute sucessfully for some roles.' as description,
+    array['SECURITY'] as categories,
+    'Detects functions where the search_path parameter is not set to an empty string.' as description,
     format(
         'Function \`%s.%s\` has a role mutable search_path',
         n.nspname,
         p.proname
     ) as detail,
-    'https://supabase.github.io/splinter/0011_function_search_path_mutable' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', p.proname,
@@ -26,9 +28,13 @@ from
     pg_catalog.pg_proc p
     join pg_catalog.pg_namespace n
         on p.pronamespace = n.oid
+    left join pg_catalog.pg_depend dep
+        on p.oid = dep.objid
+        and dep.deptype = 'e'
 where
     n.nspname not in (
-        'pg_catalog', 'information_schema', 'auth', 'extensions', 'graphql', 'graphql_public', 'net', 'pgsodium', 'storage', 'supabase_functions', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
+    and dep.objid is null -- exclude functions owned by extensions
     -- Search path not set to ''
     and not coalesce(p.proconfig, '{}') && array['search_path=""'];

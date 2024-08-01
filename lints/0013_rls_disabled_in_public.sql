@@ -2,15 +2,17 @@ create view lint."0013_rls_disabled_in_public" as
 
 select
     'rls_disabled_in_public' as name,
+    'RLS Disabled in Public' as title,
     'ERROR' as level,
     'EXTERNAL' as facing,
-    'Detects cases where row level security (RLS) has not been enabled on a table in the `public` schema.' as description,
+    array['SECURITY'] as categories,
+    'Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST' as description,
     format(
         'Table \`%s.%s\` is public, but RLS has not been enabled.',
         n.nspname,
         c.relname
     ) as detail,
-    'https://supabase.github.io/splinter/0013_rls_disabled_in_public' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c.relname,
@@ -27,6 +29,14 @@ from
         on c.relnamespace = n.oid
 where
     c.relkind = 'r' -- regular tables
-    and n.nspname = 'public'
     -- RLS is disabled
-    and not c.relrowsecurity;
+    and not c.relrowsecurity
+    and (
+        pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
+        or pg_catalog.has_table_privilege('authenticated', c.oid, 'SELECT')
+    )
+    and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
+    and n.nspname not in (
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+    );
+

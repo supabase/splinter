@@ -7,7 +7,7 @@ Tables in a relational database should ideally have a key that uniquely identifi
 
 ### What is a Primary Key?
 
-A primary key is a single column or a set of columns that uniquely identifies each row in a table. 
+A primary key is a single column or a set of columns that uniquely identifies each row in a table.
 
 Primary keys are important because they enable:
 
