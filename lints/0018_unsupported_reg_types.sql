@@ -4,7 +4,7 @@ SELECT
     'Unsupported reg* types' AS title,
     'WARN' AS level,
     'EXTERNAL' AS facing,
-    ARRAY['CATEGORY'] AS categories,
+    ARRAY['PERFORMANCE'] AS categories,
     'Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade.' AS description,
     FORMAT(
         'Table `%s.%s` has a column `%s` with unsupported reg* type `%s`.',
