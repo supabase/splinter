@@ -1,0 +1,32 @@
+begin;
+  set local search_path = '';
+  set local pgrst.db_schemas = 'public';
+  create table public.bad_table(
+    id int primary key,
+    -- Allowed
+    good1 regclass,
+    good2 regrole,
+    good3 regtype,
+    -- Not Allowed
+    bad1 regcollation,
+    bad2 regconfig,
+    bad3 regdictionary,
+    bad4 regnamespace,
+    bad5 regoper,
+    bad6 regproc,
+    bad7 regprocedure
+  );
+  -- 7 issues
+  select * from lint."0018_unsupported_reg_types";
+         name          |         title         | level |  facing  | categories |                                                          description                                                          |                                          detail                                          |                                     remediation                                      |                                       metadata                                        |                  cache_key                  
+-----------------------+-----------------------+-------+----------+------------+-------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------+---------------------------------------------
+ unsupported_reg_types | Unsupported reg types | WARN  | EXTERNAL | {SECURITY} | Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade. | Table `public.bad_table` has a column `bad1` with unsupported reg* type `regcollation`.  | https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types | {"type": "regcollation", "table": "bad_table", "column": "bad1", "schema": "public"}  | unsupported_reg_types_public_bad_table_bad1
+ unsupported_reg_types | Unsupported reg types | WARN  | EXTERNAL | {SECURITY} | Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade. | Table `public.bad_table` has a column `bad2` with unsupported reg* type `regconfig`.     | https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types | {"type": "regconfig", "table": "bad_table", "column": "bad2", "schema": "public"}     | unsupported_reg_types_public_bad_table_bad2
+ unsupported_reg_types | Unsupported reg types | WARN  | EXTERNAL | {SECURITY} | Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade. | Table `public.bad_table` has a column `bad3` with unsupported reg* type `regdictionary`. | https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types | {"type": "regdictionary", "table": "bad_table", "column": "bad3", "schema": "public"} | unsupported_reg_types_public_bad_table_bad3
+ unsupported_reg_types | Unsupported reg types | WARN  | EXTERNAL | {SECURITY} | Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade. | Table `public.bad_table` has a column `bad4` with unsupported reg* type `regnamespace`.  | https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types | {"type": "regnamespace", "table": "bad_table", "column": "bad4", "schema": "public"}  | unsupported_reg_types_public_bad_table_bad4
+ unsupported_reg_types | Unsupported reg types | WARN  | EXTERNAL | {SECURITY} | Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade. | Table `public.bad_table` has a column `bad5` with unsupported reg* type `regoper`.       | https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types | {"type": "regoper", "table": "bad_table", "column": "bad5", "schema": "public"}       | unsupported_reg_types_public_bad_table_bad5
+ unsupported_reg_types | Unsupported reg types | WARN  | EXTERNAL | {SECURITY} | Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade. | Table `public.bad_table` has a column `bad6` with unsupported reg* type `regproc`.       | https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types | {"type": "regproc", "table": "bad_table", "column": "bad6", "schema": "public"}       | unsupported_reg_types_public_bad_table_bad6
+ unsupported_reg_types | Unsupported reg types | WARN  | EXTERNAL | {SECURITY} | Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade. | Table `public.bad_table` has a column `bad7` with unsupported reg* type `regprocedure`.  | https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types | {"type": "regprocedure", "table": "bad_table", "column": "bad7", "schema": "public"}  | unsupported_reg_types_public_bad_table_bad7
+(7 rows)
+
+rollback;
