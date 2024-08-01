@@ -2,7 +2,7 @@ Level: WARN
 
 ### Rationale
 
-Referencing `reg*` types that describe Postgres internals like types, namespaces, procedures, etc is a risk as these types are not supported by [pg_upgrade](https://www.postgresql.org/docs/current/pgupgrade.html) the standard tool for upgrading between Postgres versions.
+Referencing `reg*` types that describe Postgres internals like types, namespaces, procedures, etc is a risk as these types are not supported by [pg_upgrade](https://www.postgresql.org/docs/current/pgupgrade.html), the standard tool for upgrading between Postgres versions.
 
 ### How to Resolve
 
@@ -25,5 +25,3 @@ create table public.good_table(
   my_collation_name text
 );
 ```
-
-
