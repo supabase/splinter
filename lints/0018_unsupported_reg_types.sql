@@ -1,28 +1,43 @@
-CREATE VIEW lint."unsupported_reg_types" AS
-SELECT
-    'unsupported_reg_types' AS name,
-    'Unsupported reg* types' AS title,
-    'WARN' AS level,
-    'EXTERNAL' AS facing,
-    ARRAY['PERFORMANCE'] AS categories,
-    'Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade.' AS description,
-    FORMAT(
+create view lint."0018_unsupported_reg_types" AS
+
+select
+    'unsupported_reg_types' as name,
+    'Unsupported reg types' as title,
+    'WARN' as level,
+    'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
+    'Identifies columns using unsupported reg* types outside pg_catalog schema, which prevents database upgrades using pg_upgrade.' as description,
+    format(
         'Table `%s.%s` has a column `%s` with unsupported reg* type `%s`.',
-        n.nspname, c.relname, a.attname, t.typname
-    ) AS detail,
-    'https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types' AS remediation,
+        n.nspname,
+        c.relname,
+        a.attname,
+        t.typname
+    ) as detail,
+    'https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'table', c.relname,
         'column', a.attname,
         'type', t.typname
-    ) AS metadata,
-    FORMAT('unsupported_reg_types_%s_%s_%s', n.nspname, c.relname, a.attname) AS cache_key
-FROM
+    ) as metadata,
+    format(
+        'unsupported_reg_types_%s_%s_%s',
+        n.nspname,
+        c.relname,
+        a.attname
+    ) AS cache_key
+from
     pg_catalog.pg_attribute a
-    JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
-    JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
-    JOIN pg_catalog.pg_type t ON a.tttypid = t.oid
-WHERE
-    t.typname IN ('regcollation', 'regconfig', 'regdictionary', 'regnamespace', 'regoper', 'regoperator', 'regproc', 'regprocedure')
-    AND n.nspname NOT IN ('pg_catalog', 'information_schema');
+    join pg_catalog.pg_class c
+        on a.attrelid = c.oid
+    join pg_catalog.pg_namespace n
+        on c.relnamespace = n.oid
+    join pg_catalog.pg_type t
+        on a.atttypid = t.oid
+    join pg_catalog.pg_namespace tn
+        on t.typnamespace = tn.oid
+where
+    tn.nspname = 'pg_catalog'
+    and t.typname in ('regcollation', 'regconfig', 'regdictionary', 'regnamespace', 'regoper', 'regoperator', 'regproc', 'regprocedure')
+    and n.nspname not in ('pg_catalog', 'information_schema', 'pgsodium');
