@@ -17,9 +17,9 @@ select
     'https://supabase.com/docs/guides/database/database-linter?lint=unsupported_reg_types' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
-        'table', c.relname,
+        'name', c.relname,
         'column', a.attname,
-        'type', t.typname
+        'type', 'table'
     ) as metadata,
     format(
         'unsupported_reg_types_%s_%s_%s',
