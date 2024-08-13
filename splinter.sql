@@ -58,7 +58,7 @@ from
     foreign_keys fk
     left join index_ idx
         on fk.table_oid = idx.table_oid
-        and fk.col_attnums = idx.col_attnums
+        and fk.col_attnums = idx.col_attnums[1:array_length(fk.col_attnums, 1)]
     left join pg_catalog.pg_depend dep
         on idx.table_oid = dep.objid
         and dep.deptype = 'e'
