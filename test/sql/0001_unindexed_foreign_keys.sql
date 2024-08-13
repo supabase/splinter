@@ -25,7 +25,6 @@ begin;
 
     rollback to savepoint a;
 
-
     -- Multi-column Case
     -- No index on bbb(foo, bar)
     create table public.aaa(
@@ -53,5 +52,20 @@ begin;
     create index on public.bbb(foo, bar);
     select * from lint."0001_unindexed_foreign_keys";
 
+    rollback to savepoint a;
+
+    -- Issue 90: If a fkey is a subset of an existing index (in the same order) then
+    -- it is indexed and should not raise an error
+    create table public.tenant(
+        id uuid primary key,
+        name text not null
+    );
+    create table public.account(
+        tenant_id uuid not null references public.tenant(id),
+        user_id uuid not null,
+        primary key (tenant_id, user_id)
+    );
+
+    select * from lint."0001_unindexed_foreign_keys";
 
 rollback;
