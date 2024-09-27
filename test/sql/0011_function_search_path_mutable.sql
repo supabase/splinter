@@ -14,7 +14,7 @@ begin;
   -- 1 issue
   select * from lint."0011_function_search_path_mutable";
 
-  -- Replace function and set search_path
+  -- Replace function and set search_path to empty string
   create or replace function public.abc()
     returns int
     set search_path=''
@@ -25,5 +25,19 @@ begin;
 
   -- 1 issue
   select * from lint."0011_function_search_path_mutable";
+
+  -- Replace function and set search_path to non-empty string
+  create or replace function public.abc()
+    returns int
+    set search_path='public'
+    language sql
+  as $$
+    select 1;
+  $$;
+
+  -- 1 issue
+  select * from lint."0011_function_search_path_mutable";
+
+
 
 rollback;
