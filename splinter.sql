@@ -624,7 +624,7 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects functions where the search_path parameter is not set to an empty string.' as description,
+    'Detects functions where the search_path parameter is not set.' as description,
     format(
         'Function \`%s.%s\` has a role mutable search_path',
         n.nspname,
@@ -654,8 +654,12 @@ where
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude functions owned by extensions
-    -- Search path not set to ''
-    and not coalesce(p.proconfig, '{}') && array['search_path=""'])
+    -- Search path not set
+    and not exists (
+        select 1
+        from unnest(coalesce(p.proconfig, '{}')) as config
+        where config like 'search_path=%'
+    ))
 union all
 (
 select
