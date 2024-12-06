@@ -15,8 +15,17 @@ with policies as (
             when 'd' then 'DELETE'
             when '*' then 'ALL'
         end as command,
-        qual,
-        with_check
+        -- normalize expression's spaces
+        regexp_replace(
+            regexp_replace(
+                regexp_replace(qual, '[\n\r\t ]+', ' ', 'g'),
+            ' *\( \)', '()', 'g'),
+        ' *\. *', '.', 'g') as qual,
+        regexp_replace(
+            regexp_replace(
+                regexp_replace(with_check, '[\n\r\t ]+', ' ', 'g'),
+            ' *\( \)', '()', 'g'),
+        ' *\. *', '.', 'g') as with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
@@ -75,6 +84,10 @@ where
             and lower(qual) not like '%select auth.email()%'
         )
         or (
+            qual like '%current\_setting(%)%'
+            and lower(qual) not like '%select current\_setting(%)%'
+        )
+        or (
             with_check like '%auth.uid()%'
             and lower(with_check) not like '%select auth.uid()%'
         )
@@ -89,5 +102,9 @@ where
         or (
             with_check like '%auth.email()%'
             and lower(with_check) not like '%select auth.email()%'
+        )
+        or (
+            with_check like '%current\_setting(%)%'
+            and lower(with_check) not like '%select current\_setting(%)%'
         )
     );
