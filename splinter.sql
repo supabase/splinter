@@ -197,9 +197,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
-    'Detects if calls to \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row' as description,
+    'Detects if calls to \`current_setting()\` and \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row' as description,
     format(
-        'Table \`%s.%s\` has a row level security policy \`%s\` that re-evaluates an auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.',
+        'Table \`%s.%s\` has a row level security policy \`%s\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.',
         schema_name,
         table_name,
         policy_name
@@ -238,6 +238,10 @@ where
             and lower(qual) not like '%select auth.email()%'
         )
         or (
+            qual like '%current\_setting(%)%'
+            and lower(qual) not like '%select current\_setting(%)%'
+        )
+        or (
             with_check like '%auth.uid()%'
             and lower(with_check) not like '%select auth.uid()%'
         )
@@ -252,6 +256,10 @@ where
         or (
             with_check like '%auth.email()%'
             and lower(with_check) not like '%select auth.email()%'
+        )
+        or (
+            with_check like '%current\_setting(%)%'
+            and lower(with_check) not like '%select current\_setting(%)%'
         )
     ))
 union all

@@ -35,6 +35,12 @@ begin;
         to authenticated
         using ("email" = auth.email());
 
+    create policy bad_policy_current_setting on public.foo
+    for delete
+        to authenticated
+        -- crazy whitespace is intentional
+        using ("email" =   current_setting(  'role'  ));
+
     create policy good_policy_uid on public.foo
     for select
         to authenticated
@@ -55,13 +61,18 @@ begin;
         to authenticated
         using ("email" = (select auth.email()));
 
+    create policy good_policy_current_setting on public.foo
+    for delete
+        to authenticated
+        using ("email" = (select current_setting('role')));
+
     -- Still empty because RLS not enabled
     select * from lint."0003_auth_rls_initplan";
 
 
     alter table public.foo enable row level security;
 
-    -- 4 entries, 1 per "bad_" policy
+    -- 5 entries, 1 per "bad_" policy
     select * from lint."0003_auth_rls_initplan";
 
     rollback to savepoint a;
