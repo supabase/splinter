@@ -178,6 +178,7 @@ with policies as (
             when 'd' then 'DELETE'
             when '*' then 'ALL'
         end as command,
+        -- normalize expression's spaces
         qual,
         with_check
     from
@@ -238,6 +239,10 @@ where
             and lower(qual) not like '%select auth.email()%'
         )
         or (
+            qual like '%current\_setting(%)%'
+            and lower(qual) not like '%select current\_setting(%)%'
+        )
+        or (
             with_check like '%auth.uid()%'
             and lower(with_check) not like '%select auth.uid()%'
         )
@@ -252,6 +257,10 @@ where
         or (
             with_check like '%auth.email()%'
             and lower(with_check) not like '%select auth.email()%'
+        )
+        or (
+            with_check like '%current\_setting(%)%'
+            and lower(with_check) not like '%select current\_setting(%)%'
         )
     ))
 union all

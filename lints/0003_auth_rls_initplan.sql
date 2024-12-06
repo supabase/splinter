@@ -16,16 +16,8 @@ with policies as (
             when '*' then 'ALL'
         end as command,
         -- normalize expression's spaces
-        regexp_replace(
-            regexp_replace(
-                regexp_replace(qual, '[\n\r\t ]+', ' ', 'g'),
-            ' *\( \)', '()', 'g'),
-        ' *\. *', '.', 'g') as qual,
-        regexp_replace(
-            regexp_replace(
-                regexp_replace(with_check, '[\n\r\t ]+', ' ', 'g'),
-            ' *\( \)', '()', 'g'),
-        ' *\. *', '.', 'g') as with_check
+        qual,
+        with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
