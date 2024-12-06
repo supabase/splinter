@@ -35,4 +35,4 @@ If Data APIs are enabled, and `anon` or `authenticated` have permissions on the 
 alter table pgmq.q_foo enable row level security;
 ```
 
-If queuesa are not being accessed through data APIs, an alternative is to remove the `pgmq_public` schema from the [Exposed schemas in API settings](https://supabase.com/dashboard/project/_/settings/api). That change secures your project by making all queues inaccessible over APIs.
+If queues are not being accessed through data APIs, an alternative is to remove the `pgmq_public` schema from the [Exposed schemas in API settings](https://supabase.com/dashboard/project/_/settings/api). That change secures your project by making all queues inaccessible over APIs.
