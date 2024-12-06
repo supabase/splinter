@@ -178,7 +178,6 @@ with policies as (
             when 'd' then 'DELETE'
             when '*' then 'ALL'
         end as command,
-        -- normalize expression's spaces
         qual,
         with_check
     from
