@@ -74,7 +74,7 @@ select
     array['PERFORMANCE'] as categories,
     'Detects if a table has excess bloat and may benefit from maintenance operations like vacuum full or cluster.' as description,
     format(
-        'Table `%s`.`%s` has bloat > 50%%s percent bloat',
+        'Table `%s`.`%s` has excessive bloat',
         bloat_data.schema_name,
         bloat_data.table_name,
         bloat_data.pct_bloat
@@ -92,6 +92,9 @@ select
     ) as cache_key
 from
     bloat_data
+where
+    pct_bloat > 70.0
+    and bloat_mb > 200.0
 order by
     schema_name,
     table_name;
