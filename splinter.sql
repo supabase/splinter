@@ -1056,9 +1056,7 @@ select
         'table_bloat_%s_%s',
         bloat_data.schemaname,
         bloat_data.object_name
-    ) as cache_key,
-    bloat,
-    raw_waste
+    ) as cache_key
 from
     bloat_data
 where
