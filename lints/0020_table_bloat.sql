@@ -1,6 +1,5 @@
 create or replace view lint."0020_table_bloat" as
 
-
 with constants as (
     select current_setting('block_size')::numeric as bs, 23 as hdr, 4 as ma
 ),
@@ -51,6 +50,12 @@ table_bloat as (
             on cc.relnamespace = nn.oid
             and nn.nspname = bloat_info.schemaname
             and nn.nspname <> 'information_schema'
+        join pg_tables pt
+            on pt.schemaname = nn.nspname
+            and pt.tablename = cc.relname
+        where pt.reltablespace is null
+          and cc.relkind = 'r'
+          and cc.relam = (select oid from pg_am where amname = 'heap')
 ),
 
 bloat_data as (
