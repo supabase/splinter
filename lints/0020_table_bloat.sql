@@ -1,71 +1,69 @@
 create or replace view lint."0020_table_bloat" as
 
-with bloat_data as (
+
+with constants as (
+    select current_setting('block_size')::numeric as bs, 23 as hdr, 4 as ma
+),
+
+bloat_info as (
     select
-        c.oid as table_oid,
-        n.oid as nsp_oid,
-        n.nspname as schema_name,
-        c.relname as table_name,
-        -- compute pct bloat by comparing the estimated bytes to actual table bytes
-        round(
-            (
-                (c.relpages * const.bs) - e.est_bytes
-            ) * 100.0 / (c.relpages * const.bs)
-        , 2) as pct_bloat,
+        ma,
+        bs,
+        schemaname,
+        tablename,
+        (datawidth + (hdr + ma - (case when hdr % ma = 0 then ma else hdr % ma end)))::numeric as datahdr,
+        (maxfracsum * (nullhdr + ma - (case when nullhdr % ma = 0 then ma else nullhdr % ma end))) as nullhdr2
+    from (
+        select
+            schemaname,
+            tablename,
+            hdr,
+            ma,
+            bs,
+            sum((1 - null_frac) * avg_width) as datawidth,
+            max(null_frac) as maxfracsum,
+            hdr + (
+                select 1 + count(*) / 8
+                from pg_stats s2
+                where
+                    null_frac <> 0
+                    and s2.schemaname = s.schemaname
+                    and s2.tablename = s.tablename
+            ) as nullhdr
+        from pg_stats s, constants
+        group by 1, 2, 3, 4, 5
+    ) as foo
+),
 
-        -- compute bloat in mb
-        round(
-            (
-                (c.relpages * const.bs) - e.est_bytes
-            ) / 1024.0 / 1024.0
-        , 2) as bloat_mb
-
+table_bloat as (
+    select
+        schemaname,
+        tablename,
+        cc.relpages,
+        bs,
+        ceil((cc.reltuples * ((datahdr + ma -
+          (case when datahdr % ma = 0 then ma else datahdr % ma end)) + nullhdr2 + 4)) / (bs - 20::float)) as otta
     from
-        pg_class c
-        join pg_namespace n on n.oid = c.relnamespace
-        -- cross join a small subquery to get constants (block size, row overhead, alignment)
-        cross join (
-            select
-                current_setting('block_size')::numeric as bs, -- block size in bytes
-                24 as hdr, -- estimated header size per row
-                8 as ma    -- memory alignment
-        ) const
-        -- get the average column width for each table, ignoring null fraction
-        left join (
-            select
-                schemaname,
-                tablename,
-                sum((1 - null_frac) * avg_width)::numeric as datawidth
-            from pg_stats
-            group by schemaname, tablename
-        ) w on w.schemaname = n.nspname
-           and w.tablename = c.relname
+        bloat_info
+        join pg_class cc
+            on cc.relname = bloat_info.tablename
+        join pg_namespace nn
+            on cc.relnamespace = nn.oid
+            and nn.nspname = bloat_info.schemaname
+            and nn.nspname <> 'information_schema'
+),
 
-        -- use cross join lateral to calculate estimated table bytes for each row
-        cross join lateral (
-            select ceil(
-                c.reltuples::numeric * (
-                    coalesce(w.datawidth, 0)
-                    + const.hdr + (const.hdr + 1) + const.ma
-                    - (
-                        case
-                            when (coalesce(w.datawidth, 0) + const.hdr) % const.ma = 0
-                            then const.ma
-                            else (coalesce(w.datawidth, 0) + const.hdr) % const.ma
-                        end
-                    )
-                ) / (const.bs - 20)
-            ) * const.bs as est_bytes
-        ) e
-
-    -- filter out indexes, system schemas, and any tables with 0 pages
-    where
-        c.relkind = 'r'
-        and n.nspname not in ('pg_catalog','information_schema')
-        and c.relpages > 0
-        -- ensure actual size is bigger than our estimate to count as bloat
-        and (c.relpages * const.bs) > e.est_bytes
+bloat_data as (
+    select
+        'table' as type,
+        schemaname,
+        tablename as object_name,
+        round(case when otta = 0 then 0.0 else table_bloat.relpages / otta::numeric end, 1) as bloat,
+        case when relpages < otta then 0 else (bs * (table_bloat.relpages - otta)::bigint)::bigint end as raw_waste
+    from
+        table_bloat
 )
+
 select
     'table_bloat' as name,
     'Table Bloat' as title,
@@ -75,26 +73,27 @@ select
     'Detects if a table has excess bloat and may benefit from maintenance operations like vacuum full or cluster.' as description,
     format(
         'Table `%s`.`%s` has excessive bloat',
-        bloat_data.schema_name,
-        bloat_data.table_name,
-        bloat_data.pct_bloat
+        bloat_data.schemaname,
+        bloat_data.object_name
     ) as detail,
     'Consider running vacuum full (WARNING: incurs downtime) and tweaking autovacuum settings to reduce bloat.' as remediation,
     jsonb_build_object(
-        'schema', bloat_data.schema_name,
-        'name', bloat_data.table_name,
-        'type', 'table'
+        'schema', bloat_data.schemaname,
+        'name', bloat_data.object_name,
+        'type', bloat_data.type
     ) as metadata,
     format(
         'table_bloat_%s_%s',
-        bloat_data.schema_name,
-        bloat_data.table_name
-    ) as cache_key
+        bloat_data.schemaname,
+        bloat_data.object_name
+    ) as cache_key,
+    bloat,
+    raw_waste
 from
     bloat_data
 where
-    pct_bloat > 70.0
-    and bloat_mb > 200.0
+    bloat > 70.0
+    and raw_waste > (20 * 1024 * 1024) -- filter for waste > 200 MB
 order by
-    schema_name,
-    table_name;
+    schemaname,
+    object_name;
