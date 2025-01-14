@@ -32,12 +32,3 @@ repos:
   hooks:
   - id: remove-tabs
     name: Tabs-to-Spaces
-
-- repo: local
-  hooks:
-  - id: compile-script
-    name: Compile SQL Files
-    entry: python bin/compile.py
-    language: system
-    always_run: true
-    pass_filenames: false
