@@ -34,6 +34,10 @@ begin;
     union all
     select * from lint."0017_foreign_table_in_api"
     union all
-    select * from lint."0018_unsupported_reg_types";
+    select * from lint."0018_unsupported_reg_types"
+    union all
+    select * from lint."0019_insecure_queue_exposed_in_api"
+    union all
+    select * from lint."0020_table_bloat";
 
 rollback;
