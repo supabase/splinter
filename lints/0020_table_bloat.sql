@@ -1,4 +1,4 @@
-create or replace view lint."0020_table_bloat" as
+create view lint."0020_table_bloat" as
 
 with constants as (
     select current_setting('block_size')::numeric as bs, 23 as hdr, 4 as ma

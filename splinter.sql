@@ -968,8 +968,7 @@ where
     -- Constant requirements
     and 'pgmq_public' = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ','))))))
 union all
-(create or replace view lint."0020_table_bloat" as
-
+(
 with constants as (
     select current_setting('block_size')::numeric as bs, 23 as hdr, 4 as ma
 ),
