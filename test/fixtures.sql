@@ -7,7 +7,13 @@ create schema lint;
 create schema extensions;
 
 create schema auth;
-create table auth.users (id uuid primary key);
+
+create table auth.users (
+    id uuid primary key,
+    username text not null,
+    constraint users_username_key unique (username)
+);
+
 create function auth.uid() returns uuid language sql as $$select gen_random_uuid()$$;
 create function auth.jwt() returns jsonb language sql as $$select jsonb_build_object()$$;
 create function auth.role() returns text language sql as $$select ''$$;
