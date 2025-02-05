@@ -2,7 +2,7 @@ Level: ERROR
 
 ### Rationale
 
-Supabase Auth does not support user-defined foreign keys that reference non-primary key unique constraints in the `auth` schema. These unique constraints are scheduled for removal, and any foreign keys referencing them will block Supabase Auth's database migrations from completing successfully. If Supabase Auth is unable to upgrade, it blocks the rollout of new features and critical security updates.
+Supabase Auth does not support user-defined foreign keys that reference non-primary key unique constraints in the `auth` schema. These unique constraints are scheduled for removal, and any foreign keys referencing them will block Supabase Auth's database migrations from completing successfully. If Supabase Auth is unable to upgrade, it prevents the rollout of new features and critical security updates.
 
 ### How to Resolve
 
