@@ -38,6 +38,10 @@ begin;
     union all
     select * from lint."0019_insecure_queue_exposed_in_api"
     union all
-    select * from lint."0020_table_bloat";
+    select * from lint."0020_table_bloat"
+    union all
+    select * from lint."0021_fkey_to_auth_unique"
+    union all
+    select * from lint."0022_extension_versions_outdated";
 
 rollback;
