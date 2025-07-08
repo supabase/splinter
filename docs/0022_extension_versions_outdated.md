@@ -36,12 +36,12 @@ ALTER EXTENSION extension_name UPDATE;
 
 For example, to update the `uuid-ossp` extension:
 
-First, check the version of the extension taht is installed:
+First, check the version of the extension that is installed:
 
 ```sql
 -- Check current extension version
 SELECT name, installed_version, default_version
-FROM pg_available_extensions
+FROM pg_catalog.pg_available_extensions
 WHERE name = 'uuid-ossp';
 ```
 
@@ -62,7 +62,7 @@ After updating, verify the installed version matches default:
 
 ```sql
 SELECT name, installed_version, default_version
-FROM pg_available_extensions
+FROM pg_catalog.pg_available_extensions
 WHERE name = 'uuid-ossp';
 ```
 
