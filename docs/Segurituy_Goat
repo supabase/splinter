@@ -1,0 +1,5 @@
+-- If you have role-based access via JWT claims
+CREATE POLICY "Admin can manage all records" ON public.fexessencialBDT
+FOR ALL TO authenticated
+USING ((auth.jwt() ->> 'user_role') = 'admin')
+WITH CHECK ((auth.jwt() ->> 'user_role') = 'admin');
