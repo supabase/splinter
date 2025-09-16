@@ -26,6 +26,11 @@ select
     ) as cache_key
 from
     pg_catalog.pg_available_extensions ext
+join
+    -- ignore versions not in pg_available_extension_versions
+    -- e.g. residue of pg_upgrade
+    pg_catalog.pg_available_extension_versions extv
+    on extv.name = ext.name and extv.installed
 where
     ext.installed_version is not null
     and ext.default_version is not null
