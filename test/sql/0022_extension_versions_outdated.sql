@@ -3,12 +3,7 @@ begin;
   -- 0 issues initially (all extensions should be up to date)
   select * from lint."0022_extension_versions_outdated";
 
-  -- Note: We cannot easily create a test that shows outdated extensions
-  -- because we cannot install older versions of extensions in a test environment.
-  -- Our test image doesn't have multiple extension versions available.
-  -- The test will primarily verify that the query executes without error
-  -- and returns the expected column structure.
-  -- This lint was tested manually with real outdated extensions.
+  create extension amcheck version '1.0';
 
   -- Verify the query structure and column names
   select
@@ -30,4 +25,24 @@ begin;
     cache_key
   from lint."0022_extension_versions_outdated";
 
+  drop extension amcheck;
+
+  -- Versions that aren't in pg_available_extension_versions are ignored
+  create extension amcheck;
+  update pg_extension set extversion = 'foo' where extname = 'amcheck';
+
+  select
+    name,
+    title,
+    level,
+    facing,
+    categories,
+    description,
+    detail,
+    remediation,
+    metadata,
+    cache_key
+  from lint."0022_extension_versions_outdated";
+
+  drop extension amcheck;
 rollback;
