@@ -16,7 +16,7 @@ alter extension <some_extension> set schema <some_schema>;
 
 ### Example
 
-If the `ltree` extension was initially created in thh `public` schema with
+If the `ltree` extension was initially created in the `public` schema with
 
 ```sql
 create extension ltree;
