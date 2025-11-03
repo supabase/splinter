@@ -54,7 +54,7 @@ create policy consolidated_access on employee_data
     for select
     using (
         department = current_user_department()
-        or grade_level >= current_user_grade_level()
+        and grade_level <= current_user_grade_level()
     );
 ```
 
