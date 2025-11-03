@@ -42,7 +42,7 @@ create policy grade_level_access on employee_data
     using (grade_level <= current_user_grade_level());
 ```
 
-The implementation contains a logic error. As written, every employee can see `employee_data` for every other employee within their departemnt. Similarly, every employee can see every other employee's data at or below their own grade level.
+The implementation contains a logic error. As written, every employee can see `employee_data` for every other employee within their department. Similarly, every employee can see every other employee's data at or below their own grade level.
 
 To address this issue, we can combine the two policies.
 
