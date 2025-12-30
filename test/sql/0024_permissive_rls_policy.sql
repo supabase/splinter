@@ -1,0 +1,100 @@
+begin;
+  set local search_path = '';
+  set local pgrst.db_schemas = 'public';
+
+  -- 0 issues - no tables yet
+  select * from lint."0024_permissive_rls_policy";
+
+  -- Create a table with RLS enabled
+  create table public.posts(
+    id int primary key,
+    user_id uuid,
+    title text
+  );
+  alter table public.posts enable row level security;
+
+  -- Create a permissive policy with USING (true) - should be flagged
+  create policy "allow_all_select"
+  on public.posts
+  for select
+  to authenticated
+  using (true);
+
+  -- 1 issue - policy with USING (true)
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_permissive_rls_policy";
+
+  -- Create another policy with 1=1 tautology
+  create policy "allow_all_insert"
+  on public.posts
+  for insert
+  to authenticated
+  with check (1=1);
+
+  -- 2 issues
+  select count(*) from lint."0024_permissive_rls_policy";
+
+  -- Drop the bad policies
+  drop policy "allow_all_select" on public.posts;
+  drop policy "allow_all_insert" on public.posts;
+
+  -- Create a proper policy
+  create policy "users_own_posts"
+  on public.posts
+  for select
+  to authenticated
+  using (user_id = auth.uid());
+
+  -- 0 issues - proper policy
+  select * from lint."0024_permissive_rls_policy";
+
+  -- Test with anon role
+  create table public.secrets(
+    id int primary key,
+    data text
+  );
+  alter table public.secrets enable row level security;
+
+  create policy "bad_anon_policy"
+  on public.secrets
+  for select
+  to anon
+  using (true);
+
+  -- 1 issue - permissive policy for anon
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_permissive_rls_policy";
+
+  -- Test that policy for non-anon/authenticated role is not flagged
+  drop policy "bad_anon_policy" on public.secrets;
+  create role custom_role;
+  create policy "custom_role_policy"
+  on public.secrets
+  for select
+  to custom_role
+  using (true);
+
+  -- 0 issues - policy is for custom_role, not anon/authenticated
+  select * from lint."0024_permissive_rls_policy";
+
+  -- Test public (all roles) policy - should be flagged
+  drop policy "custom_role_policy" on public.secrets;
+  create policy "public_policy"
+  on public.secrets
+  for select
+  using (true);  -- applies to all roles by default
+
+  -- 1 issue - policy applies to public
+  select metadata->>'policy_name' as policy_name from lint."0024_permissive_rls_policy";
+
+  -- Test restrictive policy with true - should NOT be flagged (less dangerous)
+  drop policy "public_policy" on public.secrets;
+  create policy "restrictive_true"
+  on public.secrets
+  as restrictive
+  for select
+  to authenticated
+  using (true);
+
+  -- 0 issues - restrictive policies are not flagged
+  select * from lint."0024_permissive_rls_policy";
+
+rollback;
