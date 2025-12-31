@@ -21,7 +21,7 @@ begin;
   using (true);
 
   -- 1 issue - policy with USING (true)
-  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_permissive_rls_policy";
+  select * from lint."0024_permissive_rls_policy";
 
   -- Create another policy with 1=1 tautology
   create policy "allow_all_insert"
