@@ -40,7 +40,11 @@ begin;
     union all
     select * from lint."0021_fkey_to_auth_unique"
     union all
-    select * from lint."0022_extension_versions_outdated";
+    select * from lint."0022_extension_versions_outdated"
+    union all
+    select * from lint."0023_sensitive_columns_exposed"
+    union all
+    select * from lint."0024_permissive_rls_policy";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
