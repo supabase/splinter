@@ -1155,7 +1155,7 @@ union all
 with sensitive_patterns as (
     select unnest(array[
         -- Authentication & Credentials
-        'password', 'passwd', 'pwd', 'pass', 'passphrase',
+        'password', 'passwd', 'pwd', 'passphrase',
         'secret', 'secret_key', 'private_key', 'api_key', 'apikey',
         'auth_key', 'token', 'jwt', 'access_token', 'refresh_token',
         'oauth_token', 'session_token', 'bearer_token', 'auth_code',
@@ -1173,14 +1173,14 @@ with sensitive_patterns as (
         -- Health & Medical
         'health_record', 'medical_record', 'patient_id',
         'insurance_number', 'health_insurance', 'medical_insurance',
-        'diagnosis', 'treatment',
+        'treatment',
         -- Device Identifiers
         'mac_address', 'macaddr', 'imei', 'device_uuid',
         -- Digital Keys & Certificates
         'pgp_key', 'gpg_key', 'ssh_key', 'certificate',
         'license_key', 'activation_key',
         -- Biometric Data
-        'fingerprint', 'biometric', 'facial_recognition'
+        'facial_recognition'
     ]) as pattern
 ),
 exposed_tables as (
@@ -1219,11 +1219,8 @@ sensitive_columns as (
             and not a.attisdropped
         cross join sensitive_patterns sp
     where
-        -- Match column name against sensitive patterns (case insensitive)
-        lower(a.attname) like '%' || sp.pattern || '%'
-        or lower(a.attname) = sp.pattern
-        -- Also check for common variations with underscores/hyphens removed
-        or replace(replace(lower(a.attname), '_', ''), '-', '') like '%' || replace(sp.pattern, '_', '') || '%'
+        -- Match column name against sensitive patterns (case insensitive), allowing '-'/'_' variants
+        replace(lower(a.attname), '-', '_') = sp.pattern
 )
 select
     'sensitive_columns_exposed' as name,
@@ -1280,7 +1277,10 @@ with policies as (
             when '*' then 'ALL'
         end as command,
         pb.qual,
-        pb.with_check
+        pb.with_check,
+        -- Normalize expressions by removing whitespace and lowercasing
+        replace(replace(replace(lower(coalesce(pb.qual, '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_qual,
+        replace(replace(replace(lower(coalesce(pb.with_check, '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
@@ -1301,20 +1301,18 @@ permissive_patterns as (
     select
         p.*,
         -- Check for always-true USING clause patterns
+        -- Note: SELECT with (true) is often intentional and documented, so we only flag UPDATE/DELETE
         case when (
-            -- Literal true
-            lower(trim(coalesce(qual, ''))) = 'true'
-            -- 1=1 or similar tautologies
-            or lower(trim(coalesce(qual, ''))) ~ '^[\s\(]*1\s*=\s*1[\s\)]*$'
-            or lower(trim(coalesce(qual, ''))) ~ '^[\s\(]*''[^'']*''\s*=\s*''[^'']*''[\s\)]*$'
-            -- Empty or null qual on permissive policy means allow all for SELECT
-            or (qual is null and is_permissive and command in ('SELECT', 'ALL'))
+            command in ('UPDATE', 'DELETE', 'ALL')
+            and (
+                normalized_qual in ('true', '(true)', '1=1', '(1=1)')
+                -- Empty or null qual on permissive policy means allow all
+                or (qual is null and is_permissive)
+            )
         ) then true else false end as has_permissive_using,
         -- Check for always-true WITH CHECK clause patterns
         case when (
-            lower(trim(coalesce(with_check, ''))) = 'true'
-            or lower(trim(coalesce(with_check, ''))) ~ '^[\s\(]*1\s*=\s*1[\s\)]*$'
-            or lower(trim(coalesce(with_check, ''))) ~ '^[\s\(]*''[^'']*''\s*=\s*''[^'']*''[\s\)]*$'
+            normalized_with_check in ('true', '(true)', '1=1', '(1=1)')
             -- Empty with_check on permissive INSERT/UPDATE policy means allow all
             or (with_check is null and is_permissive and command in ('INSERT', 'UPDATE', 'ALL'))
         ) then true else false end as has_permissive_with_check
@@ -1336,14 +1334,14 @@ permissive_patterns as (
         )
 )
 select
-    'permissive_rls_policy' as name,
-    'Permissive RLS Policy' as title,
+    'rls_policy_always_true' as name,
+    'RLS Policy Always True' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects RLS policies that use overly permissive expressions like \`USING (true)\` or \`WITH CHECK (true)\`, which effectively allow unrestricted access and may indicate a security misconfiguration.' as description,
+    'Detects RLS policies that use overly permissive expressions like \`USING (true)\` or \`WITH CHECK (true)\` for UPDATE, DELETE, or INSERT operations. SELECT policies with \`USING (true)\` are intentionally excluded as this pattern is often used deliberately for public read access.' as description,
     format(
-        'Table `%s.%s` has a permissive RLS policy `%s` for `%s` that allows unrestricted access%s. This effectively bypasses row-level security for %s.',
+        'Table `%s.%s` has an RLS policy `%s` for `%s` that allows unrestricted access%s. This effectively bypasses row-level security for %s.',
         schema_name,
         table_name,
         policy_name,
@@ -1370,7 +1368,7 @@ select
         'permissive_with_check', has_permissive_with_check
     ) as metadata,
     format(
-        'permissive_rls_policy_%s_%s_%s',
+        'rls_policy_always_true_%s_%s_%s',
         schema_name,
         table_name,
         policy_name

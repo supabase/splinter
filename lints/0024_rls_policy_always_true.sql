@@ -19,7 +19,10 @@ with policies as (
             when '*' then 'ALL'
         end as command,
         pb.qual,
-        pb.with_check
+        pb.with_check,
+        -- Normalize expressions by removing whitespace and lowercasing
+        replace(replace(replace(lower(coalesce(pb.qual, '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_qual,
+        replace(replace(replace(lower(coalesce(pb.with_check, '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
@@ -44,18 +47,14 @@ permissive_patterns as (
         case when (
             command in ('UPDATE', 'DELETE', 'ALL')
             and (
-                -- Literal true or (true)
-                replace(replace(replace(lower(coalesce(qual, '')), ' ', ''), E'\n', ''), E'\t', '') in ('true', '(true)')
-                -- (1=1) tautology
-                or replace(replace(replace(lower(coalesce(qual, '')), ' ', ''), E'\n', ''), E'\t', '') in ('1=1', '(1=1)')
+                normalized_qual in ('true', '(true)', '1=1', '(1=1)')
                 -- Empty or null qual on permissive policy means allow all
                 or (qual is null and is_permissive)
             )
         ) then true else false end as has_permissive_using,
         -- Check for always-true WITH CHECK clause patterns
         case when (
-            replace(replace(replace(lower(coalesce(with_check, '')), ' ', ''), E'\n', ''), E'\t', '') in ('true', '(true)')
-            or replace(replace(replace(lower(coalesce(with_check, '')), ' ', ''), E'\n', ''), E'\t', '') in ('1=1', '(1=1)')
+            normalized_with_check in ('true', '(true)', '1=1', '(1=1)')
             -- Empty with_check on permissive INSERT/UPDATE policy means allow all
             or (with_check is null and is_permissive and command in ('INSERT', 'UPDATE', 'ALL'))
         ) then true else false end as has_permissive_with_check
