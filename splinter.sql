@@ -1313,8 +1313,11 @@ permissive_patterns as (
         -- Check for always-true WITH CHECK clause patterns
         case when (
             normalized_with_check in ('true', '(true)', '1=1', '(1=1)')
-            -- Empty with_check on permissive INSERT/UPDATE policy means allow all
-            or (with_check is null and is_permissive and command in ('INSERT', 'UPDATE', 'ALL'))
+            -- Empty with_check on INSERT means allow all (INSERT has no USING to fall back on)
+            or (with_check is null and is_permissive and command = 'INSERT')
+            -- Empty with_check on UPDATE/ALL with permissive USING means allow all writes
+            or (with_check is null and is_permissive and command in ('UPDATE', 'ALL')
+                and normalized_qual in ('true', '(true)', '1=1', '(1=1)'))
         ) then true else false end as has_permissive_with_check
     from
         policies p
