@@ -5,7 +5,7 @@ create view lint."0023_sensitive_columns_exposed" as
 with sensitive_patterns as (
     select unnest(array[
         -- Authentication & Credentials
-        'password', 'passwd', 'pwd', 'pass', 'passphrase',
+        'password', 'passwd', 'pwd', 'passphrase',
         'secret', 'secret_key', 'private_key', 'api_key', 'apikey',
         'auth_key', 'token', 'jwt', 'access_token', 'refresh_token',
         'oauth_token', 'session_token', 'bearer_token', 'auth_code',
@@ -23,14 +23,14 @@ with sensitive_patterns as (
         -- Health & Medical
         'health_record', 'medical_record', 'patient_id',
         'insurance_number', 'health_insurance', 'medical_insurance',
-        'diagnosis', 'treatment',
+        'treatment',
         -- Device Identifiers
         'mac_address', 'macaddr', 'imei', 'device_uuid',
         -- Digital Keys & Certificates
         'pgp_key', 'gpg_key', 'ssh_key', 'certificate',
         'license_key', 'activation_key',
         -- Biometric Data
-        'fingerprint', 'biometric', 'facial_recognition'
+        'facial_recognition'
     ]) as pattern
 ),
 exposed_tables as (
@@ -69,11 +69,8 @@ sensitive_columns as (
             and not a.attisdropped
         cross join sensitive_patterns sp
     where
-        -- Match column name against sensitive patterns (case insensitive)
-        lower(a.attname) like '%' || sp.pattern || '%'
-        or lower(a.attname) = sp.pattern
-        -- Also check for common variations with underscores/hyphens removed
-        or replace(replace(lower(a.attname), '_', ''), '-', '') like '%' || replace(sp.pattern, '_', '') || '%'
+        -- Match column name against sensitive patterns (case insensitive), allowing '-'/'_' variants
+        replace(lower(a.attname), '-', '_') = sp.pattern
 )
 select
     'sensitive_columns_exposed' as name,

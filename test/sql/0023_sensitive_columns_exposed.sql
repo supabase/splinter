@@ -9,7 +9,7 @@ begin;
   create table public.users(
     id int primary key,
     username text not null,
-    password_hash text not null,
+    password text not null,
     ssn text
   );
 
@@ -20,7 +20,7 @@ begin;
   create table public.payments(
     id int primary key,
     user_id int references public.users(id),
-    credit_card_number text,
+    credit_card text,
     cvv text,
     amount numeric
   );

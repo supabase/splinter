@@ -11,21 +11,21 @@ begin;
   create table public.users(
     id int primary key,
     username text not null,
-    password_hash text not null,
+    password text not null,
     ssn text
   );
   -- 1 issue - table has sensitive columns without RLS
   select * from lint."0023_sensitive_columns_exposed";
-           name            |           title           | level |  facing  | categories |                                                                  description                                                                   |                                                                        detail                                                                         |                                          remediation                                          |                                                                        metadata                                                                        |               cache_key                
----------------------------+---------------------------+-------+----------+------------+------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------
- sensitive_columns_exposed | Sensitive Columns Exposed | ERROR | EXTERNAL | {SECURITY} | Detects tables exposed via API that contain columns with potentially sensitive data (PII, credentials, financial info) without RLS protection. | Table `public.users` is exposed via API without RLS and contains potentially sensitive column(s): password_hash, ssn. This may lead to data exposure. | https://supabase.com/docs/guides/database/database-linter?lint=0023_sensitive_columns_exposed | {"name": "users", "type": "table", "schema": "public", "matched_patterns": ["pass", "password", "ssn"], "sensitive_columns": ["password_hash", "ssn"]} | sensitive_columns_exposed_public_users
+           name            |           title           | level |  facing  | categories |                                                                  description                                                                   |                                                                      detail                                                                      |                                          remediation                                          |                                                                 metadata                                                                  |               cache_key                
+---------------------------+---------------------------+-------+----------+------------+------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------
+ sensitive_columns_exposed | Sensitive Columns Exposed | ERROR | EXTERNAL | {SECURITY} | Detects tables exposed via API that contain columns with potentially sensitive data (PII, credentials, financial info) without RLS protection. | Table `public.users` is exposed via API without RLS and contains potentially sensitive column(s): password, ssn. This may lead to data exposure. | https://supabase.com/docs/guides/database/database-linter?lint=0023_sensitive_columns_exposed | {"name": "users", "type": "table", "schema": "public", "matched_patterns": ["password", "ssn"], "sensitive_columns": ["password", "ssn"]} | sensitive_columns_exposed_public_users
 (1 row)
 
   -- Create another table with financial data
   create table public.payments(
     id int primary key,
     user_id int references public.users(id),
-    credit_card_number text,
+    credit_card text,
     cvv text,
     amount numeric
   );
