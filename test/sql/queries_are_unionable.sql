@@ -42,6 +42,10 @@ begin;
     union all
     select * from lint."0021_fkey_to_auth_unique"
     union all
-    select * from lint."0022_extension_versions_outdated";
+    select * from lint."0022_extension_versions_outdated"
+    union all
+    select * from lint."0023_sensitive_columns_exposed"
+    union all
+    select * from lint."0024_rls_policy_always_true";
 
 rollback;

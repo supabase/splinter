@@ -1,0 +1,311 @@
+begin;
+  set local search_path = '';
+  set local pgrst.db_schemas = 'public';
+  -- 0 issues - no tables yet
+  select * from lint."0024_rls_policy_always_true";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  -- Create a table with RLS enabled
+  create table public.posts(
+    id int primary key,
+    user_id uuid,
+    title text
+  );
+  alter table public.posts enable row level security;
+  ----------------------------------------
+  -- Test: SELECT with USING (true) should NOT be flagged
+  -- SELECT with (true) is often intentional for public read access
+  ----------------------------------------
+  create policy "select_using_true"
+  on public.posts
+  for select
+  to authenticated
+  using (true);
+  select count(*) from lint."0024_rls_policy_always_true";
+ count 
+-------
+     0
+(1 row)
+
+  drop policy "select_using_true" on public.posts;
+  ----------------------------------------
+  -- Test: UPDATE with USING (true) SHOULD be flagged
+  ----------------------------------------
+  create policy "update_using_true"
+  on public.posts
+  for update
+  to authenticated
+  using (true);
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+    policy_name    | command 
+-------------------+---------
+ update_using_true | UPDATE
+(1 row)
+
+  drop policy "update_using_true" on public.posts;
+  ----------------------------------------
+  -- Test: DELETE with USING (true) SHOULD be flagged
+  ----------------------------------------
+  create policy "delete_using_true"
+  on public.posts
+  for delete
+  to authenticated
+  using (true);
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+    policy_name    | command 
+-------------------+---------
+ delete_using_true | DELETE
+(1 row)
+
+  drop policy "delete_using_true" on public.posts;
+  ----------------------------------------
+  -- Test: ALL command with USING (true) SHOULD be flagged
+  ----------------------------------------
+  create policy "all_using_true"
+  on public.posts
+  for all
+  to authenticated
+  using (true);
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+  policy_name   | command 
+----------------+---------
+ all_using_true | ALL
+(1 row)
+
+  drop policy "all_using_true" on public.posts;
+  ----------------------------------------
+  -- Test: INSERT with WITH CHECK (true) SHOULD be flagged
+  ----------------------------------------
+  create policy "insert_with_check_true"
+  on public.posts
+  for insert
+  to authenticated
+  with check (true);
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+      policy_name       | command 
+------------------------+---------
+ insert_with_check_true | INSERT
+(1 row)
+
+  drop policy "insert_with_check_true" on public.posts;
+  ----------------------------------------
+  -- Test: INSERT with WITH CHECK (1=1) SHOULD be flagged
+  ----------------------------------------
+  create policy "insert_with_check_1eq1"
+  on public.posts
+  for insert
+  to authenticated
+  with check (1=1);
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+      policy_name       | command 
+------------------------+---------
+ insert_with_check_1eq1 | INSERT
+(1 row)
+
+  drop policy "insert_with_check_1eq1" on public.posts;
+  ----------------------------------------
+  -- Test: UPDATE with WITH CHECK (true) SHOULD be flagged
+  ----------------------------------------
+  create policy "update_with_check_true"
+  on public.posts
+  for update
+  to authenticated
+  using (user_id = auth.uid())
+  with check (true);
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+      policy_name       | command 
+------------------------+---------
+ update_with_check_true | UPDATE
+(1 row)
+
+  drop policy "update_with_check_true" on public.posts;
+  ----------------------------------------
+  -- Test: UPDATE with both USING (true) and WITH CHECK (true) SHOULD be flagged
+  -- and should show "both USING and WITH CHECK are always true"
+  ----------------------------------------
+  create policy "update_both_true"
+  on public.posts
+  for update
+  to authenticated
+  using (true)
+  with check (true);
+  select
+    metadata->>'policy_name' as policy_name,
+    metadata->>'command' as command,
+    metadata->>'permissive_using' as permissive_using,
+    metadata->>'permissive_with_check' as permissive_with_check
+  from lint."0024_rls_policy_always_true";
+   policy_name    | command | permissive_using | permissive_with_check 
+------------------+---------+------------------+-----------------------
+ update_both_true | UPDATE  | true             | true
+(1 row)
+
+  drop policy "update_both_true" on public.posts;
+  ----------------------------------------
+  -- Test: Whitespace and case variations should be normalized
+  -- Using TRUE with extra spaces
+  ----------------------------------------
+  create policy "update_using_TRUE_spaces"
+  on public.posts
+  for update
+  to authenticated
+  using (  TRUE  );
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+       policy_name        
+--------------------------
+ update_using_TRUE_spaces
+(1 row)
+
+  drop policy "update_using_TRUE_spaces" on public.posts;
+  ----------------------------------------
+  -- Test: Restrictive policy with true should NOT be flagged
+  ----------------------------------------
+  create policy "restrictive_true"
+  on public.posts
+  as restrictive
+  for update
+  to authenticated
+  using (true);
+  select count(*) from lint."0024_rls_policy_always_true";
+ count 
+-------
+     0
+(1 row)
+
+  drop policy "restrictive_true" on public.posts;
+  ----------------------------------------
+  -- Test: Policy for custom role (not anon/authenticated) should NOT be flagged
+  ----------------------------------------
+  create role custom_role;
+  create policy "custom_role_policy"
+  on public.posts
+  for update
+  to custom_role
+  using (true);
+  select count(*) from lint."0024_rls_policy_always_true";
+ count 
+-------
+     0
+(1 row)
+
+  drop policy "custom_role_policy" on public.posts;
+  ----------------------------------------
+  -- Test: Policy for anon role SHOULD be flagged
+  ----------------------------------------
+  create policy "anon_update_true"
+  on public.posts
+  for update
+  to anon
+  using (true);
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+   policy_name    
+------------------
+ anon_update_true
+(1 row)
+
+  drop policy "anon_update_true" on public.posts;
+  ----------------------------------------
+  -- Test: Policy for public (all roles) SHOULD be flagged for UPDATE
+  ----------------------------------------
+  create policy "public_update_true"
+  on public.posts
+  for update
+  using (true);
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+    policy_name     
+--------------------
+ public_update_true
+(1 row)
+
+  drop policy "public_update_true" on public.posts;
+  ----------------------------------------
+  -- Test: Table without RLS enabled should NOT be flagged
+  ----------------------------------------
+  create table public.no_rls_table(
+    id int primary key
+  );
+  -- RLS not enabled
+  create policy "no_rls_policy"
+  on public.no_rls_table
+  for update
+  to authenticated
+  using (true);
+  select count(*) from lint."0024_rls_policy_always_true";
+ count 
+-------
+     0
+(1 row)
+
+  drop table public.no_rls_table;
+  ----------------------------------------
+  -- Test: Proper policy with actual USING and WITH CHECK should NOT be flagged
+  ----------------------------------------
+  create policy "proper_policy"
+  on public.posts
+  for update
+  to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+  select count(*) from lint."0024_rls_policy_always_true";
+ count 
+-------
+     0
+(1 row)
+
+  drop policy "proper_policy" on public.posts;
+  ----------------------------------------
+  -- Test: ALL command with proper USING but no WITH CHECK should NOT be flagged
+  -- PostgreSQL uses USING for WITH CHECK when not specified
+  ----------------------------------------
+  create policy "all_proper_using_no_with_check"
+  on public.posts
+  for all
+  to authenticated
+  using (user_id = auth.uid());
+  select count(*) from lint."0024_rls_policy_always_true";
+ count 
+-------
+     0
+(1 row)
+
+  drop policy "all_proper_using_no_with_check" on public.posts;
+  ----------------------------------------
+  -- Test: ALL command with USING (true) and no WITH CHECK SHOULD be flagged
+  -- Both permissive_using (for UPDATE/DELETE) and permissive_with_check (USING falls back)
+  ----------------------------------------
+  create policy "all_true_using_no_with_check"
+  on public.posts
+  for all
+  to authenticated
+  using (true);
+  select
+    metadata->>'policy_name' as policy_name,
+    metadata->>'permissive_using' as permissive_using,
+    metadata->>'permissive_with_check' as permissive_with_check
+  from lint."0024_rls_policy_always_true";
+         policy_name          | permissive_using | permissive_with_check 
+------------------------------+------------------+-----------------------
+ all_true_using_no_with_check | true             | true
+(1 row)
+
+  drop policy "all_true_using_no_with_check" on public.posts;
+  ----------------------------------------
+  -- Test: INSERT with no WITH CHECK (null) SHOULD be flagged
+  ----------------------------------------
+  create policy "insert_no_with_check"
+  on public.posts
+  for insert
+  to authenticated;
+  select
+    metadata->>'policy_name' as policy_name,
+    metadata->>'permissive_with_check' as permissive_with_check
+  from lint."0024_rls_policy_always_true";
+     policy_name      | permissive_with_check 
+----------------------+-----------------------
+ insert_no_with_check | true
+(1 row)
+
+  drop policy "insert_no_with_check" on public.posts;
+rollback;
