@@ -7,6 +7,8 @@ repo_url: https://github.com/supabase/splinter
 
 nav:
     - Welcome: 'index.md'
+    - Architecture: 'architecture.md'
+    - Advisor framework strategy: 'advisor_framework_strategy.md'
     - Lints:
       - Unindexed Foreign Keys: '0001_unindexed_foreign_keys.md'
       - Auth Users Exposed: '0002_auth_users_exposed.md'
@@ -19,9 +21,19 @@ nav:
       - Duplicate Index: '0009_duplicate_index.md'
       - Security Definer View: '0010_security_definer_view.md'
       - Function Search Path Mutable: '0011_function_search_path_mutable.md'
+      - Auth Allow Anonymous Sign-ins: '0012_auth_allow_anonymous_sign_ins.md'
       - RLS Disabled in Public: '0013_rls_disabled_in_public.md'
       - Extension in Public: '0014_extension_in_public.md'
       - RLS References user_metadata: '0015_rls_references_user_metadata.md'
+      - Materialized View in API: '0016_materialized_view_in_api.md'
+      - Foreign Table in API: '0017_foreign_table_in_api.md'
+      - Unsupported reg types: '0018_unsupported_reg_types.md'
+      - Insecure Queue Exposed in API: '0019_insecure_queue_exposed_in_api.md'
+      - Table Bloat: '0020_table_bloat.md'
+      - Foreign Key to Auth Unique Constraint: '0021_fkey_to_auth_unique.md'
+      - Extension Versions Outdated: '0022_extension_versions_outdated.md'
+      - Sensitive Columns Exposed: '0023_sensitive_columns_exposed.md'
+      - Permissive RLS Policy: '0024_permissive_rls_policy.md'
 
 theme:
     name: 'material'
