@@ -1,5 +1,5 @@
 
-**Level:** Critical issue
+**Level:** ERROR
 
 **Summary:** Table publicly accessible
 
