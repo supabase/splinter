@@ -1,11 +1,11 @@
 
 Level: ERROR
 
-## Impact
+### Impact
 
 Table publicly accessible
 
-### Why it matters
+#### Why it matters
 
 Anyone with your project URL can read, edit, and delete all data in this table because Row-Level Security is not enabled.
 

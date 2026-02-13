@@ -1,11 +1,11 @@
 
 Level: WARN
 
-## Impact
+### Impact
 
 Slow security policy detected
 
-### Why it matters
+#### Why it matters
 
 A security policy is running its check on every single row instead of once per query, which slows down your database as your tables grow.
 

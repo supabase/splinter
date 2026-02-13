@@ -1,11 +1,11 @@
 
 Level: ERROR
 
-## Impact
+### Impact
 
 Sensitive data publicly accessible
 
-### Why it matters
+#### Why it matters
 
 A table with columns that likely contain sensitive data (like passwords or personal identifiers) is accessible through the API without any access restrictions.
 

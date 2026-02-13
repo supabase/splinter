@@ -1,11 +1,11 @@
 
 Level: INFO
 
-## Impact
+### Impact
 
 Security policy not enforced
 
-### Why it matters
+#### Why it matters
 
 A security policy exists but has no effect because Row-Level Security hasn't been turned on for the table.
 

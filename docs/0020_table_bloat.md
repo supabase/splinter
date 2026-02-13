@@ -1,10 +1,10 @@
 Level: WARN
 
-## Impact
+### Impact
 
 Excess table bloat detected
 
-### Why it matters
+#### Why it matters
 
 The table has accumulated significant unused space from old row versions, which increases storage costs and slows down queries.
 

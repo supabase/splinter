@@ -1,11 +1,11 @@
 
 Level: INFO
 
-## Impact
+### Impact
 
 Unused index found
 
-### Why it matters
+#### Why it matters
 
 This index is never used by any query but still slows down every insert, update, and delete on the table.
 

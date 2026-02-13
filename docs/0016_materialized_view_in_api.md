@@ -1,10 +1,10 @@
 Level: WARN
 
-## Impact
+### Impact
 
 Materialized view exposed in API
 
-### Why it matters
+#### Why it matters
 
 Materialized views can't be protected by Row-Level Security, so all their data is visible to every API user.
 

@@ -1,11 +1,11 @@
 
 Level: ERROR
 
-## Impact
+### Impact
 
 Security policy relies on user-editable data
 
-### Why it matters
+#### Why it matters
 
 A security policy references user_metadata, which end users can freely modify, allowing them to bypass access controls.
 

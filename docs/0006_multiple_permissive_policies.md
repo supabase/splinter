@@ -1,11 +1,11 @@
 
 Level: WARN
 
-## Impact
+### Impact
 
 Multiple permissive policies on a table
 
-### Why it matters
+#### Why it matters
 
 When several permissive policies exist on one table, access can become broader than intended and queries slower.
 

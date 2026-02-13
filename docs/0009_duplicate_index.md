@@ -1,11 +1,11 @@
 
 Level: WARN
 
-## Impact
+### Impact
 
 Duplicate index found
 
-### Why it matters
+#### Why it matters
 
 Identical indexes on the same table waste storage and slow down writes with no performance benefit.
 

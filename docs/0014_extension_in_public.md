@@ -1,11 +1,11 @@
 
 Level: WARN
 
-## Impact
+### Impact
 
 Extension installed in public schema
 
-### Why it matters
+#### Why it matters
 
 The extension's internal functions and tables are visible in your API, cluttering it and potentially exposing unintended functionality.
 

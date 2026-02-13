@@ -1,11 +1,11 @@
 
 Level: WARN
 
-## Impact
+### Impact
 
 Unsecured function search path
 
-### Why it matters
+#### Why it matters
 
 Without a fixed search path, this function could behave unpredictably or be exploited to reference unintended database objects.
 

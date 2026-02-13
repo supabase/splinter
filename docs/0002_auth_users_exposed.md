@@ -1,11 +1,11 @@
 
 Level: ERROR
 
-## Impact
+### Impact
 
 User data exposed through a view
 
-### Why it matters
+#### Why it matters
 
 A view is exposing your users' personal information to anyone who can access your API.
 

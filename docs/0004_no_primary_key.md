@@ -1,11 +1,11 @@
 
 Level: INFO
 
-## Impact
+### Impact
 
 Table has no primary key
 
-### Why it matters
+#### Why it matters
 
 Without a primary key, rows can't be uniquely identified, which can cause data issues and slower queries.
 

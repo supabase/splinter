@@ -1,10 +1,10 @@
 Level: INFO
 
-## Impact
+### Impact
 
 Anonymous sign-ins enabled
 
-### Why it matters
+#### Why it matters
 
 Anonymous users share the same database role as permanent users, so existing security policies may unintentionally grant them access.
 

@@ -1,11 +1,11 @@
 
 Level: ERROR
 
-## Impact
+### Impact
 
 Queue exposed without protection
 
-### Why it matters
+#### Why it matters
 
 Anyone with your project URL can read, modify, and delete messages in this queue because it lacks access controls.
 

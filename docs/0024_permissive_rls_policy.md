@@ -1,11 +1,11 @@
 
 Level: WARN
 
-## Impact
+### Impact
 
 Security policy allows unrestricted access
 
-### Why it matters
+#### Why it matters
 
 An RLS policy uses an always-true condition like `USING (true)`, which defeats the purpose of having Row-Level Security enabled.
 

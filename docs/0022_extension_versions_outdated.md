@@ -1,10 +1,10 @@
 Level: WARN
 
-## Impact
+### Impact
 
 Extension out of date
 
-### Why it matters
+#### Why it matters
 
 An installed extension is running an older version that may be missing security patches and is not covered by the Supabase SLA.
 

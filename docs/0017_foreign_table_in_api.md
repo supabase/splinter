@@ -1,10 +1,10 @@
 Level: WARN
 
-## Impact
+### Impact
 
 Foreign table exposed in API
 
-### Why it matters
+#### Why it matters
 
 Foreign tables can't be protected by Row-Level Security, so all their data is visible to every API user.
 
