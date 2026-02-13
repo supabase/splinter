@@ -57,6 +57,19 @@ git clone https://github.com/supabase/splinter.git
 cd splinter
 ```
 
+### Building the docs locally
+
+The docs use [MkDocs](https://www.mkdocs.org/) with the [Material](https://squidfunk.github.io/mkdocs-material/) theme. To install dependencies and serve the site with live reload:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+pip install mkdocs-material
+mkdocs serve
+```
+
+Then open http://127.0.0.1:8000. Run `mkdocs build` to output static files to `site/`.
+
 ## Tests
 
 All lints tests with a true positive example.
