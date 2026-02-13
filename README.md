@@ -1,6 +1,6 @@
 # splinter (Supabase Postgres LINTER)
 
-<img src="https://github.com/supabase/splinter/assets/12958657/3683c310-c9f6-4b05-ae3a-c51c03d3ff0f" height="250">
+<img src="docs/assets/splinter-elephant.png" height="250">
 
 <p>
 <a href=""><img src="https://img.shields.io/badge/postgresql-15+-blue.svg" alt="PostgreSQL version" height="18"></a>
