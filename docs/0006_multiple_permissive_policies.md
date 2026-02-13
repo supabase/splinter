@@ -1,6 +1,14 @@
 
 Level: WARN
 
+## Impact
+
+Multiple permissive policies on a table
+
+### Why it matters
+
+When several permissive policies exist on one table, access can become broader than intended and queries slower.
+
 ### Rationale
 
 In Postgres, Row Level Security (RLS) policies control access to rows in a table based on the executing user. When multiple permissive policies are applied to the same table the user may have access to a selected row through any of those policies. This means that, in the worst case, all of the relevant RLS policies must be applied/tested before Postgres can determine if a row should be visible. At scale, these checks add significant overhead to SQL queries and can be a performance bottleneck.

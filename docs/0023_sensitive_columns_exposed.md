@@ -1,6 +1,14 @@
 
 Level: ERROR
 
+## Impact
+
+Sensitive data publicly accessible
+
+### Why it matters
+
+A table with columns that likely contain sensitive data (like passwords or personal identifiers) is accessible through the API without any access restrictions.
+
 ### Rationale
 
 Tables exposed via the Supabase Data APIs that contain columns with potentially sensitive data (such as passwords, SSNs, credit card numbers, API keys, or other PII) pose a significant security risk when Row Level Security (RLS) is not enabled. Without RLS, anyone with access to the project's URL and an anonymous or authenticated role can read all data in these tables, potentially exposing sensitive user information.

@@ -1,6 +1,14 @@
 
 Level: ERROR
 
+## Impact
+
+User data exposed through a view
+
+### Why it matters
+
+A view is exposing your users' personal information to anyone who can access your API.
+
 ### Rationale
 
 Referencing the `auth.users` table in a view can inadvertently expose more data than intended.

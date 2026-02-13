@@ -1,5 +1,13 @@
 Level: INFO
 
+## Impact
+
+Anonymous sign-ins enabled
+
+### Why it matters
+
+Anonymous users share the same database role as permanent users, so existing security policies may unintentionally grant them access.
+
 ### Rationale
 
 Anonymous users use the same `authenticated` Postgres role as permanent users when accessing the database. If you have enabled anonymous sign-in for your project, existing RLS policies may allow unintended access to an anonymous user's JWT.

@@ -1,6 +1,14 @@
 
 Level: WARN
 
+## Impact
+
+Slow security policy detected
+
+### Why it matters
+
+A security policy is running its check on every single row instead of once per query, which slows down your database as your tables grow.
+
 ### Rationale
 
 Row-Level Security (RLS) policies are the mechanism for controlling access to data based on user roles or attributes. These policies frequently use the built-in `current_setting` function and provided helper functions in the `auth` schema including `auth.uid()`, `auth.role()`, `auth.email()`, and `auth.jwt()` to retrieve information about the current querying user. Improperly written RLS policies can cause these functions to execute once-per-row, rather than once-per-query. While the `current_setting()` and `auth.<function_name>()` functions are efficient, if executed once-per-row they can lead to significant performance bottlenecks at scale.

@@ -1,6 +1,14 @@
 
 Level: WARN
 
+## Impact
+
+Security policy allows unrestricted access
+
+### Why it matters
+
+An RLS policy uses an always-true condition like `USING (true)`, which defeats the purpose of having Row-Level Security enabled.
+
 ### Rationale
 
 Row Level Security (RLS) policies that use always-true expressions like `USING (true)` or `WITH CHECK (true)` effectively bypass the security that RLS is meant to provide. While RLS appears to be enabled on the table, these permissive policies allow unrestricted access to all rows for the specified roles.

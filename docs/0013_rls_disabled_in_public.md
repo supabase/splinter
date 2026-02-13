@@ -1,6 +1,14 @@
 
 Level: ERROR
 
+## Impact
+
+Table publicly accessible
+
+### Why it matters
+
+Anyone with your project URL can read, edit, and delete all data in this table because Row-Level Security is not enabled.
+
 ### Rationale
 
 Tables in the `public` schema are accessible over Supabase APIs. If row level security (RLS) is not enabled on a `public` table, anyone with the project's URL can CREATE/READ/UPDATE/DELETE (CRUD) rows in the impacted table. Publicly exposing full CRUD to the internet is a critically unsafe configuration.

@@ -1,6 +1,14 @@
 
 Level: INFO
 
+## Impact
+
+No access rules defined
+
+### Why it matters
+
+Row-Level Security is enabled but no policies exist, so no data can be read or written through the API.
+
 ### Rationale
 
 In Postgres, Row Level Security (RLS) policies control access to rows in a table based on the executing user. If a table has RLS enabled, but no policies exist, no data will be selectable via Supabase APIs.

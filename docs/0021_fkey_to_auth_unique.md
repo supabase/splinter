@@ -1,5 +1,13 @@
 Level: ERROR
 
+## Impact
+
+Foreign key blocks Auth upgrades
+
+### Why it matters
+
+A foreign key references a constraint in the auth schema that is scheduled for removal, which will prevent future Auth updates and security patches.
+
 ### Rationale
 
 Supabase Auth does not support user-defined foreign keys that reference non-primary key unique constraints in the `auth` schema. These unique constraints are scheduled for removal, and any foreign keys referencing them will block Supabase Auth's database migrations from completing successfully. If Supabase Auth is unable to upgrade, it prevents the rollout of new features and critical security updates.

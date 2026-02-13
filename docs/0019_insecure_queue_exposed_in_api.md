@@ -1,6 +1,14 @@
 
 Level: ERROR
 
+## Impact
+
+Queue exposed without protection
+
+### Why it matters
+
+Anyone with your project URL can read, modify, and delete messages in this queue because it lacks access controls.
+
 ### Rationale
 
 Queues exposed over Data APIs must be secured by Postgres permissions or row level security (RLS). Without this protection, anyone with a project's URL can manipulate queue data. That is a critically unsafe configuration.

@@ -1,6 +1,14 @@
 
 Level: INFO
 
+## Impact
+
+Unused index found
+
+### Why it matters
+
+This index is never used by any query but still slows down every insert, update, and delete on the table.
+
 ### Rationale
 
 Unused indexes in a database are a silent performance issue. While indexes are important for speeding up search queries, every index also adds overhead to the database. This overhead occurs because the database must update each index whenever data in the indexed table are inserted, updated, or deleted. If an index is never used by your queries, it burdens the database with unnecessary work, which can slow down write operations and consume additional storage space.

@@ -1,6 +1,14 @@
 
 Level: WARN
 
+## Impact
+
+Duplicate index found
+
+### Why it matters
+
+Identical indexes on the same table waste storage and slow down writes with no performance benefit.
+
 ### Rationale
 
 Each index in a Postgres database adds overhead. This overhead occurs because the database must update each index whenever data in the indexed table are inserted, updated, or deleted. If two or more indexes are exact duplicates in their composition, the database incurs additional write overhead for no performance benefit.

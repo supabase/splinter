@@ -1,5 +1,13 @@
 Level: WARN
 
+## Impact
+
+Extension out of date
+
+### Why it matters
+
+An installed extension is running an older version that may be missing security patches and is not covered by the Supabase SLA.
+
 ### Rationale
 
 Keeping PostgreSQL extensions up to date is important for maintaining database security and stability. Extension developers regularly release updates that include:

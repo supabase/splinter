@@ -1,6 +1,14 @@
 
 Level: WARN
 
+## Impact
+
+Extension installed in public schema
+
+### Why it matters
+
+The extension's internal functions and tables are visible in your API, cluttering it and potentially exposing unintended functionality.
+
 ### Rationale
 
 Entities like tables and functions in the `public` schema are exposed through Supabase APIs by default. When extensions are installed in the `public` schema, the functions, tables, views, etc that they contain appear to be part of your project's API.

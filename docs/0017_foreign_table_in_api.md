@@ -1,5 +1,13 @@
 Level: WARN
 
+## Impact
+
+Foreign table exposed in API
+
+### Why it matters
+
+Foreign tables can't be protected by Row-Level Security, so all their data is visible to every API user.
+
 ### Rationale
 
 Foreign Tables in Postgres can present a security risk if they are accessible to API roles `anon` and `authenticated`. Unlike regular tables, foreign tables can not be configured to respect Row Level Security (RLS) policies. Therefore, if foreign tables are accessible over APIs, all rows are always visible, which may not be intended.
