@@ -1,13 +1,11 @@
 
-Level: INFO
+**Level:** INFO
 
-### Impact
+**Summary:** Table has no primary key
 
-Table has no primary key
+**Ramification:** Without a primary key, rows can't be uniquely identified, which can cause data issues and slower queries.
 
-#### Why it matters
-
-Without a primary key, rows can't be uniquely identified, which can cause data issues and slower queries.
+---
 
 ### Rationale
 

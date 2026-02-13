@@ -1,13 +1,11 @@
 
-Level: INFO
+**Level:** INFO
 
-### Impact
+**Summary:** Unused index found
 
-Unused index found
+**Ramification:** This index is never used by any query but still slows down every insert, update, and delete on the table.
 
-#### Why it matters
-
-This index is never used by any query but still slows down every insert, update, and delete on the table.
+---
 
 ### Rationale
 

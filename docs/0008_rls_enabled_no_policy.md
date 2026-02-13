@@ -1,13 +1,11 @@
 
-Level: INFO
+**Level:** INFO
 
-### Impact
+**Summary:** No access rules defined
 
-No access rules defined
+**Ramification:** Row-Level Security is enabled but no policies exist, so no data can be read or written through the API.
 
-#### Why it matters
-
-Row-Level Security is enabled but no policies exist, so no data can be read or written through the API.
+---
 
 ### Rationale
 

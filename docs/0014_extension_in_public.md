@@ -1,13 +1,11 @@
 
-Level: WARN
+**Level:** WARN
 
-### Impact
+**Summary:** Extension installed in public schema
 
-Extension installed in public schema
+**Ramification:** The extension's internal functions and tables are visible in your API, cluttering it and potentially exposing unintended functionality.
 
-#### Why it matters
-
-The extension's internal functions and tables are visible in your API, cluttering it and potentially exposing unintended functionality.
+---
 
 ### Rationale
 

@@ -1,12 +1,10 @@
-Level: WARN
+**Level:** WARN
 
-### Impact
+**Summary:** Extension out of date
 
-Extension out of date
+**Ramification:** An installed extension is running an older version that may be missing security patches and is not covered by the Supabase SLA.
 
-#### Why it matters
-
-An installed extension is running an older version that may be missing security patches and is not covered by the Supabase SLA.
+---
 
 ### Rationale
 

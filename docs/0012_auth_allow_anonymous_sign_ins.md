@@ -1,12 +1,10 @@
-Level: INFO
+**Level:** INFO
 
-### Impact
+**Summary:** Anonymous sign-ins enabled
 
-Anonymous sign-ins enabled
+**Ramification:** Anonymous users share the same database role as permanent users, so existing security policies may unintentionally grant them access.
 
-#### Why it matters
-
-Anonymous users share the same database role as permanent users, so existing security policies may unintentionally grant them access.
+---
 
 ### Rationale
 

@@ -1,13 +1,11 @@
 
-Level: WARN
+**Level:** WARN
 
-### Impact
+**Summary:** Duplicate index found
 
-Duplicate index found
+**Ramification:** Identical indexes on the same table waste storage and slow down writes with no performance benefit.
 
-#### Why it matters
-
-Identical indexes on the same table waste storage and slow down writes with no performance benefit.
+---
 
 ### Rationale
 

@@ -1,13 +1,11 @@
 
-Level: ERROR
+**Level:** ERROR
 
-### Impact
+**Summary:** User data exposed through a view
 
-User data exposed through a view
+**Ramification:** A view is exposing your users' personal information to anyone who can access your API.
 
-#### Why it matters
-
-A view is exposing your users' personal information to anyone who can access your API.
+---
 
 ### Rationale
 

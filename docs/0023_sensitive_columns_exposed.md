@@ -1,13 +1,11 @@
 
-Level: ERROR
+**Level:** ERROR
 
-### Impact
+**Summary:** Sensitive data publicly accessible
 
-Sensitive data publicly accessible
+**Ramification:** A table with columns that likely contain sensitive data (like passwords or personal identifiers) is accessible through the API without any access restrictions.
 
-#### Why it matters
-
-A table with columns that likely contain sensitive data (like passwords or personal identifiers) is accessible through the API without any access restrictions.
+---
 
 ### Rationale
 

@@ -1,13 +1,11 @@
 
-Level: ERROR
+**Level:** Critical issue
 
-### Impact
+**Summary:** Table publicly accessible
 
-Table publicly accessible
+**Ramification:** Anyone with your project URL can read, edit, and delete all data in this table because Row-Level Security is not enabled.
 
-#### Why it matters
-
-Anyone with your project URL can read, edit, and delete all data in this table because Row-Level Security is not enabled.
+---
 
 ### Rationale
 

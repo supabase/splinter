@@ -1,13 +1,11 @@
 
-Level: INFO
+**Level:** INFO
 
-### Impact
+**Summary:** Unindexed foreign keys
 
-Unindexed foreign keys
+**Ramification:** Database queries that filter or join on these columns will be slower because there is no index to speed them up.
 
-#### Why it matters
-
-Database queries that filter or join on these columns will be slower because there is no index to speed them up.
+---
 
 ### Rationale
 

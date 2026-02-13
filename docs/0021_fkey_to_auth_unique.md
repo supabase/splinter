@@ -1,12 +1,10 @@
-Level: ERROR
+**Level:** ERROR
 
-### Impact
+**Summary:** Foreign key blocks Auth upgrades
 
-Foreign key blocks Auth upgrades
+**Ramification:** A foreign key references a constraint in the auth schema that is scheduled for removal, which will prevent future Auth updates and security patches.
 
-#### Why it matters
-
-A foreign key references a constraint in the auth schema that is scheduled for removal, which will prevent future Auth updates and security patches.
+---
 
 ### Rationale
 

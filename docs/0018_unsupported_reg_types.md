@@ -1,12 +1,10 @@
-Level: WARN
+**Level:** WARN
 
-### Impact
+**Summary:** Column type blocks Postgres upgrades
 
-Column type blocks Postgres upgrades
+**Ramification:** A table uses a Postgres internal type that is not supported by pg_upgrade, which will prevent you from upgrading to future Postgres versions.
 
-#### Why it matters
-
-A table uses a Postgres internal type that is not supported by pg_upgrade, which will prevent you from upgrading to future Postgres versions.
+---
 
 ### Rationale
 

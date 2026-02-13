@@ -1,13 +1,11 @@
 
-Level: WARN
+**Level:** WARN
 
-### Impact
+**Summary:** Security policy allows unrestricted access
 
-Security policy allows unrestricted access
+**Ramification:** An RLS policy uses an always-true condition like `USING (true)`, which defeats the purpose of having Row-Level Security enabled.
 
-#### Why it matters
-
-An RLS policy uses an always-true condition like `USING (true)`, which defeats the purpose of having Row-Level Security enabled.
+---
 
 ### Rationale
 

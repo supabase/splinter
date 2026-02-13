@@ -1,13 +1,11 @@
 
-Level: WARN
+**Level:** WARN
 
-### Impact
+**Summary:** Multiple permissive policies on a table
 
-Multiple permissive policies on a table
+**Ramification:** When several permissive policies exist on one table, access can become broader than intended and queries slower.
 
-#### Why it matters
-
-When several permissive policies exist on one table, access can become broader than intended and queries slower.
+---
 
 ### Rationale
 
