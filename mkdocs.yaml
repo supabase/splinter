@@ -27,8 +27,8 @@ theme:
     name: 'material'
     features:
       - navigation.expand
-    favicon: 'assets/favicon.ico'
-    logo: 'assets/favicon.ico'
+    favicon: 'assets/favicon.png'
+    logo: 'assets/favicon.png'
     homepage: https://supabase.github.io/splinter
     palette:
         primary: black

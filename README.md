@@ -1,6 +1,6 @@
 # splinter (Supabase Postgres LINTER)
 
-<img src="https://github.com/supabase/splinter/assets/12958657/3683c310-c9f6-4b05-ae3a-c51c03d3ff0f" height="250">
+<img src="docs/assets/splinter-elephant.png" height="250">
 
 <p>
 <a href=""><img src="https://img.shields.io/badge/postgresql-15+-blue.svg" alt="PostgreSQL version" height="18"></a>
@@ -56,6 +56,19 @@ Setup:
 git clone https://github.com/supabase/splinter.git
 cd splinter
 ```
+
+### Building the docs locally
+
+The docs use [MkDocs](https://www.mkdocs.org/) with the [Material](https://squidfunk.github.io/mkdocs-material/) theme. To install dependencies and serve the site with live reload:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+pip install mkdocs-material
+mkdocs serve
+```
+
+Then open http://127.0.0.1:8000. Run `mkdocs build` to output static files to `site/`.
 
 ## Tests
 
