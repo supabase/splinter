@@ -1,5 +1,11 @@
 
-Level: ERROR
+**Level:** ERROR
+
+**Summary:** View bypasses row-level security
+
+**Ramification:** A view in the public schema runs with elevated privileges and ignores Row-Level Security, which could expose more data through the API than intended.
+
+---
 
 ### Rationale
 

@@ -1,5 +1,11 @@
 
-Level: INFO
+**Level:** INFO
+
+**Summary:** Security policy not enforced
+
+**Ramification:** A security policy exists but has no effect because Row-Level Security hasn't been turned on for the table.
+
+---
 
 ### Rationale
 

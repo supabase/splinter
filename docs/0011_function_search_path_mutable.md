@@ -1,5 +1,11 @@
 
-Level: WARN
+**Level:** WARN
+
+**Summary:** Unsecured function search path
+
+**Ramification:** Without a fixed search path, this function could behave unpredictably or be exploited to reference unintended database objects.
+
+---
 
 ### Rationale
 

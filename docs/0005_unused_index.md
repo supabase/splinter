@@ -1,5 +1,11 @@
 
-Level: INFO
+**Level:** INFO
+
+**Summary:** Unused index found
+
+**Ramification:** This index is never used by any query but still slows down every insert, update, and delete on the table.
+
+---
 
 ### Rationale
 

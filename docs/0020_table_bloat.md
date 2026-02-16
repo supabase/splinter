@@ -1,4 +1,10 @@
-Level: WARN
+**Level:** WARN
+
+**Summary:** Excess table bloat detected
+
+**Ramification:** The table has accumulated significant unused space from old row versions, which increases storage costs and slows down queries.
+
+---
 
 ### Rationale
 In PostgreSQL, bloat occurs when tables contain extra, unused space due to deleted or updated rows. PostgreSQL doesn’t immediately reclaim the space used by these rows but instead marks it as reusable for future operations. Over time, if this space isn’t efficiently reused, the table becomes bloated, meaning it takes up more storage than necessary, slowing down database performance and increasing I/O overhead.

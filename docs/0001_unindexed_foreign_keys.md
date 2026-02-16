@@ -1,6 +1,11 @@
 
-Level: INFO
+**Level:** INFO
 
+**Summary:** Unindexed foreign keys
+
+**Ramification:** Database queries that filter or join on these columns will be slower because there is no index to speed them up.
+
+---
 
 ### Rationale
 

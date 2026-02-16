@@ -1,5 +1,11 @@
 
-Level: INFO
+**Level:** INFO
+
+**Summary:** Table has no primary key
+
+**Ramification:** Without a primary key, rows can't be uniquely identified, which can cause data issues and slower queries.
+
+---
 
 ### Rationale
 
