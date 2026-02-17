@@ -20,7 +20,7 @@ Splinter maintains a set of lints for Supabase projects. It uses SQL queries to 
 
 ## Usage
 
-If you are only interested in linting a project, a single query containing the latest version of all lints is availble in splinter.sql in the repo root.
+If you are only interested in linting a project, a single query containing the latest version of all lints is available in splinter.sql in the repo root.
 
 ## Lint Interface
 
@@ -29,13 +29,13 @@ Each lint creates a view that returns a common interface. The interface is:
 - name (text) not null -- Name of the lint
 - title (text) not null -- Human readable title of the lint
 - level (text) not null -- The level of issue. One of ERROR/WARN/INFO
-- facing (text) not null -- Is it an internal (to supabase) or an external (user centric)  lint. One of INTERNAL/EXTERNAL
+- facing (text) not null -- Is it an internal (to supabase) or an external (user centric) lint. One of INTERNAL/EXTERNAL
 - categories (text[]) not null -- Relevant tags for the issue. Any/All of SECURITY/PERFORMANCE (list may grow)
 - description (text) not null -- This is a description of the lint and why its an issue
 - detail (text) not null -- A text description of the issue that includes references to the specific table/column/constraint/whatever that fails the lint
 - remediation (text) optional -- A reference to documentation to describe the issue and how to resolve it
 - metadata (jsonb) optional -- Lint specific information, for example referenced entities, or entity types
-- cache_key (text) not null -- A short, uniquely identifiable string that users can add to an exclusion list to avoid repeatedly seeing the same lint failures. It should identify the releavnt table/column/constraint. The string should be prefixed with the lint name. For example a lint named "unindexed_foreign_key" might have a unique key "unindexed_foreign_key_public_user_created_by_id"
+- cache_key (text) not null -- A short, uniquely identifiable string that users can add to an exclusion list to avoid repeatedly seeing the same lint failures. It should identify the relevant table/column/constraint. The string should be prefixed with the lint name. For example a lint named "unindexed_foreign_key" might have a unique key "unindexed_foreign_key_public_user_created_by_id"
 
 ## Deploying to supabase/supabase
 
@@ -44,7 +44,6 @@ To deploy lints to Supabase prod, open a PR against `supabase/supabase` updating
 If the update includes a new lint, update [getHumanReadableTitle](https://github.com/supabase/supabase/blob/76d10d789fcd1b3e02a62d67d2d8edce78f81903/apps/studio/components/interfaces/Reports/ReportLints.utils.tsx#L9) and [LINT_TYPES](https://github.com/supabase/supabase/blob/76d10d789fcd1b3e02a62d67d2d8edce78f81903/apps/studio/data/lint/lint-query.ts#L694).
 
 [Example PR](https://github.com/supabase/supabase/pull/22682)
-
 
 ## Development
 
