@@ -1,5 +1,11 @@
 
-Level: WARN
+**Level:** WARN
+
+**Summary:** Multiple permissive policies on a table
+
+**Ramification:** When several permissive policies exist on one table, access can become broader than intended and queries slower.
+
+---
 
 ### Rationale
 

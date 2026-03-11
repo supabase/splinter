@@ -1,5 +1,11 @@
 
-Level: ERROR
+**Level:** ERROR
+
+**Summary:** Queue exposed without protection
+
+**Ramification:** Anyone with your project URL can read, modify, and delete messages in this queue because it lacks access controls.
+
+---
 
 ### Rationale
 

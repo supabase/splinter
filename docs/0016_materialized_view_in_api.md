@@ -1,4 +1,10 @@
-Level: WARN
+**Level:** WARN
+
+**Summary:** Materialized view exposed in API
+
+**Ramification:** Materialized views can't be protected by Row-Level Security, so all their data is visible to every API user.
+
+---
 
 ### Rationale
 

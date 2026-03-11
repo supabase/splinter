@@ -1,4 +1,10 @@
-Level: WARN
+**Level:** WARN
+
+**Summary:** Foreign table exposed in API
+
+**Ramification:** Foreign tables can't be protected by Row-Level Security, so all their data is visible to every API user.
+
+---
 
 ### Rationale
 

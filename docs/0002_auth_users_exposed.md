@@ -1,5 +1,11 @@
 
-Level: ERROR
+**Level:** ERROR
+
+**Summary:** User data exposed through a view
+
+**Ramification:** A view is exposing your users' personal information to anyone who can access your API.
+
+---
 
 ### Rationale
 
