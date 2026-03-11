@@ -1,6 +1,8 @@
 
 **Level:** ERROR
 
+**Severity**: 1
+
 **Summary:** Table publicly accessible
 
 **Ramification:** Anyone with your project URL can read, edit, and delete all data in this table because Row-Level Security is not enabled.

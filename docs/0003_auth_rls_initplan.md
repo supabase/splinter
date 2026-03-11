@@ -1,6 +1,8 @@
 
 **Level:** WARN
 
+**Severity**: 4
+
 **Summary:** Slow security policy detected
 
 **Ramification:** A security policy is running its check on every single row instead of once per query, which slows down your database as your tables grow.

@@ -1,4 +1,6 @@
-**Level:** WARN
+**Level:** INFO
+
+**Severity**: 4
 
 **Summary:** Excess table bloat detected
 

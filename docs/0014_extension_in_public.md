@@ -1,6 +1,8 @@
 
 **Level:** WARN
 
+**Severity**: 4
+
 **Summary:** Extension installed in public schema
 
 **Ramification:** The extension's internal functions and tables are visible in your API, cluttering it and potentially exposing unintended functionality.

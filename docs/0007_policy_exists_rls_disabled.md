@@ -1,5 +1,7 @@
 
-**Level:** INFO
+**Level:** ERROR
+
+**Severity**: 1
 
 **Summary:** Security policy not enforced
 

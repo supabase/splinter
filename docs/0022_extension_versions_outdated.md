@@ -1,5 +1,7 @@
 **Level:** WARN
 
+**Severity**: 3
+
 **Summary:** Extension out of date
 
 **Ramification:** An installed extension is running an older version that may be missing security patches and is not covered by the Supabase SLA.

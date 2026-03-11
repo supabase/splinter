@@ -1,6 +1,8 @@
 
 **Level:** ERROR
 
+**Severity**: 1
+
 **Summary:** Sensitive data publicly accessible
 
 **Ramification:** A table with columns that likely contain sensitive data (like passwords or personal identifiers) is accessible through the API without any access restrictions.

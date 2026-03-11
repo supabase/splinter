@@ -1,5 +1,7 @@
 **Level:** INFO
 
+**Severity**: 3
+
 **Summary:** Anonymous sign-ins enabled
 
 **Ramification:** Anonymous users share the same database role as permanent users, so existing security policies may unintentionally grant them access.
