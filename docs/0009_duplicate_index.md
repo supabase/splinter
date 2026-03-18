@@ -1,5 +1,11 @@
 
-Level: WARN
+**Level:** WARN
+
+**Summary:** Duplicate index found
+
+**Ramification:** Identical indexes on the same table waste storage and slow down writes with no performance benefit.
+
+---
 
 ### Rationale
 
