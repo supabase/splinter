@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   DndContext,
   DragEndEvent,
@@ -28,10 +28,13 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
   const [leadsByStage, setLeadsByStage] = useState<Record<string, Lead[]>>(() =>
     buildLeadsByStage(stages, leads)
   )
+  // Ref sempre atualizado — evita stale closure em handleDragEnd
+  const leadsByStageRef = useRef<Record<string, Lead[]>>(leadsByStage)
 
-  // Sincroniza estado local quando as props são atualizadas (após refresh)
   useEffect(() => {
-    setLeadsByStage(buildLeadsByStage(stages, leads))
+    const newState = buildLeadsByStage(stages, leads)
+    setLeadsByStage(newState)
+    leadsByStageRef.current = newState
   }, [leads, stages])
 
   const sensors = useSensors(
@@ -44,7 +47,6 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
     setActiveId(event.active.id as string)
   }
 
-  // Move o card visualmente entre colunas durante o arraste
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event
     if (!over) return
@@ -52,12 +54,11 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
     const activeLeadId = active.id as string
     const overId = over.id as string
 
-    // Coluna de origem (via estado local, que pode já ter sido movido)
-    const sourceStageId = Object.keys(leadsByStage).find((stageId) =>
-      leadsByStage[stageId].some((l) => l.id === activeLeadId)
+    // Usa o ref para leitura — nunca stale
+    const sourceStageId = Object.keys(leadsByStageRef.current).find((stageId) =>
+      leadsByStageRef.current[stageId].some((l) => l.id === activeLeadId)
     )
 
-    // Coluna de destino: pode ser o id da coluna ou o id de um card dentro dela
     const targetStageId =
       stages.find((s) => s.id === overId)?.id ||
       leads.find((l) => l.id === overId)?.stage_id
@@ -67,11 +68,14 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
     setLeadsByStage((prev) => {
       const movedLead = prev[sourceStageId]?.find((l) => l.id === activeLeadId)
       if (!movedLead) return prev
-      return {
+      const newState = {
         ...prev,
         [sourceStageId]: prev[sourceStageId].filter((l) => l.id !== activeLeadId),
         [targetStageId]: [...(prev[targetStageId] || []), movedLead],
       }
+      // Atualiza o ref de forma síncrona dentro do setState
+      leadsByStageRef.current = newState
+      return newState
     })
   }
 
@@ -81,14 +85,13 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
 
     const leadId = active.id as string
 
-    // Usa o estado local para saber onde o card parou (após handleDragOver)
-    const targetStageId = Object.keys(leadsByStage).find((stageId) =>
-      leadsByStage[stageId].some((l) => l.id === leadId)
+    // Lê do ref — sempre reflete o estado mais recente após os drags
+    const targetStageId = Object.keys(leadsByStageRef.current).find((stageId) =>
+      leadsByStageRef.current[stageId].some((l) => l.id === leadId)
     )
 
     if (!targetStageId) return
 
-    // Usa as props originais para checar se houve mudança real
     const lead = leads.find((l) => l.id === leadId)
     if (!lead || lead.stage_id === targetStageId) return
 
@@ -100,11 +103,12 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
       .eq("id", leadId)
 
     if (updateError) {
-      setLeadsByStage(buildLeadsByStage(stages, leads))
+      const revertState = buildLeadsByStage(stages, leads)
+      setLeadsByStage(revertState)
+      leadsByStageRef.current = revertState
       return
     }
 
-    // Registra a interação de mudança de estágio
     await supabase.from("interactions").insert({
       lead_id: leadId,
       type: "stage_change",
