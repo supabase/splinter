@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "builds": [
     {
       "src": "mentoria-crm/package.json",
@@ -8,7 +9,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "mentoria-crm/$1"
+      "dest": "/mentoria-crm/$1"
     }
   ]
 }
