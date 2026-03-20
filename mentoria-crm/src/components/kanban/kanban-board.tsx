@@ -76,17 +76,15 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
+    const { active } = event
     setActiveId(null)
 
-    if (!over) return
-
     const leadId = active.id as string
-    const overId = over.id as string
 
-    const targetStageId =
-      stages.find((s) => s.id === overId)?.id ||
-      leads.find((l) => l.id === overId)?.stage_id
+    // Usa o estado local para saber onde o card parou (após handleDragOver)
+    const targetStageId = Object.keys(leadsByStage).find((stageId) =>
+      leadsByStage[stageId].some((l) => l.id === leadId)
+    )
 
     if (!targetStageId) return
 
@@ -95,18 +93,25 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
     if (!lead || lead.stage_id === targetStageId) return
 
     const stageName = stages.find((s) => s.id === targetStageId)?.name || ""
-    const { error } = await supabase.rpc("move_lead_stage", {
-      p_lead_id: leadId,
-      p_stage_id: targetStageId,
-      p_stage_name: stageName,
+
+    const { error: updateError } = await supabase
+      .from("leads")
+      .update({ stage_id: targetStageId })
+      .eq("id", leadId)
+
+    if (updateError) {
+      setLeadsByStage(buildLeadsByStage(stages, leads))
+      return
+    }
+
+    // Registra a interação de mudança de estágio
+    await supabase.from("interactions").insert({
+      lead_id: leadId,
+      type: "stage_change",
+      content: `Movido para "${stageName}"`,
     })
 
-    if (!error) {
-      onRefresh()
-    } else {
-      // Reverte o estado otimista em caso de erro
-      setLeadsByStage(buildLeadsByStage(stages, leads))
-    }
+    onRefresh()
   }
 
   return (
