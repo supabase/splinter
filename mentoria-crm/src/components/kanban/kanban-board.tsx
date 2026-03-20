@@ -90,10 +90,23 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
       leadsByStageRef.current[stageId].some((l) => l.id === leadId)
     )
 
-    if (!targetStageId) return
+    console.log("[DragEnd] leadId:", leadId)
+    console.log("[DragEnd] targetStageId from ref:", targetStageId)
+    console.log("[DragEnd] leadsByStageRef.current keys:", Object.keys(leadsByStageRef.current))
+
+    if (!targetStageId) {
+      console.log("[DragEnd] abortado: targetStageId não encontrado")
+      return
+    }
 
     const lead = leads.find((l) => l.id === leadId)
-    if (!lead || lead.stage_id === targetStageId) return
+    console.log("[DragEnd] lead.stage_id (original):", lead?.stage_id)
+    console.log("[DragEnd] mesmo estágio?", lead?.stage_id === targetStageId)
+
+    if (!lead || lead.stage_id === targetStageId) {
+      console.log("[DragEnd] abortado: sem mudança de estágio")
+      return
+    }
 
     const stageName = stages.find((s) => s.id === targetStageId)?.name || ""
 
@@ -102,7 +115,10 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
       .update({ stage_id: targetStageId })
       .eq("id", leadId)
 
+    console.log("[DragEnd] Supabase update error:", updateError)
+
     if (updateError) {
+      console.error("[DragEnd] Falha no update:", updateError.message, updateError.code)
       const revertState = buildLeadsByStage(stages, leads)
       setLeadsByStage(revertState)
       leadsByStageRef.current = revertState
