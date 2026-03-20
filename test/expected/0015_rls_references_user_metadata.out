@@ -1,0 +1,37 @@
+begin;
+    set local search_path = '';
+    -- No issues
+    select * from lint."0015_rls_references_user_metadata";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+    -- Create a view that exposes auth.users
+    create table public.foo (
+        id int primary key,
+        user_id uuid,
+        jwt jsonb,
+        role text,
+        email text
+    );
+    create policy bad_policy_1 on public.foo
+    for select
+        to authenticated
+        using ( (( select auth.jwt() ) ->> 'user_metadata' )::bool );
+    create policy bad_policy_2 on public.foo
+    for insert
+        to authenticated
+        with check ( ( current_setting($$request.jwt.claims$$, true)::json ->> 'user_metadata' )::boolean );
+    create policy ok_policy_1 on public.foo
+    for select
+        to authenticated
+        using ( (( select auth.jwt() ) ->> 'is_acessible' )::bool );
+    -- 2 errors, both 'bad_*' policies
+    select * from lint."0015_rls_references_user_metadata";
+             name             |            title             | level |  facing  | categories |                                               description                                               |                                                                                                      detail                                                                                                       |                                           remediation                                            |                       metadata                       |                      cache_key                       
+------------------------------+------------------------------+-------+----------+------------+---------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------+------------------------------------------------------+------------------------------------------------------
+ rls_references_user_metadata | RLS references user metadata | ERROR | EXTERNAL | {SECURITY} | Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy. | Table \`public.foo\` has a row level security policy \`bad_policy_1\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context. | https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata | {"name": "foo", "type": "table", "schema": "public"} | rls_references_user_metadata_public_foo_bad_policy_1
+ rls_references_user_metadata | RLS references user metadata | ERROR | EXTERNAL | {SECURITY} | Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy. | Table \`public.foo\` has a row level security policy \`bad_policy_2\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context. | https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata | {"name": "foo", "type": "table", "schema": "public"} | rls_references_user_metadata_public_foo_bad_policy_2
+(2 rows)
+
+rollback;

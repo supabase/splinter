@@ -1,0 +1,41 @@
+begin;
+  -- 0 issues
+  select * from lint."0021_fkey_to_auth_unique";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  -- Satisfy all failure conditions
+  create table public.foo(
+    id uuid primary key,
+    un text not null references auth.users(username)
+  );
+  -- 1 issue - fkey ref to unique constraint
+  select * from lint."0021_fkey_to_auth_unique";
+        name         |                 title                 | level |  facing  | categories |                                 description                                 |                                           detail                                           |                           remediation                            |                             metadata                              |                 cache_key                  
+---------------------+---------------------------------------+-------+----------+------------+-----------------------------------------------------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------------------------------+--------------------------------------------
+ fkey_to_auth_unique | Foreign Key to Auth Unique Constraint | ERROR | EXTERNAL | {SECURITY} | Detects user defined foreign keys to unique constraints in the auth schema. | Table `public`.`foo` has a foreign key `foo_un_fkey` referencing an auth unique constraint | Drop the foreign key constraint that references the auth schema. | {"name": "foo", "schema": "public", "foreign_key": "foo_un_fkey"} | fkey_to_auth_unique_public_foo_foo_un_fkey
+(1 row)
+
+  -- Alter the table adding another fkey based on id
+  -- this is the primary key, so it is allowed and should not show up
+  -- in the lint
+  alter table public.foo
+  add constraint fk_foo_user_id
+  foreign key (id)
+  references auth.users(id);
+  -- 1 issue - still only 1 issue because the pkey constraint is okay
+  select * from lint."0021_fkey_to_auth_unique";
+        name         |                 title                 | level |  facing  | categories |                                 description                                 |                                           detail                                           |                           remediation                            |                             metadata                              |                 cache_key                  
+---------------------+---------------------------------------+-------+----------+------------+-----------------------------------------------------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------------------------------------------+--------------------------------------------
+ fkey_to_auth_unique | Foreign Key to Auth Unique Constraint | ERROR | EXTERNAL | {SECURITY} | Detects user defined foreign keys to unique constraints in the auth schema. | Table `public`.`foo` has a foreign key `foo_un_fkey` referencing an auth unique constraint | Drop the foreign key constraint that references the auth schema. | {"name": "foo", "schema": "public", "foreign_key": "foo_un_fkey"} | fkey_to_auth_unique_public_foo_foo_un_fkey
+(1 row)
+
+  drop table public.foo;
+  -- 0 issue - still only 1 issue because the pkey constraint is okay
+  select * from lint."0021_fkey_to_auth_unique";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+rollback;

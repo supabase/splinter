@@ -1,0 +1,21 @@
+name: tests
+on:
+  pull_request:
+  push: { branches: master }
+
+jobs:
+  test:
+    name: Run tests
+    strategy:
+      matrix:
+        postgres: ["15.1.1.13"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build docker images
+        run: PG_VERSION=${{ matrix.postgres }} docker compose -f dockerfiles/docker-compose.yml build
+
+      - name: Run tests
+        run: PG_VERSION=${{ matrix.postgres }} docker compose -f dockerfiles/docker-compose.yml run test

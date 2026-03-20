@@ -1,0 +1,50 @@
+site_name: splinter
+site_url: https://supabase.github.io/splinter
+site_description: Supabase Project Linter
+
+repo_name: supabase/splinter
+repo_url: https://github.com/supabase/splinter
+
+nav:
+    - Welcome: 'index.md'
+    - Lints:
+      - Unindexed Foreign Keys: '0001_unindexed_foreign_keys.md'
+      - Auth Users Exposed: '0002_auth_users_exposed.md'
+      - Auth RLS InitPlan: '0003_auth_rls_initplan.md'
+      - No Primary Key: '0004_no_primary_key.md'
+      - Unused Index: '0005_unused_index.md'
+      - Multiple Permissive Policies: '0006_multiple_permissive_policies.md'
+      - Policy Exists RLS Disabled: '0007_policy_exists_rls_disabled.md'
+      - RLS Enabled No Policy: '0008_rls_enabled_no_policy.md'
+      - Duplicate Index: '0009_duplicate_index.md'
+      - Security Definer View: '0010_security_definer_view.md'
+      - Function Search Path Mutable: '0011_function_search_path_mutable.md'
+      - RLS Disabled in Public: '0013_rls_disabled_in_public.md'
+      - Extension in Public: '0014_extension_in_public.md'
+      - RLS References user_metadata: '0015_rls_references_user_metadata.md'
+
+theme:
+    name: 'material'
+    features:
+      - navigation.expand
+    favicon: 'assets/favicon.ico'
+    logo: 'assets/favicon.ico'
+    homepage: https://supabase.github.io/splinter
+    palette:
+        primary: black
+        accent: light green
+
+markdown_extensions:
+    - pymdownx.highlight:
+        linenums: true
+        guess_lang: false
+        use_pygments: true
+        pygments_style: default
+    - pymdownx.superfences
+    - pymdownx.tabbed:
+        alternate_style: true
+    - pymdownx.snippets
+    - pymdownx.tasklist
+    - admonition
+    - attr_list
+    - md_in_html
