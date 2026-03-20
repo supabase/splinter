@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# override root gitignore (splinter's lib/ rule)
+\!src/lib/
