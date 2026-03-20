@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   DndContext,
   DragEndEvent,
@@ -12,7 +12,6 @@ import {
   useSensors,
   closestCorners,
 } from "@dnd-kit/core"
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { KanbanColumn } from "./kanban-column"
 import { KanbanCardOverlay } from "./kanban-card"
 import { supabase } from "@/lib/supabase"
@@ -30,8 +29,10 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
     buildLeadsByStage(stages, leads)
   )
 
-  // Rebuild when props change
-  const currentLeadsByStage = buildLeadsByStage(stages, leads)
+  // Sincroniza estado local quando as props são atualizadas (após refresh)
+  useEffect(() => {
+    setLeadsByStage(buildLeadsByStage(stages, leads))
+  }, [leads, stages])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -43,6 +44,37 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
     setActiveId(event.active.id as string)
   }
 
+  // Move o card visualmente entre colunas durante o arraste
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event
+    if (!over) return
+
+    const activeLeadId = active.id as string
+    const overId = over.id as string
+
+    // Coluna de origem (via estado local, que pode já ter sido movido)
+    const sourceStageId = Object.keys(leadsByStage).find((stageId) =>
+      leadsByStage[stageId].some((l) => l.id === activeLeadId)
+    )
+
+    // Coluna de destino: pode ser o id da coluna ou o id de um card dentro dela
+    const targetStageId =
+      stages.find((s) => s.id === overId)?.id ||
+      leads.find((l) => l.id === overId)?.stage_id
+
+    if (!sourceStageId || !targetStageId || sourceStageId === targetStageId) return
+
+    setLeadsByStage((prev) => {
+      const movedLead = prev[sourceStageId]?.find((l) => l.id === activeLeadId)
+      if (!movedLead) return prev
+      return {
+        ...prev,
+        [sourceStageId]: prev[sourceStageId].filter((l) => l.id !== activeLeadId),
+        [targetStageId]: [...(prev[targetStageId] || []), movedLead],
+      }
+    })
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveId(null)
@@ -52,16 +84,16 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
     const leadId = active.id as string
     const overId = over.id as string
 
-    // Find which stage the lead was dropped into
-    const targetStageId = stages.find((s) => s.id === overId)?.id
-      || leads.find((l) => l.id === overId)?.stage_id
+    const targetStageId =
+      stages.find((s) => s.id === overId)?.id ||
+      leads.find((l) => l.id === overId)?.stage_id
 
     if (!targetStageId) return
 
+    // Usa as props originais para checar se houve mudança real
     const lead = leads.find((l) => l.id === leadId)
     if (!lead || lead.stage_id === targetStageId) return
 
-    // Atualiza estágio + interação atomicamente via RPC
     const stageName = stages.find((s) => s.id === targetStageId)?.name || ""
     const { error } = await supabase.rpc("move_lead_stage", {
       p_lead_id: leadId,
@@ -71,6 +103,9 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
 
     if (!error) {
       onRefresh()
+    } else {
+      // Reverte o estado otimista em caso de erro
+      setLeadsByStage(buildLeadsByStage(stages, leads))
     }
   }
 
@@ -79,6 +114,7 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="flex gap-4 overflow-x-auto pb-4" style={{ minHeight: "calc(100vh - 180px)" }}>
@@ -86,7 +122,7 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
           <KanbanColumn
             key={stage.id}
             stage={stage}
-            leads={currentLeadsByStage[stage.id] || []}
+            leads={leadsByStage[stage.id] || []}
             onRefresh={onRefresh}
           />
         ))}
