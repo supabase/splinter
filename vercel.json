@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": "mentoria-crm/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "mentoria-crm/$1"
+    }
+  ]
+}
