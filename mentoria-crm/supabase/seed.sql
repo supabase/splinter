@@ -13,10 +13,8 @@ INSERT INTO stages (name, color, "order", type) VALUES
 
 -- Produtos padrão
 INSERT INTO products (name, price, description) VALUES
-  ('Mentoria Individual 3 meses',  3000.00, 'Acompanhamento individual por 3 meses'),
-  ('Mentoria Individual 6 meses',  5000.00, 'Acompanhamento individual por 6 meses'),
-  ('Mentoria Individual 12 meses', 9000.00, 'Acompanhamento individual por 12 meses'),
-  ('Sessão Avulsa',                 500.00, 'Sessão de mentoria avulsa');
+  ('Sessão Única',  600.00, 'Sessão individual de mentoria'),
+  ('Travessia',    2000.00, 'Pacote com 4 sessões de mentoria');
 
 -- Origens padrão
 INSERT INTO sources (name) VALUES
