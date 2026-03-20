@@ -61,19 +61,15 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
     const lead = leads.find((l) => l.id === leadId)
     if (!lead || lead.stage_id === targetStageId) return
 
-    // Update in DB
-    const { error } = await supabase
-      .from("leads")
-      .update({ stage_id: targetStageId })
-      .eq("id", leadId)
+    // Atualiza estágio + interação atomicamente via RPC
+    const stageName = stages.find((s) => s.id === targetStageId)?.name || ""
+    const { error } = await supabase.rpc("move_lead_stage", {
+      p_lead_id: leadId,
+      p_stage_id: targetStageId,
+      p_stage_name: stageName,
+    })
 
     if (!error) {
-      const stageName = stages.find((s) => s.id === targetStageId)?.name || ""
-      await supabase.from("interactions").insert({
-        lead_id: leadId,
-        type: "stage_change",
-        content: `Movido para "${stageName}"`,
-      })
       onRefresh()
     }
   }

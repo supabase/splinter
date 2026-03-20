@@ -63,19 +63,20 @@ export function LeadForm({ lead, initialStageId, onSuccess, onCancel }: LeadForm
     }
 
     if (lead) {
-      const { error: updateError } = await supabase
-        .from("leads")
-        .update(payload)
-        .eq("id", lead.id)
-
-      if (!updateError && lead.stage_id !== form.stage_id) {
-        const stageName = stages.find((s) => s.id === form.stage_id)?.name || ""
-        await supabase.from("interactions").insert({
-          lead_id: lead.id,
-          type: "stage_change",
-          content: `Movido para "${stageName}"`,
-        })
-      }
+      const { error: updateError } = await supabase.rpc("update_lead_with_interaction", {
+        p_lead_id: lead.id,
+        p_name: payload.name,
+        p_phone: payload.phone,
+        p_email: payload.email,
+        p_stage_id: payload.stage_id,
+        p_source_id: payload.source_id,
+        p_product_id: payload.product_id,
+        p_proposal_value: payload.proposal_value,
+        p_payment_method: payload.payment_method,
+        p_notes: payload.notes,
+        p_old_stage_id: lead.stage_id,
+        p_new_stage_name: stages.find((s) => s.id === form.stage_id)?.name || "",
+      })
 
       if (updateError) {
         setError(updateError.message)
@@ -83,24 +84,24 @@ export function LeadForm({ lead, initialStageId, onSuccess, onCancel }: LeadForm
         return
       }
     } else {
-      const { data: newLead, error: insertError } = await supabase
-        .from("leads")
-        .insert(payload)
-        .select()
-        .single()
+      const { error: insertError } = await supabase.rpc("create_lead_with_interaction", {
+        p_name: payload.name,
+        p_phone: payload.phone,
+        p_email: payload.email,
+        p_stage_id: payload.stage_id,
+        p_source_id: payload.source_id,
+        p_product_id: payload.product_id,
+        p_proposal_value: payload.proposal_value,
+        p_payment_method: payload.payment_method,
+        p_notes: payload.notes,
+        p_stage_name: stages.find((s) => s.id === form.stage_id)?.name || "",
+      })
 
       if (insertError) {
         setError(insertError.message)
         setLoading(false)
         return
       }
-
-      const stageName = stages.find((s) => s.id === form.stage_id)?.name || ""
-      await supabase.from("interactions").insert({
-        lead_id: newLead.id,
-        type: "stage_change",
-        content: `Lead criado em "${stageName}"`,
-      })
     }
 
     setLoading(false)

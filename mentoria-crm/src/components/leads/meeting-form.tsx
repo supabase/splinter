@@ -31,23 +31,20 @@ export function MeetingForm({ leadId, onSuccess, onCancel }: MeetingFormProps) {
       return
     }
     setLoading(true)
-    const { error: err } = await supabase.from("meetings").insert({
-      lead_id: leadId,
-      title: form.title.trim(),
-      date: form.date,
-      time: form.time,
-      link: form.link.trim() || null,
+    const formattedDate = `${new Date(form.date + "T00:00:00").toLocaleDateString("pt-BR")} às ${form.time}`
+    const { error: err } = await supabase.rpc("create_meeting_with_interaction", {
+      p_lead_id: leadId,
+      p_title: form.title.trim(),
+      p_date: form.date,
+      p_time: form.time,
+      p_link: form.link.trim() || null,
+      p_formatted_date: formattedDate,
     })
     if (err) {
       setError(err.message)
       setLoading(false)
       return
     }
-    await supabase.from("interactions").insert({
-      lead_id: leadId,
-      type: "meeting",
-      content: `Reunião agendada: ${form.title} — ${new Date(form.date).toLocaleDateString("pt-BR")} às ${form.time}`,
-    })
     setLoading(false)
     onSuccess()
   }
