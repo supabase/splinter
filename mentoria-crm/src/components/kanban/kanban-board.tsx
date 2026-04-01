@@ -25,6 +25,7 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [debugMsg, setDebugMsg] = useState<string | null>(null)
   const [leadsByStage, setLeadsByStage] = useState<Record<string, Lead[]>>(() =>
     buildLeadsByStage(stages, leads)
   )
@@ -90,40 +91,35 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
       leadsByStageRef.current[stageId].some((l) => l.id === leadId)
     )
 
-    console.log("[DragEnd] leadId:", leadId)
-    console.log("[DragEnd] targetStageId from ref:", targetStageId)
-    console.log("[DragEnd] leadsByStageRef.current keys:", Object.keys(leadsByStageRef.current))
-
     if (!targetStageId) {
-      console.log("[DragEnd] abortado: targetStageId não encontrado")
+      setDebugMsg("ERRO: targetStageId não encontrado no ref")
       return
     }
 
     const lead = leads.find((l) => l.id === leadId)
-    console.log("[DragEnd] lead.stage_id (original):", lead?.stage_id)
-    console.log("[DragEnd] mesmo estágio?", lead?.stage_id === targetStageId)
 
     if (!lead || lead.stage_id === targetStageId) {
-      console.log("[DragEnd] abortado: sem mudança de estágio")
+      setDebugMsg(`ABORTADO: lead.stage_id=${lead?.stage_id} === targetStageId=${targetStageId} (sem mudança detectada)`)
       return
     }
 
     const stageName = stages.find((s) => s.id === targetStageId)?.name || ""
+    setDebugMsg(`Atualizando: lead "${lead.name}" → "${stageName}"...`)
 
     const { error: updateError } = await supabase
       .from("leads")
       .update({ stage_id: targetStageId })
       .eq("id", leadId)
 
-    console.log("[DragEnd] Supabase update error:", updateError)
-
     if (updateError) {
-      console.error("[DragEnd] Falha no update:", updateError.message, updateError.code)
+      setDebugMsg(`ERRO SUPABASE: [${updateError.code}] ${updateError.message}`)
       const revertState = buildLeadsByStage(stages, leads)
       setLeadsByStage(revertState)
       leadsByStageRef.current = revertState
       return
     }
+
+    setDebugMsg(`OK: "${lead.name}" movido para "${stageName}"`)
 
     await supabase.from("interactions").insert({
       lead_id: leadId,
@@ -135,6 +131,17 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
   }
 
   return (
+    <>
+    {debugMsg && (
+      <div className={`mb-4 px-4 py-3 rounded-lg text-sm font-mono font-medium border ${
+        debugMsg.startsWith("OK") ? "bg-green-50 border-green-300 text-green-800" :
+        debugMsg.startsWith("ERRO") ? "bg-red-50 border-red-300 text-red-800" :
+        debugMsg.startsWith("ABORTADO") ? "bg-yellow-50 border-yellow-300 text-yellow-800" :
+        "bg-blue-50 border-blue-300 text-blue-800"
+      }`}>
+        {debugMsg}
+      </div>
+    )}
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
@@ -157,6 +164,7 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
         {activeLead && <KanbanCardOverlay lead={activeLead} />}
       </DragOverlay>
     </DndContext>
+    </>
   )
 }
 
