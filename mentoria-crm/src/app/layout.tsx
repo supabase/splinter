@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import "./globals.css"
-import { Sidebar } from "@/components/layout/sidebar"
+import { LayoutWrapper } from "@/components/layout/layout-wrapper"
 
 export const metadata: Metadata = {
   title: "Mentoria CRM",
@@ -15,8 +15,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="h-full">
       <body className="h-full bg-slate-50">
-        <Sidebar />
-        <main className="ml-60 min-h-screen p-6">{children}</main>
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   )

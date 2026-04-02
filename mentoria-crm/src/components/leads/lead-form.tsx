@@ -43,10 +43,29 @@ export function LeadForm({ lead, initialStageId, onSuccess, onCancel }: LeadForm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!form.name.trim() || !form.phone.trim() || !form.stage_id) {
       setError("Nome, telefone e estágio são obrigatórios")
       return
     }
+
+    const phoneDigits = form.phone.replace(/\D/g, "")
+    if (phoneDigits.length < 10 || phoneDigits.length > 13) {
+      setError("Telefone inválido — use formato (11) 99999-9999")
+      return
+    }
+
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError("E-mail inválido")
+      return
+    }
+
+    const proposalVal = form.proposal_value ? parseFloat(form.proposal_value) : null
+    if (proposalVal !== null && (isNaN(proposalVal) || proposalVal <= 0)) {
+      setError("Valor da proposta deve ser maior que zero")
+      return
+    }
+
     setLoading(true)
     setError("")
 

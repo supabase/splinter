@@ -26,10 +26,17 @@ export function MeetingForm({ leadId, onSuccess, onCancel }: MeetingFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.title || !form.date || !form.time) {
+
+    if (!form.title.trim() || !form.date || !form.time) {
       setError("Título, data e horário são obrigatórios")
       return
     }
+
+    if (form.link.trim() && !/^https?:\/\/.+/.test(form.link.trim())) {
+      setError("Link inválido — deve começar com http:// ou https://")
+      return
+    }
+
     setLoading(true)
     const formattedDate = `${new Date(form.date + "T00:00:00").toLocaleDateString("pt-BR")} às ${form.time}`
     const { error: err } = await supabase.rpc("create_meeting_with_interaction", {
