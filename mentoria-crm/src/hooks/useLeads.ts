@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
-import type { Lead } from "@/types"
+import type { Lead, Meeting } from "@/types"
 
 export function useLeads(filters?: { stageId?: string; sourceId?: string; search?: string }) {
   const [leads, setLeads] = useState<Lead[]>([])
