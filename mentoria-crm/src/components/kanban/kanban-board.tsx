@@ -25,7 +25,6 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [debugMsg, setDebugMsg] = useState<string | null>(null)
   const [leadsByStage, setLeadsByStage] = useState<Record<string, Lead[]>>(() =>
     buildLeadsByStage(stages, leads)
   )
@@ -91,20 +90,13 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
       leadsByStageRef.current[stageId].some((l) => l.id === leadId)
     )
 
-    if (!targetStageId) {
-      setDebugMsg("ERRO: targetStageId não encontrado no ref")
-      return
-    }
+    if (!targetStageId) return
 
     const lead = leads.find((l) => l.id === leadId)
 
-    if (!lead || lead.stage_id === targetStageId) {
-      setDebugMsg(`ABORTADO: lead.stage_id=${lead?.stage_id} === targetStageId=${targetStageId} (sem mudança detectada)`)
-      return
-    }
+    if (!lead || lead.stage_id === targetStageId) return
 
     const stageName = stages.find((s) => s.id === targetStageId)?.name || ""
-    setDebugMsg(`Atualizando: lead "${lead.name}" → "${stageName}"...`)
 
     const { error: updateError } = await supabase
       .from("leads")
@@ -112,14 +104,11 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
       .eq("id", leadId)
 
     if (updateError) {
-      setDebugMsg(`ERRO SUPABASE: [${updateError.code}] ${updateError.message}`)
       const revertState = buildLeadsByStage(stages, leads)
       setLeadsByStage(revertState)
       leadsByStageRef.current = revertState
       return
     }
-
-    setDebugMsg(`OK: "${lead.name}" movido para "${stageName}"`)
 
     await supabase.from("interactions").insert({
       lead_id: leadId,
@@ -132,16 +121,6 @@ export function KanbanBoard({ stages, leads, onRefresh }: KanbanBoardProps) {
 
   return (
     <>
-    {debugMsg && (
-      <div className={`mb-4 px-4 py-3 rounded-lg text-sm font-mono font-medium border ${
-        debugMsg.startsWith("OK") ? "bg-green-50 border-green-300 text-green-800" :
-        debugMsg.startsWith("ERRO") ? "bg-red-50 border-red-300 text-red-800" :
-        debugMsg.startsWith("ABORTADO") ? "bg-yellow-50 border-yellow-300 text-yellow-800" :
-        "bg-blue-50 border-blue-300 text-blue-800"
-      }`}>
-        {debugMsg}
-      </div>
-    )}
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
