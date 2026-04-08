@@ -46,6 +46,10 @@ If the update includes a new lint, update [getHumanReadableTitle](https://github
 [Example PR](https://github.com/supabase/supabase/pull/22682)
 
 
+## Contributing a New Lint
+
+To add a new lint using Claude Code, run the `/new-lint` skill from the [`.claude/skills/new-lint`](.claude/skills/new-lint/SKILL.md) directory. It will guide you through creating the SQL view, test cases, and documentation.
+
 ## Development
 
 Supabase PostgreSQL 15+
