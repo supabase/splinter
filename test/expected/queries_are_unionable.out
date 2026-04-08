@@ -44,7 +44,9 @@ begin;
     union all
     select * from lint."0023_sensitive_columns_exposed"
     union all
-    select * from lint."0024_rls_policy_always_true";
+    select * from lint."0024_rls_policy_always_true"
+    union all
+    select * from lint."0025_public_bucket_allows_listing";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
