@@ -94,11 +94,10 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects public storage buckets that also have bucket-specific SELECT policies on storage.objects. Public buckets do not require SELECT policies for object URL access, and adding them can unintentionally make bucket contents listable.' as description,
+    'Detects public storage buckets with a SELECT policy on `storage.objects`, which allows clients to list all files in the bucket.' as description,
     format(
-        'Public storage bucket `%s` (`%s`) has %s matching SELECT %s on `storage.objects`: %s. This allows clients to list the bucket contents. Public buckets do not require SELECT policies for object URL access, and this is often unintentional.',
+        'Public bucket `%s` has %s SELECT %s on `storage.objects` (%s), allowing clients to list all files. Public buckets don''t need this and it may expose more data than intended.',
         bucket_name,
-        bucket_id,
         policy_count,
         case
             when policy_count = 1 then 'policy'
