@@ -1386,32 +1386,14 @@ order by
     policy_name)
 union all
 (
-with storage_bucket_table as (
-    select
-        1
-    from
-        pg_catalog.pg_class c
-        join pg_catalog.pg_namespace n
-            on c.relnamespace = n.oid
-    where
-        n.nspname = 'storage'
-        and c.relname = 'buckets'
-        and c.relkind in ('r', 'p')
-),
-public_buckets as (
+with public_buckets as (
     -- Read storage.buckets at runtime so the lint can load even when storage is not installed.
     select
-        bucket_id,
-        bucket_name
-    from
-        (
-            select
-                (xpath('/row/id/text()', bucket_xml))[1]::text as bucket_id,
-                (xpath('/row/name/text()', bucket_xml))[1]::text as bucket_name
-            from
-                storage_bucket_table
-        cross join lateral unnest(
-            xpath(
+        (xpath('/row/id/text()', bucket_xml))[1]::text as bucket_id,
+        (xpath('/row/name/text()', bucket_xml))[1]::text as bucket_name
+    from unnest(
+        case when pg_catalog.to_regclass('storage.buckets') is not null
+            then xpath(
                 '/table/row',
                 pg_catalog.query_to_xml(
                     'select id, name from storage.buckets where public = true order by id',
@@ -1420,8 +1402,9 @@ public_buckets as (
                     ''
                 )
             )
-        ) as bucket_rows(bucket_xml)
-        ) public_bucket_rows
+            else array[]::xml[]
+        end
+    ) as bucket_xml
 ),
 matching_policies as (
     select
