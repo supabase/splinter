@@ -1458,7 +1458,9 @@ matching_policies as (
         join pg_catalog.pg_policies p
             on p.schemaname = 'storage'
             and p.tablename = 'objects'
-            and p.cmd = 'SELECT'
+            and p.cmd in ('SELECT', 'ALL')
+            and p.permissive = 'PERMISSIVE'
+            and p.roles && array['public'::name, 'anon'::name, 'authenticated'::name]
     where
         (
             p.qual is null
