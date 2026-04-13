@@ -1,0 +1,247 @@
+begin;
+  set local search_path = '';
+
+  -- BASELINE: 0 issues before storage is installed
+  select * from lint."0025_public_bucket_allows_listing";
+
+  create schema storage;
+
+  create table storage.buckets(
+    id text primary key,
+    name text not null,
+    public boolean not null default false
+  );
+
+  create table storage.objects(
+    bucket_id text not null,
+    name text not null
+  );
+
+  alter table storage.objects enable row level security;
+
+  savepoint a;
+
+  -- NEGATIVE EXAMPLE: a public bucket without a matching SELECT policy should not fire
+  -- Public buckets can rely on object URLs alone, and INSERT policies do not make contents listable
+  insert into storage.buckets(id, name, public)
+  values ('public-without-policy', 'Public without policy', true);
+
+  create policy "public_without_policy_insert"
+  on storage.objects
+  for insert
+  to authenticated
+  with check (bucket_id = 'public-without-policy');
+
+  select * from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint a;
+
+  savepoint b;
+
+  -- NEGATIVE EXAMPLE: a public bucket with a constrained SELECT policy should not fire
+  -- The policy scopes listing to a path prefix rather than broadly listing the whole bucket
+  insert into storage.buckets(id, name, public)
+  values ('restricted-list-bucket', 'Restricted list bucket', true);
+
+  create policy "restricted_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'restricted-list-bucket' and name like 'public/%');
+
+  select * from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint b;
+
+  savepoint c;
+
+  -- POSITIVE EXAMPLE: regex metacharacters in bucket IDs should be matched literally
+  -- Bucket IDs are user-controlled names, so regex escaping must handle more than dots and pluses
+  insert into storage.buckets(id, name, public)
+  values ('a|b[1]^{x}\z', 'Regex metachar bucket', true);
+
+  create policy "regex_metachar_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'a|b[1]^{x}\z');
+
+  select
+    name,
+    metadata->>'bucket_id' as bucket_id,
+    metadata->>'bucket_name' as bucket_name,
+    metadata->>'policy_count' as policy_count,
+    metadata->'policy_names' as policy_names,
+    cache_key
+  from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint c;
+
+  savepoint d;
+
+  -- NEGATIVE EXAMPLE: a restrictive-only policy should not fire
+  -- Restrictive policies do not grant access by themselves
+  insert into storage.buckets(id, name, public)
+  values ('restrictive-only-bucket', 'Restrictive only bucket', true);
+
+  create policy "restrictive_only_bucket_select"
+  on storage.objects
+  as restrictive
+  for select
+  to authenticated
+  using (bucket_id = 'restrictive-only-bucket');
+
+  select * from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint d;
+
+  savepoint e;
+
+  -- POSITIVE EXAMPLE: a public bucket with an always-true SELECT policy should fire once
+  -- An always-true SELECT policy broadly allows listing, even though it is not bucket-specific
+  insert into storage.buckets(id, name, public)
+  values ('always-true-bucket', 'Always true bucket', true);
+
+  create policy "always_true_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (true);
+
+  select
+    name,
+    metadata->>'bucket_id' as bucket_id,
+    metadata->>'bucket_name' as bucket_name,
+    metadata->>'policy_count' as policy_count,
+    metadata->'policy_names' as policy_names,
+    cache_key
+  from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint e;
+
+  savepoint f;
+
+  -- POSITIVE EXAMPLE: a public bucket with a broad ALL policy should fire once
+  -- FOR ALL policies also apply to SELECT, so they can make a public bucket listable
+  insert into storage.buckets(id, name, public)
+  values ('all-policy-bucket', 'All policy bucket', true);
+
+  create policy "all_policy_bucket_access"
+  on storage.objects
+  for all
+  to authenticated
+  using (bucket_id = 'all-policy-bucket');
+
+  select
+    name,
+    metadata->>'bucket_id' as bucket_id,
+    metadata->>'bucket_name' as bucket_name,
+    metadata->>'policy_count' as policy_count,
+    metadata->'policy_names' as policy_names,
+    cache_key
+  from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint f;
+
+  savepoint g;
+
+  -- POSITIVE EXAMPLE: a public bucket with a matching SELECT policy should fire once
+  -- The broad SELECT policy references the public bucket directly, so clients can list its contents
+  insert into storage.buckets(id, name, public)
+  values ('listable.bucket+1', 'Listable bucket', true);
+
+  create policy "listable_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'listable.bucket+1');
+
+  select
+    name,
+    metadata->>'bucket_id' as bucket_id,
+    metadata->>'bucket_name' as bucket_name,
+    metadata->>'policy_count' as policy_count,
+    metadata->'policy_names' as policy_names,
+    cache_key
+  from lint."0025_public_bucket_allows_listing";
+
+  -- RESOLUTION: removing the unnecessary SELECT policy should clear the lint
+  drop policy "listable_bucket_select" on storage.objects;
+
+  select * from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint g;
+
+  savepoint h;
+
+  -- MULTIPLE POLICIES: the bucket should still produce a single lint with aggregated metadata
+  -- Both broad SELECT policies target the same public bucket, so the lint should collapse them into one result
+  insert into storage.buckets(id, name, public)
+  values ('multi-policy-bucket', 'Multi policy bucket', true);
+
+  create policy "bucket_listing_policy_a"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'multi-policy-bucket');
+
+  create policy "bucket_listing_policy_b"
+  on storage.objects
+  for select
+  to authenticated
+  using ((bucket_id = 'multi-policy-bucket'));
+
+  select
+    metadata->>'bucket_id' as bucket_id,
+    metadata->>'policy_count' as policy_count,
+    metadata->'policy_names' as policy_names
+  from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint h;
+
+  savepoint i;
+
+  -- PRIVATE BUCKET: matching SELECT policy text alone should not fire
+  -- Private buckets are out of scope for this lint even when the policy text looks similar
+  insert into storage.buckets(id, name, public)
+  values ('private-bucket', 'Private bucket', false);
+
+  create policy "private_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'private-bucket');
+
+  select * from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint i;
+
+  savepoint j;
+
+  -- MULTIPLE AFFECTED BUCKETS: each affected public bucket should produce its own lint
+  -- Two public buckets each have their own matching SELECT policy, so the lint should emit one row per bucket
+  insert into storage.buckets(id, name, public)
+  values
+    ('alpha-bucket', 'Alpha bucket', true),
+    ('omega-bucket', 'Omega bucket', true);
+
+  create policy "alpha_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'alpha-bucket');
+
+  create policy "omega_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'omega-bucket');
+
+  select
+    metadata->>'bucket_id' as bucket_id,
+    cache_key
+  from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint j;
+
+rollback;

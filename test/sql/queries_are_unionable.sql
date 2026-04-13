@@ -46,6 +46,8 @@ begin;
     union all
     select * from lint."0023_sensitive_columns_exposed"
     union all
-    select * from lint."0024_rls_policy_always_true";
+    select * from lint."0024_rls_policy_always_true"
+    union all
+    select * from lint."0025_public_bucket_allows_listing";
 
 rollback;
