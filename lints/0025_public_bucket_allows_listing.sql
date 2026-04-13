@@ -74,7 +74,11 @@ matching_policies as (
             and p.tablename = 'objects'
             and p.cmd = 'SELECT'
     where
-        p.qual ~* (E'bucket_id\\s*=\\s*' || b.quoted_bucket_pattern)
+        p.qual ~* (
+            E'^\\s*\\(*\\s*bucket_id\\s*=\\s*'
+            || b.quoted_bucket_pattern
+            || E'(\\s*::\\s*[[:alnum:]_\\.]+)?\\s*\\)*\\s*$'
+        )
 ),
 affected_buckets as (
     select
@@ -94,9 +98,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects public storage buckets with a SELECT policy on `storage.objects`, which allows clients to list all files in the bucket.' as description,
+    'Detects public storage buckets with a bucket-only SELECT policy on `storage.objects`, which allows clients to list all files in the bucket.' as description,
     format(
-        'Public bucket `%s` has %s SELECT %s on `storage.objects` (%s), allowing clients to list all files. Public buckets don''t need this and it may expose more data than intended.',
+        'Public bucket `%s` has %s bucket-only SELECT %s on `storage.objects` (%s), allowing clients to list all files. Public buckets don''t need this for object URL access and it may expose more data than intended.',
         bucket_name,
         policy_count,
         case

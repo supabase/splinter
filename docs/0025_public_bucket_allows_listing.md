@@ -1,6 +1,6 @@
 **Level:** WARN
 
-**Summary:** Detects public storage buckets whose `SELECT` policies on `storage.objects` make their contents listable.
+**Summary:** Detects public storage buckets whose bucket-only `SELECT` policies on `storage.objects` make their contents listable.
 
 **Ramification:** Clients can enumerate the files in a public bucket, which often exposes more information than intended even though public object URLs would still work without the policy.
 
@@ -10,7 +10,7 @@
 
 Supabase public buckets are already readable by URL. They do not need a `SELECT` policy on `storage.objects` for clients to fetch known object paths.
 
-The footgun appears when a public bucket also has one or more bucket-scoped `SELECT` policies on `storage.objects`, for example `bucket_id = 'avatars'`. That combination allows clients to list objects in the bucket through Storage APIs, which is often broader access than the project intended.
+The footgun appears when a public bucket also has one or more bucket-only `SELECT` policies on `storage.objects`, for example `bucket_id = 'avatars'`. That combination allows clients to list objects in the bucket through Storage APIs, which is often broader access than the project intended.
 
 This lint is intentionally narrow. It does not warn on all public buckets. It only warns when a public bucket also has a matching `SELECT` policy that makes its contents enumerable.
 
@@ -57,6 +57,6 @@ drop policy if exists "Public bucket listing" on storage.objects;
 
 ### False Positives
 
-This lint may fire when bucket listing is intentional for a public bucket. In that case, keep the policy and handle the warning as an accepted risk.
+This lint may fire when broad bucket listing is intentional for a public bucket. In that case, keep the policy and handle the warning as an accepted risk.
 
-The lint is also intentionally conservative. It only detects direct bucket-specific `bucket_id = '<bucket id>'` matches, so more complex policy expressions may not be reported.
+The lint is also intentionally conservative. It only detects direct bucket-only `bucket_id = '<bucket id>'` matches. It does not warn on policies that add additional object, path, or user constraints such as `bucket_id = 'avatars' and owner = auth.uid()`.

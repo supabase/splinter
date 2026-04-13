@@ -38,8 +38,25 @@ begin;
 
   savepoint b;
 
+  -- NEGATIVE EXAMPLE: a public bucket with a constrained SELECT policy should not fire
+  -- The policy scopes listing to a path prefix rather than broadly listing the whole bucket
+  insert into storage.buckets(id, name, public)
+  values ('restricted-list-bucket', 'Restricted list bucket', true);
+
+  create policy "restricted_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'restricted-list-bucket' and name like 'public/%');
+
+  select * from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint b;
+
+  savepoint c;
+
   -- POSITIVE EXAMPLE: a public bucket with a matching SELECT policy should fire once
-  -- The SELECT policy references the public bucket directly, so clients can list its contents
+  -- The bucket-only SELECT policy references the public bucket directly, so clients can list its contents
   insert into storage.buckets(id, name, public)
   values ('listable.bucket+1', 'Listable bucket', true);
 
@@ -63,12 +80,12 @@ begin;
 
   select * from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint b;
+  rollback to savepoint c;
 
-  savepoint c;
+  savepoint d;
 
   -- MULTIPLE POLICIES: the bucket should still produce a single lint with aggregated metadata
-  -- Both SELECT policies target the same public bucket, so the lint should collapse them into one result
+  -- Both bucket-only SELECT policies target the same public bucket, so the lint should collapse them into one result
   insert into storage.buckets(id, name, public)
   values ('multi-policy-bucket', 'Multi policy bucket', true);
 
@@ -82,7 +99,7 @@ begin;
   on storage.objects
   for select
   to authenticated
-  using (bucket_id = 'multi-policy-bucket' and name like 'public/%');
+  using ((bucket_id = 'multi-policy-bucket'));
 
   select
     metadata->>'bucket_id' as bucket_id,
@@ -90,9 +107,9 @@ begin;
     metadata->'policy_names' as policy_names
   from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint c;
+  rollback to savepoint d;
 
-  savepoint d;
+  savepoint e;
 
   -- PRIVATE BUCKET: matching SELECT policy text alone should not fire
   -- Private buckets are out of scope for this lint even when the policy text looks similar
@@ -107,9 +124,9 @@ begin;
 
   select * from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint d;
+  rollback to savepoint e;
 
-  savepoint e;
+  savepoint f;
 
   -- MULTIPLE AFFECTED BUCKETS: each affected public bucket should produce its own lint
   -- Two public buckets each have their own matching SELECT policy, so the lint should emit one row per bucket
@@ -135,6 +152,6 @@ begin;
     cache_key
   from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint e;
+  rollback to savepoint f;
 
 rollback;
