@@ -55,6 +55,30 @@ begin;
 
   savepoint c;
 
+  -- POSITIVE EXAMPLE: regex metacharacters in bucket IDs should be matched literally
+  -- Bucket IDs are user-controlled names, so regex escaping must handle more than dots and pluses
+  insert into storage.buckets(id, name, public)
+  values ('a|b[1]^{x}\z', 'Regex metachar bucket', true);
+
+  create policy "regex_metachar_bucket_select"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'a|b[1]^{x}\z');
+
+  select
+    name,
+    metadata->>'bucket_id' as bucket_id,
+    metadata->>'bucket_name' as bucket_name,
+    metadata->>'policy_count' as policy_count,
+    metadata->'policy_names' as policy_names,
+    cache_key
+  from lint."0025_public_bucket_allows_listing";
+
+  rollback to savepoint c;
+
+  savepoint d;
+
   -- NEGATIVE EXAMPLE: a restrictive-only policy should not fire
   -- Restrictive policies do not grant access by themselves
   insert into storage.buckets(id, name, public)
@@ -69,9 +93,9 @@ begin;
 
   select * from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint c;
+  rollback to savepoint d;
 
-  savepoint d;
+  savepoint e;
 
   -- POSITIVE EXAMPLE: a public bucket with an always-true SELECT policy should fire once
   -- An always-true SELECT policy broadly allows listing, even though it is not bucket-specific
@@ -93,9 +117,9 @@ begin;
     cache_key
   from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint d;
+  rollback to savepoint e;
 
-  savepoint e;
+  savepoint f;
 
   -- POSITIVE EXAMPLE: a public bucket with a broad ALL policy should fire once
   -- FOR ALL policies also apply to SELECT, so they can make a public bucket listable
@@ -117,9 +141,9 @@ begin;
     cache_key
   from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint e;
+  rollback to savepoint f;
 
-  savepoint f;
+  savepoint g;
 
   -- POSITIVE EXAMPLE: a public bucket with a matching SELECT policy should fire once
   -- The broad SELECT policy references the public bucket directly, so clients can list its contents
@@ -146,9 +170,9 @@ begin;
 
   select * from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint f;
+  rollback to savepoint g;
 
-  savepoint g;
+  savepoint h;
 
   -- MULTIPLE POLICIES: the bucket should still produce a single lint with aggregated metadata
   -- Both broad SELECT policies target the same public bucket, so the lint should collapse them into one result
@@ -173,9 +197,9 @@ begin;
     metadata->'policy_names' as policy_names
   from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint g;
+  rollback to savepoint h;
 
-  savepoint h;
+  savepoint i;
 
   -- PRIVATE BUCKET: matching SELECT policy text alone should not fire
   -- Private buckets are out of scope for this lint even when the policy text looks similar
@@ -190,9 +214,9 @@ begin;
 
   select * from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint h;
+  rollback to savepoint i;
 
-  savepoint i;
+  savepoint j;
 
   -- MULTIPLE AFFECTED BUCKETS: each affected public bucket should produce its own lint
   -- Two public buckets each have their own matching SELECT policy, so the lint should emit one row per bucket
@@ -218,6 +242,6 @@ begin;
     cache_key
   from lint."0025_public_bucket_allows_listing";
 
-  rollback to savepoint i;
+  rollback to savepoint j;
 
 rollback;
