@@ -8,6 +8,7 @@ import {
   Users,
   Settings,
   TrendingUp,
+  GraduationCap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -15,6 +16,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/kanban", label: "Kanban", icon: KanbanSquare },
   { href: "/leads", label: "Leads", icon: Users },
+  { href: "/mentorados", label: "Mentorados", icon: GraduationCap },
   { href: "/settings", label: "Configurações", icon: Settings },
 ]
 
