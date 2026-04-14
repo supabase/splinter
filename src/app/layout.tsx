@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { AuthRedirect } from "./_components/AuthRedirect";
 import "./globals.css";
 
 const SITE_URL = "https://mentoria.caimanoliveira.com";
@@ -165,7 +167,12 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+          <Suspense fallback={null}>
+            <AuthRedirect />
+          </Suspense>
+          {children}
+        </body>
     </html>
   );
 }
