@@ -1,5 +1,4 @@
 create view lint."0013_rls_disabled_in_public" as
-
 select
     'rls_disabled_in_public' as name,
     'RLS Disabled in Public' as title,
@@ -8,7 +7,7 @@ select
     array['SECURITY'] as categories,
     'Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST' as description,
     format(
-        'Table \`%s.%s\` is public, but RLS has not been enabled.',
+        'Table `%s.%s` is public, but RLS has not been enabled.',
         n.nspname,
         c.relname
     ) as detail,
@@ -38,4 +37,11 @@ where
     and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
     and n.nspname not in (
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+    )
+    and c.relname not in (
+        'spatial_ref_sys',
+        'geometry_columns',
+        'geography_columns',
+        'raster_columns',
+        'raster_overviews'
     );
