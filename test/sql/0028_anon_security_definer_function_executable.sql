@@ -1,0 +1,112 @@
+begin;
+  set local search_path = '';
+
+  -- BASELINE: empty user-schema, no rows
+  select * from lint."0028_anon_security_definer_function_executable";
+
+  savepoint a;
+
+  ----------------------------------------
+  -- NEGATIVE EXAMPLE: SECURITY INVOKER function, even with EXECUTE
+  -- granted to anon (via the Postgres default to PUBLIC), must not
+  -- fire. Invoker functions run as the caller and RLS still applies.
+  ----------------------------------------
+  create function public.invoker_func() returns int
+    language sql
+    security invoker
+    as $$ select 1 $$;
+  -- Postgres default grants EXECUTE on functions to PUBLIC, so anon
+  -- has EXECUTE here without an explicit grant.
+  select * from lint."0028_anon_security_definer_function_executable";
+
+  rollback to savepoint a;
+
+  savepoint case_definer_default_grant;
+
+  ----------------------------------------
+  -- POSITIVE: SECURITY DEFINER function in public, EXECUTE granted to
+  -- anon via the Postgres default to PUBLIC. This is the most common
+  -- accidental exposure — the developer never granted EXECUTE
+  -- explicitly, the default did it.
+  ----------------------------------------
+  create function public.priv_op(target_id int) returns int
+    language sql
+    security definer
+    as $$ select target_id $$;
+
+  select
+    name,
+    metadata->>'name' as func_name,
+    metadata->>'arguments' as func_args,
+    metadata->>'security_definer' as security_definer,
+    cache_key
+  from lint."0028_anon_security_definer_function_executable";
+
+  ----------------------------------------
+  -- RESOLUTION: revoke EXECUTE from anon and from PUBLIC. After
+  -- revoking, has_function_privilege('anon', ...) is false and the
+  -- lint clears.
+  ----------------------------------------
+  revoke execute on function public.priv_op(int) from anon, public;
+  select * from lint."0028_anon_security_definer_function_executable";
+
+  rollback to savepoint case_definer_default_grant;
+
+  savepoint case_overloads;
+
+  ----------------------------------------
+  -- POSITIVE (overloads): two SECURITY DEFINER functions sharing a
+  -- name but with different argument lists. Each must produce a
+  -- separate finding with a unique cache_key based on the argument
+  -- signature.
+  ----------------------------------------
+  create function public.dispatch(target_id int) returns int
+    language sql
+    security definer
+    as $$ select target_id $$;
+  create function public.dispatch(target_id int, label text) returns int
+    language sql
+    security definer
+    as $$ select target_id $$;
+
+  select
+    name,
+    metadata->>'name' as func_name,
+    metadata->>'arguments' as func_args,
+    cache_key
+  from lint."0028_anon_security_definer_function_executable";
+
+  rollback to savepoint case_overloads;
+
+  savepoint case_definer_revoked;
+
+  ----------------------------------------
+  -- NEGATIVE: SECURITY DEFINER function with EXECUTE explicitly
+  -- revoked from anon (and PUBLIC). Lint must not fire even though
+  -- `authenticated` may still have EXECUTE — that's lint 0029's job.
+  ----------------------------------------
+  create function public.admin_only() returns int
+    language sql
+    security definer
+    as $$ select 1 $$;
+  revoke execute on function public.admin_only() from public, anon;
+  select * from lint."0028_anon_security_definer_function_executable";
+
+  rollback to savepoint case_definer_revoked;
+
+  savepoint case_system_schema;
+
+  ----------------------------------------
+  -- NEGATIVE: SECURITY DEFINER function in a system schema (auth)
+  -- must not fire even with EXECUTE to anon — system schemas are
+  -- excluded.
+  ----------------------------------------
+  create function auth.system_definer() returns int
+    language sql
+    security definer
+    as $$ select 1 $$;
+  select * from lint."0028_anon_security_definer_function_executable";
+
+  rollback to savepoint case_system_schema;
+
+rollback;
