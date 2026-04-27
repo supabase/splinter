@@ -65,13 +65,13 @@ exposed_objects as (
 )
 select
     'pg_graphql_authenticated_table_exposed' as name,
-    'pg_graphql Authenticated Role Exposes Objects in Introspection' as title,
+    'Signed-In Users Can See Object in GraphQL Schema' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects tables, views, materialized views, and foreign tables whose schema is visible via the `/graphql/v1` introspection endpoint to any signed-up user. When `pg_graphql` is installed, any object the `authenticated` role has `SELECT` on is visible in introspection — names, columns, types, and relationships — even when RLS is enabled. In default Supabase projects `authenticated` is anyone with a valid JWT, which under open or auto-confirm signup is anyone with a throwaway email. See lint 0026 for the equivalent check against `anon`.' as description,
+    'Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to signed-in users. If `pg_graphql` is installed and the `authenticated` role can `SELECT` any column on an object, its name, columns, and relationships appear in `/graphql/v1` introspection even when RLS is enabled. Revoke `SELECT` from `authenticated` for objects that signed-in users should not discover, and check lint 0026 for the matching public exposure.' as description,
     format(
-        'Extension `pg_graphql` is installed and the `authenticated` role has `SELECT` on %s `%s.%s`. Its name, columns, and relationships are visible via the `/graphql/v1` introspection endpoint to any signed-up user.',
+        '%s `%s.%s` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if this object should not be discoverable to every account.',
         object_type,
         schema_name,
         object_name

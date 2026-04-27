@@ -1,9 +1,9 @@
 
 **Level:** WARN
 
-**Summary:** A `SECURITY DEFINER` function in a user schema is executable by the `authenticated` role, meaning every signed-up user can invoke a privileged operation that bypasses RLS.
+**Summary:** This `SECURITY DEFINER` function is callable by signed-in users.
 
-**Ramification:** A `SECURITY DEFINER` function runs with the privileges of its owner — typically a role with `BYPASSRLS` or with broad table grants — not the caller. When `authenticated` has `EXECUTE`, any signed-up user can call the function via `POST /rest/v1/rpc/<name>` with a real user JWT and read or modify rows that RLS would otherwise hide. If pg_graphql is installed and the function's return type is supported, the same function is also callable as a Query or Mutation field via `/graphql/v1`. Under open or auto-confirm signup, "authenticated" is anyone with a throwaway email — not a meaningfully smaller audience than `anon`.
+**Ramification:** Because this function is `SECURITY DEFINER`, it runs with the privileges of its owner rather than the caller. If `authenticated` has `EXECUTE`, any signed-in user can call it through `POST /rest/v1/rpc/<name>` and potentially read or modify data that RLS would normally block. In projects with open signup, that can mean any throwaway account, so revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if every account holder should not be able to call it.
 
 > **See also: lint [0028_anon_security_definer_function_executable](0028_anon_security_definer_function_executable.md).** The two checks are paired — revoking from one role alone usually leaves the other side callable. Address findings from both lints together. The `pg_graphql_*` lints (0026/0027) cover the parallel risk for tables/views.
 

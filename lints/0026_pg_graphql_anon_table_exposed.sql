@@ -61,13 +61,13 @@ exposed_objects as (
 )
 select
     'pg_graphql_anon_table_exposed' as name,
-    'pg_graphql Anon Role Exposes Objects in Introspection' as title,
+    'Public Can See Object in GraphQL Schema' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects tables, views, materialized views, and foreign tables whose schema is visible via the public `/graphql/v1` introspection endpoint. When `pg_graphql` is installed, any object the `anon` role has `SELECT` on is visible in introspection — names, columns, types, and relationships — even when RLS is enabled. See lint 0027 for the equivalent check against the `authenticated` role; in default Supabase projects revoking from `anon` alone is not sufficient.' as description,
+    'Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to anyone using your public anon key. If `pg_graphql` is installed and the `anon` role can `SELECT` any column on an object, its name, columns, and relationships appear in `/graphql/v1` introspection even when RLS is enabled. Revoke `SELECT` from `anon` for objects that should not be discoverable before sign-in, and check lint 0027 for the matching signed-in-user exposure.' as description,
     format(
-        'Extension `pg_graphql` is installed and the `anon` role has `SELECT` on %s `%s.%s`. Its name, columns, and relationships are visible via the public `/graphql/v1` introspection endpoint.',
+        '%s `%s.%s` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if this object should not be discoverable without signing in.',
         object_type,
         schema_name,
         object_name
