@@ -1,9 +1,9 @@
 
 **Level:** WARN
 
-**Summary:** Tables, views, materialized views, and foreign tables readable by the `anon` role have their schema (names, columns, relationships) made visible through `pg_graphql` introspection.
+**Summary:** This object is visible in your GraphQL schema to anyone using the public anon key.
 
-**Ramification:** Anyone with your public anon key can enumerate every relation the `anon` role can SELECT — even when RLS is enabled. RLS hides rows; it does not hide the schema. Both forms of introspection (PostgREST and `pg_graphql`) are intentional behavior, but you may not realize how much of your schema is reachable without authentication: every table name, column name, type, relationship, and mutation endpoint is publicly discoverable.
+**Ramification:** If `anon` can `SELECT` any column on a table, view, materialized view, or foreign table, `pg_graphql` exposes that object's name, columns, relationships, and generated mutations through `/graphql/v1` introspection. RLS does not change that because it protects rows, not schema visibility. If this object should not be discoverable before sign-in, revoke `SELECT` from `anon` or disable `pg_graphql` if you do not use GraphQL.
 
 > **See also: lint [0027_pg_graphql_authenticated_table_exposed](0027_pg_graphql_authenticated_table_exposed.md).** In default Supabase projects `anon` and `authenticated` start with identical default-privilege grants, so revoking from `anon` alone often leaves the same introspection response served to any signed-up user. Address findings from both lints together.
 

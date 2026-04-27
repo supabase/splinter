@@ -1,9 +1,9 @@
 
 **Level:** WARN
 
-**Summary:** A `SECURITY DEFINER` function in a user schema is executable by the `anon` role, meaning anyone with the public anon key can invoke a privileged operation that bypasses RLS.
+**Summary:** This `SECURITY DEFINER` function is callable without signing in.
 
-**Ramification:** A `SECURITY DEFINER` function runs with the privileges of its owner — typically a role with `BYPASSRLS` or with broad table grants — not the caller. When `anon` has `EXECUTE`, any unauthenticated request can call the function via `POST /rest/v1/rpc/<name>` and read or modify rows that RLS would otherwise hide. If pg_graphql is installed and the function's return type is supported, the same function is also callable as a Query or Mutation field via `/graphql/v1`.
+**Ramification:** Because this function is `SECURITY DEFINER`, it runs with the privileges of its owner rather than the caller. If `anon` has `EXECUTE`, anyone with the public anon key can call it through `POST /rest/v1/rpc/<name>` and potentially read or modify data that RLS would normally block. If that is not intentional, revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema.
 
 > **See also: lint [0029_authenticated_security_definer_function_executable](0029_authenticated_security_definer_function_executable.md).** In default Supabase projects `anon` and `authenticated` start with identical default-privilege grants (and the Postgres default for new functions is `EXECUTE` to `PUBLIC`), so revoking from `anon` alone usually leaves the same function callable by every signed-up user. Address findings from both lints together. The `pg_graphql_*` lints (0026/0027) cover the parallel risk for tables/views.
 

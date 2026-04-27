@@ -20,13 +20,13 @@ create view lint."0029_authenticated_security_definer_function_executable" as
 -- commonly deployed surface for the same risk.
 select
     'authenticated_security_definer_function_executable' as name,
-    'SECURITY DEFINER Function Executable by Authenticated' as title,
+    'Signed-In Users Can Execute SECURITY DEFINER Function' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects SECURITY DEFINER functions that the `authenticated` role has EXECUTE on. A SECURITY DEFINER function runs with the privileges of its owner and bypasses RLS, so granting EXECUTE to `authenticated` lets any signed-up user invoke a privileged operation via PostgREST `/rest/v1/rpc/<name>` (and via `/graphql/v1` when pg_graphql is installed and the function''s return type is supported). Under open or auto-confirm signup `authenticated` is anyone with a throwaway email. See lint 0028 for the equivalent check against the `anon` role.' as description,
+    'Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.' as description,
     format(
-        'SECURITY DEFINER function `%s.%s(%s)` is executable by the `authenticated` role. It runs with the privileges of its owner and bypasses RLS, so any signed-up user can invoke it via `/rest/v1/rpc/%s`.',
+        'Function `%s.%s(%s)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
         schema_name,
         function_name,
         function_args,

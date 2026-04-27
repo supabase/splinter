@@ -19,13 +19,13 @@ create view lint."0028_anon_security_definer_function_executable" as
 -- commonly deployed surface for the same risk.
 select
     'anon_security_definer_function_executable' as name,
-    'SECURITY DEFINER Function Executable by Anon' as title,
+    'Public Can Execute SECURITY DEFINER Function' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects SECURITY DEFINER functions that the `anon` role has EXECUTE on. A SECURITY DEFINER function runs with the privileges of its owner and bypasses RLS, so granting EXECUTE to `anon` lets any holder of the public anon key invoke a privileged operation via PostgREST `/rest/v1/rpc/<name>` (and via `/graphql/v1` when pg_graphql is installed and the function''s return type is supported). See lint 0029 for the equivalent check against the `authenticated` role.' as description,
+    'Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.' as description,
     format(
-        'SECURITY DEFINER function `%s.%s(%s)` is executable by the `anon` role. It runs with the privileges of its owner and bypasses RLS, so any unauthenticated caller can invoke it via `/rest/v1/rpc/%s`.',
+        'Function `%s.%s(%s)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
         schema_name,
         function_name,
         function_args,

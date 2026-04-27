@@ -1,9 +1,9 @@
 
 **Level:** WARN
 
-**Summary:** Tables, views, materialized views, and foreign tables readable by the `authenticated` role have their schema (names, columns, relationships) made visible through `pg_graphql` introspection to any signed-up user.
+**Summary:** This object is visible in your GraphQL schema to signed-in users.
 
-**Ramification:** Every relation the `authenticated` role can SELECT is enumerable by anyone with a valid Supabase user JWT — even when RLS is enabled. RLS hides rows; it does not hide the schema. In default Supabase projects the `authenticated` role starts with the same default-privilege grants as `anon` (both come from `ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin … TO anon, authenticated, service_role`), and under open or auto-confirm signup, "authenticated" is in practice anyone with a throwaway email rather than a meaningfully smaller audience.
+**Ramification:** If `authenticated` can `SELECT` any column on a table, view, materialized view, or foreign table, `pg_graphql` exposes that object's name, columns, relationships, and generated mutations through `/graphql/v1` introspection to signed-in users. RLS does not change that because it protects rows, not schema visibility. In projects with open signup, that can mean any throwaway account, so revoke `SELECT` from `authenticated` for objects that every account holder should not discover.
 
 > **See also: lint [0026_pg_graphql_anon_table_exposed](0026_pg_graphql_anon_table_exposed.md).** The two checks are paired — revoking from one role alone usually leaves the other side of the introspection response unchanged. Address findings from both lints together.
 
