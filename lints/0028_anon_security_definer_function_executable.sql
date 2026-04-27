@@ -23,9 +23,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects `SECURITY DEFINER` functions that are callable without signing in. These functions run with the privileges of their owner, not the caller, so granting `EXECUTE` to `anon` can create a public RPC endpoint that bypasses RLS. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.' as description,
+    'Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.' as description,
     format(
-        'Function `%s.%s(%s)` can be executed by the `anon` role. Because it is `SECURITY DEFINER`, any unauthenticated caller can run it with the privileges of its owner via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
+        'Function `%s.%s(%s)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
         schema_name,
         function_name,
         function_args,

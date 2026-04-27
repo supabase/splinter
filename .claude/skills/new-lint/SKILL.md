@@ -32,6 +32,11 @@ Create a SQL view in the `lint` schema. The view **must** return exactly these 1
 | `metadata` | jsonb | `jsonb_build_object('schema', ..., 'name', ..., 'type', ...)` |
 | `cache_key` | text | `format('<name>_%s_%s', schema, object)` — unique per violation |
 
+**Copy guidance for Advisor surfaces:**
+- Keep `description` to 1-2 short sentences: what the lint detects and the first likely action.
+- Keep `detail` concise and object-specific. It should describe the failing object, not restate the full rationale.
+- Put deeper explanation, edge cases, and extended remediation in `docs/XXXX_<name>.md`, not in the SQL strings.
+
 **Required conventions:**
 - Always prefix all catalog references: `pg_catalog.pg_class`, `pg_catalog.pg_namespace`, etc.
 - Always exclude system schemas using this exact list:

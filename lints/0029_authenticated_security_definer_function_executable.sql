@@ -24,9 +24,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects `SECURITY DEFINER` functions that are callable by signed-in users. These functions run with the privileges of their owner, not the caller, so granting `EXECUTE` to `authenticated` can create a privileged RPC endpoint that bypasses RLS for any account holder. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.' as description,
+    'Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.' as description,
     format(
-        'Function `%s.%s(%s)` can be executed by the `authenticated` role. Because it is `SECURITY DEFINER`, any signed-in user can run it with the privileges of its owner via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
+        'Function `%s.%s(%s)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
         schema_name,
         function_name,
         function_args,

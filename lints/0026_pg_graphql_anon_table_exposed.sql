@@ -65,9 +65,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to anyone using your public anon key. If `pg_graphql` is installed and the `anon` role can `SELECT` any column on an object, its name, columns, and relationships appear in `/graphql/v1` introspection even when RLS is enabled. Revoke `SELECT` from `anon` for objects that should not be discoverable before sign-in, and check lint 0027 for the matching signed-in-user exposure.' as description,
+    'Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to anyone using your public anon key. Revoke `SELECT` from `anon` for objects that should not be discoverable before sign-in, and check lint 0027 for the matching signed-in-user exposure.' as description,
     format(
-        '%s `%s.%s` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if this object should not be discoverable without signing in.',
+        '%s `%s.%s` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if it should not be discoverable without signing in.',
         object_type,
         schema_name,
         object_name

@@ -1549,9 +1549,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to anyone using your public anon key. If `pg_graphql` is installed and the `anon` role can `SELECT` any column on an object, its name, columns, and relationships appear in `/graphql/v1` introspection even when RLS is enabled. Revoke `SELECT` from `anon` for objects that should not be discoverable before sign-in, and check lint 0027 for the matching signed-in-user exposure.' as description,
+    'Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to anyone using your public anon key. Revoke `SELECT` from `anon` for objects that should not be discoverable before sign-in, and check lint 0027 for the matching signed-in-user exposure.' as description,
     format(
-        '%s `%s.%s` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if this object should not be discoverable without signing in.',
+        '%s `%s.%s` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if it should not be discoverable without signing in.',
         object_type,
         schema_name,
         object_name
@@ -1643,9 +1643,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to signed-in users. If `pg_graphql` is installed and the `authenticated` role can `SELECT` any column on an object, its name, columns, and relationships appear in `/graphql/v1` introspection even when RLS is enabled. Revoke `SELECT` from `authenticated` for objects that signed-in users should not discover, and check lint 0026 for the matching public exposure.' as description,
+    'Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to signed-in users. Revoke `SELECT` from `authenticated` for objects that signed-in users should not discover, and check lint 0026 for the matching public exposure.' as description,
     format(
-        '%s `%s.%s` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if this object should not be discoverable to every account.',
+        '%s `%s.%s` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.',
         object_type,
         schema_name,
         object_name
@@ -1691,9 +1691,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects `SECURITY DEFINER` functions that are callable without signing in. These functions run with the privileges of their owner, not the caller, so granting `EXECUTE` to `anon` can create a public RPC endpoint that bypasses RLS. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.' as description,
+    'Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.' as description,
     format(
-        'Function `%s.%s(%s)` can be executed by the `anon` role. Because it is `SECURITY DEFINER`, any unauthenticated caller can run it with the privileges of its owner via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
+        'Function `%s.%s(%s)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
         schema_name,
         function_name,
         function_args,
@@ -1764,9 +1764,9 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects `SECURITY DEFINER` functions that are callable by signed-in users. These functions run with the privileges of their owner, not the caller, so granting `EXECUTE` to `authenticated` can create a privileged RPC endpoint that bypasses RLS for any account holder. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.' as description,
+    'Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.' as description,
     format(
-        'Function `%s.%s(%s)` can be executed by the `authenticated` role. Because it is `SECURITY DEFINER`, any signed-in user can run it with the privileges of its owner via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
+        'Function `%s.%s(%s)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/%s`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.',
         schema_name,
         function_name,
         function_args,
