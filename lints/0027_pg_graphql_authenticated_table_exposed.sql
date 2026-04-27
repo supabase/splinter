@@ -1,22 +1,26 @@
-create view lint."0026_pg_graphql_anon_table_exposed" as
+create view lint."0027_pg_graphql_authenticated_table_exposed" as
 
 -- Detects tables, views, materialized views, and foreign tables whose
--- schema is visible to the `anon` role through pg_graphql introspection.
--- pg_graphql introspection reflects the calling role's Postgres
--- privileges: if `anon` can SELECT an object, its name, columns, and
--- relationships are visible via /graphql/v1 to anyone with the public
--- anon key, even when RLS is enabled.
+-- schema is visible to the `authenticated` role through pg_graphql
+-- introspection. pg_graphql introspection reflects the calling role's
+-- Postgres privileges: if `authenticated` can SELECT an object, its
+-- name, columns, and relationships are visible via /graphql/v1 to any
+-- signed-up user, even when RLS is enabled.
 --
--- See lint 0027 for the equivalent check against the `authenticated`
--- role. In default Supabase projects the two roles share the same
--- default-privilege grants, so revoking from `anon` alone often leaves
--- the introspection response served to any signed-up user unchanged.
+-- See lint 0026 for the equivalent check against the `anon` role. In
+-- default Supabase projects the two roles share the same
+-- default-privilege grants — `ALTER DEFAULT PRIVILEGES FOR ROLE
+-- supabase_admin ... TO anon, authenticated, service_role` — so an
+-- object readable by `anon` is typically also readable by
+-- `authenticated`. If signup is open or auto-confirm, "authenticated"
+-- is in practice anyone with a throwaway email rather than a
+-- meaningfully smaller audience.
 --
 -- The privilege check uses has_column_privilege rather than
 -- has_table_privilege so that column-level grants such as
--- `GRANT SELECT (some_col) ON t TO anon` are also caught: pg_graphql
--- exposes a relation in introspection if any column is selectable to
--- the calling role (`load_sql_context.sql:327`,
+-- `GRANT SELECT (some_col) ON t TO authenticated` are also caught:
+-- pg_graphql exposes a relation in introspection if any column is
+-- selectable to the calling role (`load_sql_context.sql:327`,
 -- `is_column_selectable`).
 --
 -- The relkind set ('r','v','m','f') matches pg_graphql's own filter in
@@ -52,7 +56,7 @@ exposed_objects as (
             where a.attrelid = c.oid
                 and a.attnum > 0
                 and not a.attisdropped
-                and pg_catalog.has_column_privilege('anon', c.oid, a.attnum, 'SELECT')
+                and pg_catalog.has_column_privilege('authenticated', c.oid, a.attnum, 'SELECT')
         )
         and exists (select 1 from graphql_installed)
         and n.nspname not in (
@@ -60,26 +64,26 @@ exposed_objects as (
         )
 )
 select
-    'pg_graphql_anon_table_exposed' as name,
-    'pg_graphql Anon Role Exposes Objects in Introspection' as title,
+    'pg_graphql_authenticated_table_exposed' as name,
+    'pg_graphql Authenticated Role Exposes Objects in Introspection' as title,
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects tables, views, materialized views, and foreign tables whose schema is visible via the public `/graphql/v1` introspection endpoint. When `pg_graphql` is installed, any object the `anon` role has `SELECT` on is visible in introspection — names, columns, types, and relationships — even when RLS is enabled. See lint 0027 for the equivalent check against the `authenticated` role; in default Supabase projects revoking from `anon` alone is not sufficient.' as description,
+    'Detects tables, views, materialized views, and foreign tables whose schema is visible via the `/graphql/v1` introspection endpoint to any signed-up user. When `pg_graphql` is installed, any object the `authenticated` role has `SELECT` on is visible in introspection — names, columns, types, and relationships — even when RLS is enabled. In default Supabase projects `authenticated` is anyone with a valid JWT, which under open or auto-confirm signup is anyone with a throwaway email. See lint 0026 for the equivalent check against `anon`.' as description,
     format(
-        'Extension `pg_graphql` is installed and the `anon` role has `SELECT` on %s `%s.%s`. Its name, columns, and relationships are visible via the public `/graphql/v1` introspection endpoint.',
+        'Extension `pg_graphql` is installed and the `authenticated` role has `SELECT` on %s `%s.%s`. Its name, columns, and relationships are visible via the `/graphql/v1` introspection endpoint to any signed-up user.',
         object_type,
         schema_name,
         object_name
     ) as detail,
-    'https://supabase.com/docs/guides/database/database-linter?lint=0026_pg_graphql_anon_table_exposed' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0027_pg_graphql_authenticated_table_exposed' as remediation,
     jsonb_build_object(
         'schema', schema_name,
         'name', object_name,
         'type', object_type
     ) as metadata,
     format(
-        'pg_graphql_anon_table_exposed_%s_%s',
+        'pg_graphql_authenticated_table_exposed_%s_%s',
         schema_name,
         object_name
     ) as cache_key

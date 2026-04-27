@@ -65,7 +65,7 @@ from
 where
     idx.index_ is null
     and fk.schema_name not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude tables owned by extensions
 order by
@@ -217,7 +217,7 @@ where
     is_rls_active
     -- NOTE: does not include realtime in support of monitoring policies on realtime.messages
     and schema_name not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
         -- Example: auth.uid()
@@ -299,7 +299,7 @@ from
 where
     pgc.relkind = 'r' -- regular tables
     and pgns.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude tables owned by extensions
 group by
@@ -349,7 +349,7 @@ where
     and not pi.indisprimary
     and dep.objid is null -- exclude tables owned by extensions
     and psui.schemaname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     ))
 union all
 (
@@ -411,7 +411,7 @@ where
     c.relkind = 'r' -- regular tables
     and p.polpermissive -- policy is permissive
     and n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and r.rolname not like 'pg_%'
     and r.rolname not like 'supabase%admin'
@@ -462,7 +462,7 @@ from
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     -- RLS is disabled
     and not c.relrowsecurity
@@ -507,7 +507,7 @@ from
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     -- RLS is enabled
     and c.relrowsecurity
@@ -561,7 +561,7 @@ from
 where
     c.relkind in ('r', 'm') -- tables and materialized views
     and n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude tables owned by extensions
 group by
@@ -612,7 +612,7 @@ where
     and substring(pg_catalog.version() from 'PostgreSQL ([0-9]+)') >= '15' -- security invoker was added in pg15
     and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
     and n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude views owned by extensions
     and not (
@@ -659,7 +659,7 @@ from
         and dep.deptype = 'e'
 where
     n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude functions owned by extensions
     -- Search path not set
@@ -707,7 +707,7 @@ where
     )
     and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
     and n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     ))
 union all
 (
@@ -787,7 +787,7 @@ from
     policies
 where
     schema_name not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
         -- Example: auth.jwt() -> 'user_metadata'
@@ -838,7 +838,7 @@ where
     )
     and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
     and n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null)
 union all
@@ -881,7 +881,7 @@ where
     )
     and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
     and n.nspname not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null)
 union all
@@ -1200,7 +1200,7 @@ exposed_tables as (
         )
         and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
         and n.nspname not in (
-            '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+            '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
         )
         -- Only flag tables without RLS enabled
         and not c.relrowsecurity
@@ -1294,7 +1294,7 @@ with policies as (
     where
         pc.relkind = 'r' -- regular tables
         and nsp.nspname not in (
-            '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+            '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
         )
 ),
 permissive_patterns as (
@@ -1484,11 +1484,29 @@ order by
     bucket_id)
 union all
 (
--- Detects tables, views, and materialized views whose schema is visible
--- through pg_graphql introspection. pg_graphql introspection reflects the
--- calling role's Postgres privileges: if `anon` can SELECT an object, its
--- name, columns, and relationships are visible to anyone with the public
--- anon key via /graphql/v1, even when RLS is enabled.
+-- Detects tables, views, materialized views, and foreign tables whose
+-- schema is visible to the `anon` role through pg_graphql introspection.
+-- pg_graphql introspection reflects the calling role's Postgres
+-- privileges: if `anon` can SELECT an object, its name, columns, and
+-- relationships are visible via /graphql/v1 to anyone with the public
+-- anon key, even when RLS is enabled.
+--
+-- See lint 0027 for the equivalent check against the `authenticated`
+-- role. In default Supabase projects the two roles share the same
+-- default-privilege grants, so revoking from `anon` alone often leaves
+-- the introspection response served to any signed-up user unchanged.
+--
+-- The privilege check uses has_column_privilege rather than
+-- has_table_privilege so that column-level grants such as
+-- `GRANT SELECT (some_col) ON t TO anon` are also caught: pg_graphql
+-- exposes a relation in introspection if any column is selectable to
+-- the calling role (`load_sql_context.sql:327`,
+-- `is_column_selectable`).
+--
+-- The relkind set ('r','v','m','f') matches pg_graphql's own filter in
+-- load_sql_context.sql. Partitioned table roots ('p') are excluded
+-- because pg_graphql does not expose them their leaf partitions ('r')
+-- are still picked up.
 with graphql_installed as (
     select 1 as installed
     from pg_catalog.pg_extension
@@ -1501,20 +1519,28 @@ exposed_objects as (
         c.relkind as object_relkind,
         case c.relkind
             when 'r' then 'table'
-            when 'p' then 'table'
             when 'v' then 'view'
             when 'm' then 'materialized view'
+            when 'f' then 'foreign table'
         end as object_type
     from
         pg_catalog.pg_class c
         join pg_catalog.pg_namespace n
             on c.relnamespace = n.oid
     where
-        c.relkind in ('r', 'p', 'v', 'm') -- tables, partitioned tables, views, materialized views
-        and pg_catalog.has_table_privilege('anon', c.oid, 'SELECT')
+        c.relkind in ('r', 'v', 'm', 'f') -- tables, views, materialized views, foreign tables matches pg_graphql
+        and exists (
+            -- Any selectable column (table-level or column-level grant)
+            select 1
+            from pg_catalog.pg_attribute a
+            where a.attrelid = c.oid
+                and a.attnum > 0
+                and not a.attisdropped
+                and pg_catalog.has_column_privilege('anon', c.oid, a.attnum, 'SELECT')
+        )
         and exists (select 1 from graphql_installed)
         and n.nspname not in (
-            '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+            '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
         )
 )
 select
@@ -1523,7 +1549,7 @@ select
     'WARN' as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects tables and views whose schema is visible via the public `/graphql/v1` introspection endpoint. When `pg_graphql` is installed, any table, view, or materialized view the `anon` role has `SELECT` on is visible in introspection — names, columns, types, and relationships — even when RLS is enabled. Both forms of introspection are intentional behavior this lint surfaces the objects that are currently public so you can confirm each one is meant to be discoverable without authentication.' as description,
+    'Detects tables, views, materialized views, and foreign tables whose schema is visible via the public `/graphql/v1` introspection endpoint. When `pg_graphql` is installed, any object the `anon` role has `SELECT` on is visible in introspection — names, columns, types, and relationships — even when RLS is enabled. See lint 0027 for the equivalent check against the `authenticated` role in default Supabase projects revoking from `anon` alone is not sufficient.' as description,
     format(
         'Extension `pg_graphql` is installed and the `anon` role has `SELECT` on %s `%s.%s`. Its name, columns, and relationships are visible via the public `/graphql/v1` introspection endpoint.',
         object_type,
@@ -1546,3 +1572,242 @@ from
 order by
     schema_name,
     object_name)
+union all
+(
+-- Detects tables, views, materialized views, and foreign tables whose
+-- schema is visible to the `authenticated` role through pg_graphql
+-- introspection. pg_graphql introspection reflects the calling role's
+-- Postgres privileges: if `authenticated` can SELECT an object, its
+-- name, columns, and relationships are visible via /graphql/v1 to any
+-- signed-up user, even when RLS is enabled.
+--
+-- See lint 0026 for the equivalent check against the `anon` role. In
+-- default Supabase projects the two roles share the same
+-- default-privilege grants — `ALTER DEFAULT PRIVILEGES FOR ROLE
+-- supabase_admin ... TO anon, authenticated, service_role` — so an
+-- object readable by `anon` is typically also readable by
+-- `authenticated`. If signup is open or auto-confirm, "authenticated"
+-- is in practice anyone with a throwaway email rather than a
+-- meaningfully smaller audience.
+--
+-- The privilege check uses has_column_privilege rather than
+-- has_table_privilege so that column-level grants such as
+-- `GRANT SELECT (some_col) ON t TO authenticated` are also caught:
+-- pg_graphql exposes a relation in introspection if any column is
+-- selectable to the calling role (`load_sql_context.sql:327`,
+-- `is_column_selectable`).
+--
+-- The relkind set ('r','v','m','f') matches pg_graphql's own filter in
+-- load_sql_context.sql. Partitioned table roots ('p') are excluded
+-- because pg_graphql does not expose them their leaf partitions ('r')
+-- are still picked up.
+with graphql_installed as (
+    select 1 as installed
+    from pg_catalog.pg_extension
+    where extname = 'pg_graphql'
+),
+exposed_objects as (
+    select
+        n.nspname as schema_name,
+        c.relname as object_name,
+        c.relkind as object_relkind,
+        case c.relkind
+            when 'r' then 'table'
+            when 'v' then 'view'
+            when 'm' then 'materialized view'
+            when 'f' then 'foreign table'
+        end as object_type
+    from
+        pg_catalog.pg_class c
+        join pg_catalog.pg_namespace n
+            on c.relnamespace = n.oid
+    where
+        c.relkind in ('r', 'v', 'm', 'f') -- tables, views, materialized views, foreign tables matches pg_graphql
+        and exists (
+            -- Any selectable column (table-level or column-level grant)
+            select 1
+            from pg_catalog.pg_attribute a
+            where a.attrelid = c.oid
+                and a.attnum > 0
+                and not a.attisdropped
+                and pg_catalog.has_column_privilege('authenticated', c.oid, a.attnum, 'SELECT')
+        )
+        and exists (select 1 from graphql_installed)
+        and n.nspname not in (
+            '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        )
+)
+select
+    'pg_graphql_authenticated_table_exposed' as name,
+    'pg_graphql Authenticated Role Exposes Objects in Introspection' as title,
+    'WARN' as level,
+    'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
+    'Detects tables, views, materialized views, and foreign tables whose schema is visible via the `/graphql/v1` introspection endpoint to any signed-up user. When `pg_graphql` is installed, any object the `authenticated` role has `SELECT` on is visible in introspection — names, columns, types, and relationships — even when RLS is enabled. In default Supabase projects `authenticated` is anyone with a valid JWT, which under open or auto-confirm signup is anyone with a throwaway email. See lint 0026 for the equivalent check against `anon`.' as description,
+    format(
+        'Extension `pg_graphql` is installed and the `authenticated` role has `SELECT` on %s `%s.%s`. Its name, columns, and relationships are visible via the `/graphql/v1` introspection endpoint to any signed-up user.',
+        object_type,
+        schema_name,
+        object_name
+    ) as detail,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0027_pg_graphql_authenticated_table_exposed' as remediation,
+    jsonb_build_object(
+        'schema', schema_name,
+        'name', object_name,
+        'type', object_type
+    ) as metadata,
+    format(
+        'pg_graphql_authenticated_table_exposed_%s_%s',
+        schema_name,
+        object_name
+    ) as cache_key
+from
+    exposed_objects
+order by
+    schema_name,
+    object_name)
+union all
+(
+-- Detects SECURITY DEFINER functions that the `anon` role has EXECUTE
+-- on. SECURITY DEFINER functions run with the privileges of their
+-- owner (typically a superuser-equivalent role) rather than the
+-- caller, so they bypass RLS on every table they read or write.
+-- Granting EXECUTE to `anon` therefore lets any holder of the public
+-- anon key invoke a privileged operation through PostgREST
+-- `/rest/v1/rpc/<name>`, and through `/graphql/v1` Query/Mutation
+-- fields when pg_graphql is installed and the return type is
+-- supported.
+--
+-- See lint 0029 for the equivalent check against the `authenticated`
+-- role. Together with 0026/0027 they cover the four direct
+-- exposure paths: anon-vs-authenticated × table-vs-function.
+--
+-- This lint deliberately does not gate on pg_graphql being installed:
+-- PostgREST exposes `/rest/v1/rpc` independently and is the more
+-- commonly deployed surface for the same risk.
+select
+    'anon_security_definer_function_executable' as name,
+    'SECURITY DEFINER Function Executable by Anon' as title,
+    'WARN' as level,
+    'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
+    'Detects SECURITY DEFINER functions that the `anon` role has EXECUTE on. A SECURITY DEFINER function runs with the privileges of its owner and bypasses RLS, so granting EXECUTE to `anon` lets any holder of the public anon key invoke a privileged operation via PostgREST `/rest/v1/rpc/<name>` (and via `/graphql/v1` when pg_graphql is installed and the function''s return type is supported). See lint 0029 for the equivalent check against the `authenticated` role.' as description,
+    format(
+        'SECURITY DEFINER function `%s.%s(%s)` is executable by the `anon` role. It runs with the privileges of its owner and bypasses RLS, so any unauthenticated caller can invoke it via `/rest/v1/rpc/%s`.',
+        schema_name,
+        function_name,
+        function_args,
+        function_name
+    ) as detail,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable' as remediation,
+    jsonb_build_object(
+        'schema', schema_name,
+        'name', function_name,
+        'arguments', function_args,
+        'language', function_language,
+        'security_definer', true
+    ) as metadata,
+    format(
+        'anon_security_definer_function_executable_%s_%s_%s',
+        schema_name,
+        function_name,
+        function_args
+    ) as cache_key
+from
+    (
+        select
+            n.nspname as schema_name,
+            p.proname as function_name,
+            pg_catalog.pg_get_function_identity_arguments(p.oid) as function_args,
+            l.lanname as function_language
+        from
+            pg_catalog.pg_proc p
+            join pg_catalog.pg_namespace n
+                on p.pronamespace = n.oid
+            join pg_catalog.pg_language l
+                on p.prolang = l.oid
+        where
+            p.prosecdef = true
+            and pg_catalog.has_function_privilege('anon', p.oid, 'EXECUTE')
+            and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
+            and n.nspname not in (
+                '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+            )
+    ) exposed_functions
+order by
+    schema_name,
+    function_name,
+    function_args)
+union all
+(
+-- Detects SECURITY DEFINER functions that the `authenticated` role
+-- has EXECUTE on. SECURITY DEFINER functions run with the privileges
+-- of their owner (typically a superuser-equivalent role) rather than
+-- the caller, so they bypass RLS on every table they read or write.
+-- Granting EXECUTE to `authenticated` therefore lets any signed-up
+-- user invoke a privileged operation through PostgREST
+-- `/rest/v1/rpc/<name>`, and through `/graphql/v1` Query/Mutation
+-- fields when pg_graphql is installed and the return type is
+-- supported. Under open or auto-confirm signup, "authenticated" is in
+-- practice anyone with a throwaway email.
+--
+-- See lint 0028 for the equivalent check against the `anon` role.
+-- Together with 0026/0027 they cover the four direct exposure paths:
+-- anon-vs-authenticated × table-vs-function.
+--
+-- This lint deliberately does not gate on pg_graphql being installed:
+-- PostgREST exposes `/rest/v1/rpc` independently and is the more
+-- commonly deployed surface for the same risk.
+select
+    'authenticated_security_definer_function_executable' as name,
+    'SECURITY DEFINER Function Executable by Authenticated' as title,
+    'WARN' as level,
+    'EXTERNAL' as facing,
+    array['SECURITY'] as categories,
+    'Detects SECURITY DEFINER functions that the `authenticated` role has EXECUTE on. A SECURITY DEFINER function runs with the privileges of its owner and bypasses RLS, so granting EXECUTE to `authenticated` lets any signed-up user invoke a privileged operation via PostgREST `/rest/v1/rpc/<name>` (and via `/graphql/v1` when pg_graphql is installed and the function''s return type is supported). Under open or auto-confirm signup `authenticated` is anyone with a throwaway email. See lint 0028 for the equivalent check against the `anon` role.' as description,
+    format(
+        'SECURITY DEFINER function `%s.%s(%s)` is executable by the `authenticated` role. It runs with the privileges of its owner and bypasses RLS, so any signed-up user can invoke it via `/rest/v1/rpc/%s`.',
+        schema_name,
+        function_name,
+        function_args,
+        function_name
+    ) as detail,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable' as remediation,
+    jsonb_build_object(
+        'schema', schema_name,
+        'name', function_name,
+        'arguments', function_args,
+        'language', function_language,
+        'security_definer', true
+    ) as metadata,
+    format(
+        'authenticated_security_definer_function_executable_%s_%s_%s',
+        schema_name,
+        function_name,
+        function_args
+    ) as cache_key
+from
+    (
+        select
+            n.nspname as schema_name,
+            p.proname as function_name,
+            pg_catalog.pg_get_function_identity_arguments(p.oid) as function_args,
+            l.lanname as function_language
+        from
+            pg_catalog.pg_proc p
+            join pg_catalog.pg_namespace n
+                on p.pronamespace = n.oid
+            join pg_catalog.pg_language l
+                on p.prolang = l.oid
+        where
+            p.prosecdef = true
+            and pg_catalog.has_function_privilege('authenticated', p.oid, 'EXECUTE')
+            and n.nspname = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
+            and n.nspname not in (
+                '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+            )
+    ) exposed_functions
+order by
+    schema_name,
+    function_name,
+    function_args)

@@ -1,0 +1,119 @@
+NOTICE:  identifier "pg_regress/0029_authenticated_security_definer_function_executable" will be truncated to "pg_regress/0029_authenticated_security_definer_function_executa"
+begin;
+  set local search_path = '';
+  -- BASELINE: empty user-schema, no rows
+  select * from lint."0029_authenticated_security_definer_function_executable";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  savepoint a;
+  ----------------------------------------
+  -- NEGATIVE EXAMPLE: SECURITY INVOKER function, even with EXECUTE
+  -- granted to authenticated (via the Postgres default to PUBLIC),
+  -- must not fire. Invoker functions run as the caller and RLS still
+  -- applies.
+  ----------------------------------------
+  create function public.invoker_func() returns int
+    language sql
+    security invoker
+    as $$ select 1 $$;
+  select * from lint."0029_authenticated_security_definer_function_executable";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  savepoint case_definer_default_grant;
+  ----------------------------------------
+  -- POSITIVE: SECURITY DEFINER function in public, EXECUTE granted to
+  -- authenticated via the Postgres default to PUBLIC.
+  ----------------------------------------
+  create function public.priv_op(target_id int) returns int
+    language sql
+    security definer
+    as $$ select target_id $$;
+  select
+    name,
+    metadata->>'name' as func_name,
+    metadata->>'arguments' as func_args,
+    metadata->>'security_definer' as security_definer,
+    cache_key
+  from lint."0029_authenticated_security_definer_function_executable";
+                        name                        | func_name |     func_args     | security_definer |                                      cache_key                                      
+----------------------------------------------------+-----------+-------------------+------------------+-------------------------------------------------------------------------------------
+ authenticated_security_definer_function_executable | priv_op   | target_id integer | true             | authenticated_security_definer_function_executable_public_priv_op_target_id integer
+(1 row)
+
+  ----------------------------------------
+  -- RESOLUTION: revoke EXECUTE from authenticated and from PUBLIC.
+  ----------------------------------------
+  revoke execute on function public.priv_op(int) from authenticated, public;
+  select * from lint."0029_authenticated_security_definer_function_executable";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint case_definer_default_grant;
+  savepoint case_overloads;
+  ----------------------------------------
+  -- POSITIVE (overloads): two SECURITY DEFINER functions sharing a
+  -- name but with different argument lists. Each must produce a
+  -- separate finding with a unique cache_key based on the argument
+  -- signature.
+  ----------------------------------------
+  create function public.dispatch(target_id int) returns int
+    language sql
+    security definer
+    as $$ select target_id $$;
+  create function public.dispatch(target_id int, label text) returns int
+    language sql
+    security definer
+    as $$ select target_id $$;
+  select
+    name,
+    metadata->>'name' as func_name,
+    metadata->>'arguments' as func_args,
+    cache_key
+  from lint."0029_authenticated_security_definer_function_executable";
+                        name                        | func_name |           func_args           |                                            cache_key                                             
+----------------------------------------------------+-----------+-------------------------------+--------------------------------------------------------------------------------------------------
+ authenticated_security_definer_function_executable | dispatch  | target_id integer             | authenticated_security_definer_function_executable_public_dispatch_target_id integer
+ authenticated_security_definer_function_executable | dispatch  | target_id integer, label text | authenticated_security_definer_function_executable_public_dispatch_target_id integer, label text
+(2 rows)
+
+  rollback to savepoint case_overloads;
+  savepoint case_definer_revoked;
+  ----------------------------------------
+  -- NEGATIVE: SECURITY DEFINER function with EXECUTE explicitly
+  -- revoked from authenticated (and PUBLIC). Lint must not fire even
+  -- though `anon` may still have EXECUTE — that's lint 0028's job.
+  ----------------------------------------
+  create function public.user_only() returns int
+    language sql
+    security definer
+    as $$ select 1 $$;
+  revoke execute on function public.user_only() from public, authenticated;
+  select * from lint."0029_authenticated_security_definer_function_executable";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint case_definer_revoked;
+  savepoint case_system_schema;
+  ----------------------------------------
+  -- NEGATIVE: SECURITY DEFINER function in a system schema (auth)
+  -- must not fire even with EXECUTE to authenticated — system schemas
+  -- are excluded.
+  ----------------------------------------
+  create function auth.system_definer() returns int
+    language sql
+    security definer
+    as $$ select 1 $$;
+  select * from lint."0029_authenticated_security_definer_function_executable";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint case_system_schema;
+rollback;

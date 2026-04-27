@@ -50,6 +50,12 @@ begin;
     union all
     select * from lint."0025_public_bucket_allows_listing"
     union all
-    select * from lint."0026_pg_graphql_anon_table_exposed";
+    select * from lint."0026_pg_graphql_anon_table_exposed"
+    union all
+    select * from lint."0027_pg_graphql_authenticated_table_exposed"
+    union all
+    select * from lint."0028_anon_security_definer_function_executable"
+    union all
+    select * from lint."0029_authenticated_security_definer_function_executable";
 
 rollback;

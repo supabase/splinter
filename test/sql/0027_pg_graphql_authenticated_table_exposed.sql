@@ -2,19 +2,19 @@ begin;
   set local search_path = '';
 
   -- BASELINE: pg_graphql not installed, no rows
-  select * from lint."0026_pg_graphql_anon_table_exposed";
+  select * from lint."0027_pg_graphql_authenticated_table_exposed";
 
   savepoint a;
 
   ----------------------------------------
-  -- NEGATIVE EXAMPLE: anon has SELECT on a table but pg_graphql is NOT
-  -- installed. Without the extension there is no /graphql/v1 endpoint,
-  -- so the lint must not fire.
+  -- NEGATIVE EXAMPLE: authenticated has SELECT on a table but
+  -- pg_graphql is NOT installed. Without the extension there is no
+  -- /graphql/v1 endpoint, so the lint must not fire.
   ----------------------------------------
   create table public.products(id int primary key, name text);
   -- Default privileges from fixtures grant SELECT on new public tables to PUBLIC,
-  -- so `anon` already has SELECT here. The lint must still report 0 rows.
-  select * from lint."0026_pg_graphql_anon_table_exposed";
+  -- so `authenticated` already has SELECT here. The lint must still report 0 rows.
+  select * from lint."0027_pg_graphql_authenticated_table_exposed";
 
   rollback to savepoint a;
 
@@ -24,9 +24,10 @@ begin;
   savepoint case_table_view_matview;
 
   ----------------------------------------
-  -- POSITIVE: `anon` has SELECT (via the fixture's PUBLIC default
-  -- grant) on a table, a view, and a materialized view. All three
-  -- relkinds covered by the lint should appear, ordered by object name.
+  -- POSITIVE: `authenticated` has SELECT (via the fixture's PUBLIC
+  -- default grant) on a table, a view, and a materialized view. All
+  -- three relkinds covered by the lint should appear, ordered by
+  -- object name.
   ----------------------------------------
   create table public.internal_api_keys(
     id int primary key,
@@ -44,17 +45,18 @@ begin;
     name,
     metadata->>'type' as object_type,
     cache_key
-  from lint."0026_pg_graphql_anon_table_exposed";
+  from lint."0027_pg_graphql_authenticated_table_exposed";
 
   ----------------------------------------
-  -- RESOLUTION: revoke from anon (and PUBLIC, which anon rides on by
-  -- default). After revoking, has_table_privilege('anon', ...) is false
-  -- and the lint clears.
+  -- RESOLUTION: revoke from authenticated (and PUBLIC, which
+  -- authenticated rides on by default). After revoking,
+  -- has_table_privilege('authenticated', ...) is false and the lint
+  -- clears.
   ----------------------------------------
-  revoke all on public.internal_api_keys from anon, public;
-  revoke all on public.api_key_summary   from anon, public;
-  revoke all on public.api_key_archive   from anon, public;
-  select * from lint."0026_pg_graphql_anon_table_exposed";
+  revoke all on public.internal_api_keys from authenticated, public;
+  revoke all on public.api_key_summary   from authenticated, public;
+  revoke all on public.api_key_archive   from authenticated, public;
+  select * from lint."0027_pg_graphql_authenticated_table_exposed";
 
   rollback to savepoint case_table_view_matview;
 
@@ -77,7 +79,7 @@ begin;
     name,
     metadata->>'type' as object_type,
     cache_key
-  from lint."0026_pg_graphql_anon_table_exposed";
+  from lint."0027_pg_graphql_authenticated_table_exposed";
 
   rollback to savepoint case_foreign;
 
@@ -95,42 +97,44 @@ begin;
     name,
     metadata->>'type' as object_type,
     cache_key
-  from lint."0026_pg_graphql_anon_table_exposed";
+  from lint."0027_pg_graphql_authenticated_table_exposed";
 
   rollback to savepoint case_partitioned;
 
-  savepoint case_anon_revoked;
+  savepoint case_authenticated_revoked;
 
   ----------------------------------------
-  -- NEGATIVE: pg_graphql installed and `authenticated` has SELECT, but
-  -- `anon` does NOT. Lint 0026 must not fire (this is precisely the
-  -- "operator followed the original 0026 doc verbatim" state — see
-  -- lint 0027 for the equivalent authenticated-side check).
+  -- NEGATIVE: pg_graphql installed and `anon` has SELECT, but
+  -- `authenticated` does NOT. Lint 0027 must not fire — this is the
+  -- mirror image of 0026's "revoke from anon, keep on authenticated"
+  -- state. It is unusual in practice but verifies the role check is
+  -- independent.
   ----------------------------------------
-  create table public.auth_only_tbl(id int primary key);
-  revoke select on public.auth_only_tbl from public;
-  grant select on public.auth_only_tbl to authenticated;
-  select * from lint."0026_pg_graphql_anon_table_exposed";
+  create table public.anon_only_tbl(id int primary key);
+  revoke select on public.anon_only_tbl from public;
+  grant select on public.anon_only_tbl to anon;
+  select * from lint."0027_pg_graphql_authenticated_table_exposed";
 
-  rollback to savepoint case_anon_revoked;
+  rollback to savepoint case_authenticated_revoked;
 
   savepoint case_column_only_grant;
 
   ----------------------------------------
-  -- POSITIVE (column-level grant only): `anon` has SELECT on a single
-  -- column, no table-level SELECT, and no PUBLIC grant. pg_graphql
-  -- exposes any relation with at least one selectable column, so the
-  -- lint must too. has_table_privilege would have missed this case.
+  -- POSITIVE (column-level grant only): `authenticated` has SELECT on
+  -- a single column, no table-level SELECT, and no PUBLIC grant.
+  -- pg_graphql exposes any relation with at least one selectable
+  -- column, so the lint must too. has_table_privilege would have
+  -- missed this case.
   ----------------------------------------
   create table public.col_grant_only(id int primary key, secret text);
   revoke select on public.col_grant_only from public, anon, authenticated;
-  grant select (id) on public.col_grant_only to anon;
+  grant select (id) on public.col_grant_only to authenticated;
 
   select
     name,
     metadata->>'type' as object_type,
     cache_key
-  from lint."0026_pg_graphql_anon_table_exposed";
+  from lint."0027_pg_graphql_authenticated_table_exposed";
 
   rollback to savepoint case_column_only_grant;
 

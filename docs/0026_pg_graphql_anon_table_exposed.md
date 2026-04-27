@@ -1,15 +1,35 @@
 
 **Level:** WARN
 
-**Summary:** Tables and views readable by the `anon` role have their schema (names, columns, relationships) made visible through `pg_graphql` introspection.
+**Summary:** Tables, views, materialized views, and foreign tables readable by the `anon` role have their schema (names, columns, relationships) made visible through `pg_graphql` introspection.
 
-**Ramification:** Anyone with your public anon key can enumerate every table and view the `anon` role can SELECT — even when RLS is enabled. RLS hides rows; it does not hide the schema. Both forms of introspection (PostgREST and `pg_graphql`) are intentional behavior, but you may not realize how much of your schema is reachable without authentication: every table name, column name, type, relationship, and mutation endpoint is publicly discoverable.
+**Ramification:** Anyone with your public anon key can enumerate every relation the `anon` role can SELECT — even when RLS is enabled. RLS hides rows; it does not hide the schema. Both forms of introspection (PostgREST and `pg_graphql`) are intentional behavior, but you may not realize how much of your schema is reachable without authentication: every table name, column name, type, relationship, and mutation endpoint is publicly discoverable.
+
+> **See also: lint [0027_pg_graphql_authenticated_table_exposed](0027_pg_graphql_authenticated_table_exposed.md).** In default Supabase projects `anon` and `authenticated` start with identical default-privilege grants, so revoking from `anon` alone often leaves the same introspection response served to any signed-up user. Address findings from both lints together.
+
+---
+
+### If you are not using `pg_graphql`, disable it
+
+The simplest mitigation — and the right one if your app does not use the GraphQL endpoint — is to drop the extension. With `pg_graphql` not installed, this lint and 0027 stop firing entirely and the `/graphql/v1` endpoint returns nothing exposing your schema.
+
+In the Supabase SQL Editor:
+
+```sql
+drop extension pg_graphql;
+```
+
+Or in the dashboard: **Database → Extensions**, search for `pg_graphql`, and toggle it off.
+
+If your project does use `pg_graphql`, leave it installed and follow the remediation below.
 
 ---
 
 ### Rationale
 
-`pg_graphql` introspection is by design: the GraphQL schema reflects the Postgres privileges of the calling role. The Supabase anon key maps to the `anon` Postgres role, so any table or view `anon` can `SELECT` is visible in the GraphQL introspection response from `/graphql/v1`, regardless of RLS. Visibility through introspection is governed entirely by `GRANT` / `REVOKE`. This lint flags the objects that are currently discoverable so you can confirm each one is intentionally public.
+`pg_graphql` introspection is by design: the GraphQL schema reflects the Postgres privileges of the calling role. The Supabase anon key maps to the `anon` Postgres role, so any relation `anon` can `SELECT` is visible in the GraphQL introspection response from `/graphql/v1`, regardless of RLS. Visibility through introspection is governed entirely by `GRANT` / `REVOKE`. This lint flags the objects currently discoverable through the public anon key so you can confirm each one is intentionally public.
+
+The relkinds covered match `pg_graphql`'s own filter (`load_sql_context.sql:395-400`): regular tables (`r`), views (`v`), materialized views (`m`), and foreign tables (`f`). Partitioned table roots (`relkind='p'`) are not covered because `pg_graphql` does not expose them via introspection; their leaf partitions (`relkind='r'`) are still picked up individually.
 
 You can confirm what is visible using only the public anon key:
 
@@ -26,6 +46,8 @@ The response includes one entry per exposed table (e.g. `internal_api_keysCollec
 ### How to Resolve
 
 The fix is always a standard Postgres `GRANT` / `REVOKE` run in the SQL Editor. No support ticket, no config file, no extension toggle.
+
+**Important:** revoking from `anon` does not, on its own, hide the relation from `pg_graphql` introspection — `authenticated` is checked separately by lint 0027 and typically has the same default grants. Address both lints' findings together (see "Hide all tables from both roles" in 0027).
 
 **Option 1: Hide every table from `anon` (most thorough)**
 
@@ -46,7 +68,9 @@ Re-grant access to `authenticated` for tables your app needs after login:
 grant select on public.profiles to authenticated;
 grant select on public.products to authenticated;
 grant select, insert on public.orders to authenticated;
--- Sensitive tables receive no grant and remain invisible to introspection.
+-- Sensitive tables receive no grant from anon and remain invisible to
+-- the public introspection endpoint. Make sure to also handle 0027 for
+-- the authenticated-side exposure.
 ```
 
 **Option 2: Hide a specific sensitive table or view only**
@@ -55,7 +79,7 @@ grant select, insert on public.orders to authenticated;
 revoke all on public.internal_api_keys from anon;
 ```
 
-`anon` continues to see other objects, but `internal_api_keys` is no longer visible in introspection. Use the same `revoke all on <object>` pattern for views and materialized views.
+`anon` continues to see other objects, but `internal_api_keys` is no longer visible in the unauthenticated introspection response. Use the same `revoke all on <object>` pattern for views, materialized views, and foreign tables.
 
 **Option 3: Block the entire GraphQL endpoint for `anon`**
 
@@ -91,7 +115,7 @@ Fix:
 revoke all on public.internal_api_keys from anon;
 ```
 
-Re-running the introspection query no longer returns this table.
+Re-running the introspection query with the anon key no longer returns this table. (The same call repeated with a signed-up user's JWT still returns it until you also revoke from `authenticated` — see 0027.)
 
 ### Verifying the Fix
 
@@ -117,6 +141,6 @@ curl -X POST https://<PROJECT_REF>.supabase.co/graphql/v1 \
 
 ### False Positives
 
-This lint flags every `anon`-readable table when `pg_graphql` is installed. Some of these are intentional — public catalog tables (blog posts, product listings, public FAQs) are meant to be readable without authentication, and exposing their column names is acceptable.
+This lint flags every `anon`-readable relation when `pg_graphql` is installed. Some of these are intentional — public catalog tables (blog posts, product listings, public FAQs) are meant to be readable without authentication, and exposing their column names is acceptable.
 
-If introspection visibility is intentional for a table or view, the lint can be safely ignored for that object. The lint is informational rather than a hard misconfiguration: it surfaces what your project makes visible so you can decide which tables and views are actually meant to be public.
+If introspection visibility is intentional for a relation, the lint can be safely ignored for that object. The lint is informational rather than a hard misconfiguration: it surfaces what your project makes visible so you can decide which relations are actually meant to be public.
