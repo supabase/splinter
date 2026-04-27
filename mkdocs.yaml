@@ -32,6 +32,11 @@ nav:
       - Extension Versions Outdated: '0022_extension_versions_outdated.md'
       - Sensitive Columns Exposed: '0023_sensitive_columns_exposed.md'
       - Permissive RLS Policy: '0024_permissive_rls_policy.md'
+      - Public Bucket Allows Listing: '0025_public_bucket_allows_listing.md'
+      - Public Can See Object in GraphQL Schema: '0026_pg_graphql_anon_table_exposed.md'
+      - Signed-In Users Can See Object in GraphQL Schema: '0027_pg_graphql_authenticated_table_exposed.md'
+      - Public Can Execute SECURITY DEFINER Function: '0028_anon_security_definer_function_executable.md'
+      - Signed-In Users Can Execute SECURITY DEFINER Function: '0029_authenticated_security_definer_function_executable.md'
 
 theme:
     name: 'material'
