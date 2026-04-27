@@ -1,5 +1,6 @@
 begin;
   set local search_path = '';
+  set local pgrst.db_schemas = 'public';
   -- BASELINE: empty user-schema, no rows
   select * from lint."0028_anon_security_definer_function_executable";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 

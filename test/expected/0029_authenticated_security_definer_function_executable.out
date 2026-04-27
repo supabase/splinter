@@ -1,6 +1,7 @@
 NOTICE:  identifier "pg_regress/0029_authenticated_security_definer_function_executable" will be truncated to "pg_regress/0029_authenticated_security_definer_function_executa"
 begin;
   set local search_path = '';
+  set local pgrst.db_schemas = 'public';
   -- BASELINE: empty user-schema, no rows
   select * from lint."0029_authenticated_security_definer_function_executable";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
