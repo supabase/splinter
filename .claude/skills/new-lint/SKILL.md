@@ -50,6 +50,26 @@ Create a SQL view in the `lint` schema. The view **must** return exactly these 1
 - If using `array_agg`, always specify `ORDER BY` inside the aggregate for deterministic element order
 - Use CTEs for complex logic
 
+**Data API exposure filters (REQUIRED when the lint flags risks from Data API surface area):**
+
+If the lint is about a risk that only matters when a database object is exposed via a Supabase Data API (PostgREST and/or pg_graphql) — e.g. "X is accessible to anon/authenticated", "Y leaks via the API", "Z is reachable from clients" — you **must** filter to schemas that are actually exposed. Without this filter, the lint will false-positive on objects that exist in non-exposed schemas.
+
+- **PostgREST and pg_graphql both read their exposed schemas from `pgrst.db_schemas`** (a comma-separated GUC). Always add this predicate so the lint only fires when the object's schema is in that list:
+  ```sql
+  and <schema_column> = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
+  ```
+  The `'t'` (missing_ok) argument is important — it prevents an error when the setting is unset. See `lints/0023_sensitive_columns_exposed.sql` and `lints/0016_materialized_view_in_api.sql` for working examples.
+
+- **If the risk is GraphQL-specific** (i.e. it would not exist if only PostgREST were enabled — for example, a problem that surfaces through the generated GraphQL schema), additionally require that the `pg_graphql` extension is installed:
+  ```sql
+  and exists (select 1 from pg_catalog.pg_extension where extname = 'pg_graphql')
+  ```
+  See `lints/0014_extension_in_public.sql` for the `pg_catalog.pg_extension` query pattern.
+
+- **If the lint is purely a "table best practices" check** (e.g. missing primary key, unindexed FK, duplicate index) that applies regardless of API exposure, do **not** add these filters — they would mask legitimate findings on internal-only schemas.
+
+- **Tests for lints with these filters must `set local pgrst.db_schemas = 'public';`** inside the test transaction (see the test template in Step 5). For GraphQL-gated lints, the test also needs `create extension if not exists pg_graphql;` (and a corresponding teardown) so the positive case can fire.
+
 **Template:**
 ```sql
 create view lint."XXXX_<name>" as
@@ -267,6 +287,7 @@ Then check:
 |---|---|
 | System-schema exclusion list | `lints/0024_rls_policy_always_true.sql` lines 38–40 |
 | Extension-owned object filter (pg_depend) | `lints/0001_unindexed_foreign_keys.sql` |
-| pgrst.db_schemas API exposure check | `lints/0023_sensitive_columns_exposed.sql` |
+| pgrst.db_schemas API exposure check | `lints/0023_sensitive_columns_exposed.sql`, `lints/0016_materialized_view_in_api.sql` |
+| pg_graphql extension-enabled check | `lints/0014_extension_in_public.sql` (for the `pg_catalog.pg_extension` pattern) |
 | begin/savepoint/rollback test structure | `test/sql/0024_rls_policy_always_true.sql` |
 | Doc format | `docs/0024_permissive_rls_policy.md` |
