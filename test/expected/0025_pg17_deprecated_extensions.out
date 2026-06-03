@@ -1,0 +1,16 @@
+begin;
+  -- 0 issues initially
+  select * from lint."0025_pg17_deprecated_extensions";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  create extension adminpack;
+  -- 1 issue
+  select * from lint."0025_pg17_deprecated_extensions";
+            name            |           title            | level |  facing  | categories |                           description                           |                                                      detail                                                      |                                          remediation                                           |            metadata             |              cache_key              
+----------------------------+----------------------------+-------+----------+------------+-----------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+---------------------------------+-------------------------------------
+ pg17_deprecated_extensions | PG17 Deprecated Extensions | WARN  | EXTERNAL | {SECURITY} | Detects extensions that are deprecated in PostgreSQL 17 images. | Extension `adminpack` is deprecated in PostgreSQL 17 images. Consider removing or replacing it before upgrading. | https://supabase.com/docs/guides/database/database-linter?lint=0025_pg17_deprecated_extensions | {"extension_name": "adminpack"} | pg17_deprecated_extension_adminpack
+(1 row)
+
+rollback;
