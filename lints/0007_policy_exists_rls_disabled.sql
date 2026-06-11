@@ -33,6 +33,7 @@ from
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (

@@ -33,6 +33,7 @@ from
     left join pg_catalog.pg_depend dep
         on psui.relid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     psui.idx_scan = 0
     and not pi.indisunique

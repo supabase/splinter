@@ -31,6 +31,7 @@ from
     left join pg_catalog.pg_depend dep
         on p.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_proc'::regclass
 where
     n.nspname not in (
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'

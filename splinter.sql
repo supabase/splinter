@@ -3,7 +3,7 @@ set local search_path = '';
 (
 with foreign_keys as (
     select
-        cl.relnamespace::regnamespace::text as schema_name,
+        ns.nspname as schema_name,
         cl.relname as table_name,
         cl.oid as table_oid,
         ct.conname as fkey_name,
@@ -12,13 +12,16 @@ with foreign_keys as (
         pg_catalog.pg_constraint ct
         join pg_catalog.pg_class cl -- fkey owning table
             on ct.conrelid = cl.oid
+        join pg_catalog.pg_namespace ns
+            on cl.relnamespace = ns.oid
         left join pg_catalog.pg_depend d
             on d.objid = cl.oid
             and d.deptype = 'e'
+            and d.classid = 'pg_catalog.pg_class'::regclass
     where
         ct.contype = 'f' -- foreign key constraints
         and d.objid is null -- exclude tables that are dependencies of extensions
-        and cl.relnamespace::regnamespace::text not in (
+        and ns.nspname not in (
             'pg_catalog', 'information_schema', 'auth', 'storage', 'vault', 'extensions'
         )
 ),
@@ -62,6 +65,7 @@ from
     left join pg_catalog.pg_depend dep
         on idx.table_oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     idx.index_ is null
     and fk.schema_name not in (
@@ -296,6 +300,7 @@ from
     left join pg_catalog.pg_depend dep
         on pgc.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     pgc.relkind = 'r' -- regular tables
     and pgns.nspname not in (
@@ -343,6 +348,7 @@ from
     left join pg_catalog.pg_depend dep
         on psui.relid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     psui.idx_scan = 0
     and not pi.indisunique
@@ -392,7 +398,8 @@ from
         or p.polroles = array[0::oid]
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
-        and dep.deptype = 'e',
+        and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass,
     lateral (
         select x.cmd
         from unnest((
@@ -459,6 +466,7 @@ from
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
@@ -504,6 +512,7 @@ from
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     c.relkind = 'r' -- regular tables
     and n.nspname not in (
@@ -558,6 +567,7 @@ from
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     c.relkind in ('r', 'm') -- tables and materialized views
     and n.nspname not in (
@@ -603,6 +613,7 @@ from
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     c.relkind = 'v'
     and (
@@ -657,6 +668,7 @@ from
     left join pg_catalog.pg_depend dep
         on p.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_proc'::regclass
 where
     n.nspname not in (
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
@@ -830,6 +842,7 @@ from
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     c.relkind = 'm'
     and (
@@ -873,6 +886,7 @@ from
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
         and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     c.relkind = 'f'
     and (

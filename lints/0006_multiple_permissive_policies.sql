@@ -39,7 +39,8 @@ from
         or p.polroles = array[0::oid]
     left join pg_catalog.pg_depend dep
         on c.oid = dep.objid
-        and dep.deptype = 'e',
+        and dep.deptype = 'e'
+        and dep.classid = 'pg_catalog.pg_class'::regclass,
     lateral (
         select x.cmd
         from unnest((
