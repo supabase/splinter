@@ -37,4 +37,4 @@ where
     and n.nspname = 'pgmq' -- tables in the pgmq schema
     and c.relname like 'q_%' -- only queue tables
     -- Constant requirements
-    and 'pgmq_public' = any(array(select trim(unnest(string_to_array(current_setting('pgrst.db_schemas', 't'), ',')))))
+    and 'pgmq_public' = any(array(select trim(unnest(string_to_array(coalesce(current_setting('pgrst.db_schemas', 't'), 'public'), ',')))))

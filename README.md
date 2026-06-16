@@ -22,6 +22,18 @@ Splinter maintains a set of lints for Supabase projects. It uses SQL queries to 
 
 If you are only interested in linting a project, a single query containing the latest version of all lints is availble in splinter.sql in the repo root.
 
+### API-exposure lints and `pgrst.db_schemas`
+
+Several lints (e.g. `auth_users_exposed`, `materialized_view_in_api`, `foreign_table_in_api`) only report objects that are reachable through the Data API — that is, objects in a schema listed in the `pgrst.db_schemas` setting. PostgREST sets this value at runtime, but it is **not** present in a plain `psql` connection.
+
+When `pgrst.db_schemas` is unset, these lints default to the **`public` schema only**. If your project exposes additional schemas, set the value to match your PostgREST config before running the lints so those schemas are covered too:
+
+```sql
+set pgrst.db_schemas = 'public, graphql_public, ...';
+```
+
+Without this, exposures in non-`public` schemas will not be reported.
+
 ## Lint Interface
 
 Each lint creates a view that returns a common interface. The interface is:
