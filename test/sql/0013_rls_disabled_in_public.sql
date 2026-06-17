@@ -1,3 +1,17 @@
+-- PSQL-1309: lint must still fire when `pgrst.db_schemas` is unset (e.g. running
+-- splinter.sql directly via psql), defaulting to the `public` schema. This block
+-- runs first, in a fresh session where the GUC has never been set (NULL).
+begin;
+  set local search_path = '';
+  -- pgrst.db_schemas intentionally NOT set
+
+  create table public.unset_guc_tbl( it int primary key );
+
+  -- 1 issue (defaults to the `public` schema)
+  select * from lint."0013_rls_disabled_in_public";
+rollback;
+
+
 begin;
   set local search_path = '';
   set local pgrst.db_schemas = 'public';

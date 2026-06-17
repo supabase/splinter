@@ -1,3 +1,18 @@
+-- PSQL-1309: lint must still fire when `pgrst.db_schemas` is unset (e.g. running
+-- splinter.sql directly via psql), defaulting to the `public` schema. This block
+-- runs first, in a fresh session where the GUC has never been set (NULL).
+begin;
+  set local search_path = '';
+  -- pgrst.db_schemas intentionally NOT set
+  create table public.unset_guc_tbl( it int primary key );
+  -- 1 issue (defaults to the `public` schema)
+  select * from lint."0013_rls_disabled_in_public";
+          name          |         title          | level |  facing  | categories |                                                 description                                                 |                                 detail                                  |                                        remediation                                         |                            metadata                            |                  cache_key                  
+------------------------+------------------------+-------+----------+------------+-------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------+---------------------------------------------
+ rls_disabled_in_public | RLS Disabled in Public | ERROR | EXTERNAL | {SECURITY} | Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST | Table \`public.unset_guc_tbl\` is public, but RLS has not been enabled. | https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public | {"name": "unset_guc_tbl", "type": "table", "schema": "public"} | rls_disabled_in_public_public_unset_guc_tbl
+(1 row)
+
+rollback;
 begin;
   set local search_path = '';
   set local pgrst.db_schemas = 'public';
