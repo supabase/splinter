@@ -56,6 +56,8 @@ begin;
     union all
     select * from lint."0028_anon_security_definer_function_executable"
     union all
-    select * from lint."0029_authenticated_security_definer_function_executable";
+    select * from lint."0029_authenticated_security_definer_function_executable"
+    union all
+    select * from lint."0030_rls_policy_null_auth_disjunct";
 
 rollback;
