@@ -1,6 +1,32 @@
 from pathlib import Path
 from typing import Dict
 
+LINTS_DIR = "./lints"
+HEADER = """set local search_path = '';
+
+-- Used for 0025_public_bucket_allows_listing
+do $$
+declare
+    buckets text;
+begin
+    if pg_catalog.to_regclass('storage.buckets') is not null then
+        select coalesce(
+            pg_catalog.jsonb_agg(
+                pg_catalog.jsonb_build_object('bucket_id', id::text, 'bucket_name', name::text)
+                order by id
+            ),
+            '[]'::pg_catalog.jsonb
+        )::text
+        from storage.buckets
+        where public = true
+        into buckets;
+    else
+        buckets := '[]';
+    end if;
+    perform pg_catalog.set_config('splinter.public_buckets', buckets, true);
+end $$;
+"""
+
 
 def load_sql_files(directory_path) -> Dict[str, str]:
     # Convert the directory path to a Path object
@@ -33,9 +59,7 @@ def load_sql_files(directory_path) -> Dict[str, str]:
     return queries
 
 
-# Example usage
-directory_path = "./lints"
-sql_map = load_sql_files(directory_path)
+sql_map = load_sql_files(LINTS_DIR)
 
 with open("splinter.sql", "w") as f:
-    f.write("set local search_path = '';\n\n" + "\nunion all\n".join(sql_map.values()))
+    f.write(HEADER + "\n" + "\nunion all\n".join(sql_map.values()))

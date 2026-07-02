@@ -1,7 +1,28 @@
 begin;
   set local search_path = '';
 
-  -- BASELINE: 0 issues before storage is installed
+  create function pg_temp.refresh_public_buckets() returns void language plpgsql as $fn$
+  declare
+      buckets text;
+  begin
+      if pg_catalog.to_regclass('storage.buckets') is not null then
+          select coalesce(
+              pg_catalog.jsonb_agg(
+                  pg_catalog.jsonb_build_object('bucket_id', id::text, 'bucket_name', name::text)
+                  order by id
+              ),
+              '[]'::pg_catalog.jsonb
+          )::text
+          from storage.buckets
+          where public = true
+          into buckets;
+      else
+          buckets := '[]';
+      end if;
+      perform pg_catalog.set_config('splinter.public_buckets', buckets, true);
+  end $fn$;
+
+  -- BASELINE: 0 issues before storage is installed (and before the GUC is set)
   select * from lint."0025_public_bucket_allows_listing";
 
   create schema storage;
@@ -32,6 +53,7 @@ begin;
   to authenticated
   with check (bucket_id = 'public-without-policy');
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select * from lint."0025_public_bucket_allows_listing";
 
   rollback to savepoint a;
@@ -49,6 +71,7 @@ begin;
   to authenticated
   using (bucket_id = 'restricted-list-bucket' and name like 'public/%');
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select * from lint."0025_public_bucket_allows_listing";
 
   rollback to savepoint b;
@@ -66,6 +89,7 @@ begin;
   to authenticated
   using (bucket_id = 'a|b[1]^{x}\z');
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select
     name,
     metadata->>'bucket_id' as bucket_id,
@@ -91,6 +115,7 @@ begin;
   to authenticated
   using (bucket_id = 'restrictive-only-bucket');
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select * from lint."0025_public_bucket_allows_listing";
 
   rollback to savepoint d;
@@ -108,6 +133,7 @@ begin;
   to authenticated
   using (true);
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select
     name,
     metadata->>'bucket_id' as bucket_id,
@@ -132,6 +158,7 @@ begin;
   to authenticated
   using (bucket_id = 'all-policy-bucket');
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select
     name,
     metadata->>'bucket_id' as bucket_id,
@@ -156,6 +183,7 @@ begin;
   to authenticated
   using (bucket_id = 'listable.bucket+1');
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select
     name,
     metadata->>'bucket_id' as bucket_id,
@@ -168,6 +196,7 @@ begin;
   -- RESOLUTION: removing the unnecessary SELECT policy should clear the lint
   drop policy "listable_bucket_select" on storage.objects;
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select * from lint."0025_public_bucket_allows_listing";
 
   rollback to savepoint g;
@@ -191,6 +220,7 @@ begin;
   to authenticated
   using ((bucket_id = 'multi-policy-bucket'));
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select
     metadata->>'bucket_id' as bucket_id,
     metadata->>'policy_count' as policy_count,
@@ -212,6 +242,7 @@ begin;
   to authenticated
   using (bucket_id = 'private-bucket');
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select * from lint."0025_public_bucket_allows_listing";
 
   rollback to savepoint i;
@@ -237,6 +268,7 @@ begin;
   to authenticated
   using (bucket_id = 'omega-bucket');
 
+  do $$ begin perform pg_temp.refresh_public_buckets(); end $$;
   select
     metadata->>'bucket_id' as bucket_id,
     cache_key
