@@ -3,22 +3,14 @@ create view lint."0025_public_bucket_allows_listing" as
 with public_buckets as (
     -- Read storage.buckets at runtime so the lint can load even when storage is not installed.
     select
-        (xpath('/row/id/text()', bucket_xml))[1]::text as bucket_id,
-        (xpath('/row/name/text()', bucket_xml))[1]::text as bucket_name
-    from unnest(
-        case when pg_catalog.to_regclass('storage.buckets') is not null
-            then xpath(
-                '/table/row',
-                pg_catalog.query_to_xml(
-                    'select id, name from storage.buckets where public = true order by id',
-                    false,
-                    false,
-                    ''
-                )
-            )
-            else array[]::xml[]
-        end
-    ) as bucket_xml
+        bucket->>'bucket_id' as bucket_id,
+        bucket->>'bucket_name' as bucket_name
+    from pg_catalog.jsonb_array_elements(
+        coalesce(
+            nullif(pg_catalog.current_setting('splinter.public_buckets', true), '')::pg_catalog.jsonb,
+            '[]'::pg_catalog.jsonb
+        )
+    ) as buckets(bucket)
 ),
 matching_policies as (
     select

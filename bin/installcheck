@@ -58,4 +58,4 @@ psql -v ON_ERROR_STOP= -f test/fixtures.sql -f lints/0001*.sql -f lints/0002*.sq
 ${REGRESS} --use-existing --dbname=contrib_regression --inputdir=${TESTDIR} ${TESTS}
 
 # Check that splinter.sql is valid
-psql -v ON_ERROR_STOP= -f splinter.sql -d contrib_regression
+psql -v ON_ERROR_STOP= --single-transaction -f splinter.sql -d contrib_regression
