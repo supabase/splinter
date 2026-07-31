@@ -90,23 +90,23 @@ jobs:
           files: splinter.json
           generate_release_notes: true
 
-      # - name: GitHub OIDC auth
-      #   uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
-      #   with:
-      #     aws-region: ap-southeast-1
-      #     role-to-assume: ${{ secrets.SHARED_SERVICES_OIDC }}
-      #     role-session-name: shared-services-jump
+      - name: GitHub OIDC auth
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+        with:
+          aws-region: ap-southeast-1
+          role-to-assume: ${{ secrets.SHARED_SERVICES_OIDC }}
+          role-session-name: shared-services-jump
 
-      # - name: Assume destination role
-      #   uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
-      #   with:
-      #     aws-region: ap-southeast-1
-      #     role-to-assume: ${{ secrets.SHARED_SERVICES_ROLE }}
-      #     role-skip-session-tagging: true
-      #     role-session-name: upload-assets
-      #     role-chaining: true
+      - name: Assume destination role
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+        with:
+          aws-region: ap-southeast-1
+          role-to-assume: ${{ secrets.SHARED_SERVICES_ROLE }}
+          role-skip-session-tagging: true
+          role-session-name: upload-assets
+          role-chaining: true
 
-      # - name: Upload splinter.json to shared services bucket
-      #   run: |
-      #     aws s3 cp --no-progress splinter.json \
-      #       "s3://${{ secrets.SHARED_SERVICES_BUCKET }}/splinter/${{ needs.plan.outputs.version }}/splinter.json"
+      - name: Upload splinter.json to shared services bucket
+        run: |
+          aws s3 cp --no-progress splinter.json \
+            "s3://${{ secrets.SHARED_SERVICES_BUCKET }}/splinter/${{ needs.plan.outputs.version }}/splinter.json"
