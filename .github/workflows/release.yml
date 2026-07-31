@@ -38,18 +38,19 @@ jobs:
             range="HEAD"
           fi
 
-          # Release when there is at least one Conventional Commit since the
-          # last release. We only care that a commit is semantically formatted,
-          # not which type prefix it uses (feat/fix/chore/... all count the
-          # same and trigger a single micro bump).
-          if git log --no-merges --format='%s' ${range} \
-              | grep -qiE '^[a-z]+(\([^)]+\))?!?: '; then
+          # Release when there is a release-worthy Conventional Commit since the
+          # last release.
+          subjects=$(git log --no-merges --format='%s' ${range})
+          bodies=$(git log --no-merges --format='%b' ${range})
+          if printf '%s\n' "${subjects}" | grep -qiE '^(feat|fix)(\([^)]+\))?!?:' \
+            || printf '%s\n' "${subjects}" | grep -qE '^[a-zA-Z]+(\([^)]+\))?!:' \
+            || printf '%s\n' "${bodies}" | grep -qE '^BREAKING[ -]CHANGE:'; then
             should_release=true
           else
             should_release=false
           fi
 
-          # CalVer YYYY.MM.Micro; micro is the next counter within this month.
+          # CalVer YYYY.MM.Micro.
           ym=$(date -u +%Y.%m)
           last=$(git tag --list "${ym}.*" | sed -E "s/^${ym}\.//" | sort -n | tail -n1)
           micro=$(( ${last:--1} + 1 ))
@@ -89,25 +90,23 @@ jobs:
           files: splinter.json
           generate_release_notes: true
 
-      # Mirrors the supautils release: OIDC jump role, then chain into the
-      # shared-services destination role, then upload to the internal bucket.
-      - name: GitHub OIDC auth
-        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
-        with:
-          aws-region: ap-southeast-1
-          role-to-assume: ${{ secrets.SHARED_SERVICES_OIDC }}
-          role-session-name: shared-services-jump
+      # - name: GitHub OIDC auth
+      #   uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+      #   with:
+      #     aws-region: ap-southeast-1
+      #     role-to-assume: ${{ secrets.SHARED_SERVICES_OIDC }}
+      #     role-session-name: shared-services-jump
 
-      - name: Assume destination role
-        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
-        with:
-          aws-region: ap-southeast-1
-          role-to-assume: ${{ secrets.SHARED_SERVICES_ROLE }}
-          role-skip-session-tagging: true
-          role-session-name: upload-assets
-          role-chaining: true
+      # - name: Assume destination role
+      #   uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+      #   with:
+      #     aws-region: ap-southeast-1
+      #     role-to-assume: ${{ secrets.SHARED_SERVICES_ROLE }}
+      #     role-skip-session-tagging: true
+      #     role-session-name: upload-assets
+      #     role-chaining: true
 
-      - name: Upload splinter.json to shared services bucket
-        run: |
-          aws s3 cp --no-progress splinter.json \
-            "s3://${{ secrets.SHARED_SERVICES_BUCKET }}/splinter/${{ needs.plan.outputs.version }}/splinter.json"
+      # - name: Upload splinter.json to shared services bucket
+      #   run: |
+      #     aws s3 cp --no-progress splinter.json \
+      #       "s3://${{ secrets.SHARED_SERVICES_BUCKET }}/splinter/${{ needs.plan.outputs.version }}/splinter.json"
