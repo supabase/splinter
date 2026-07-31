@@ -83,6 +83,15 @@ jobs:
       - name: generate splinter.json
         run: python bin/compile_json.py --version "${{ needs.plan.outputs.version }}" --output splinter.json
 
+      # Surface the artifact's sha256 so consumers can pin it for integrity
+      # verification (e.g. mgmt-api's SPLINTER_MANIFEST_SHA256).
+      - name: checksum splinter.json
+        run: |
+          echo '### splinter.json sha256' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          sha256sum splinter.json | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
       - name: publish github release (creates the tag)
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
