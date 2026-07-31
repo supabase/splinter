@@ -141,3 +141,6 @@ dmypy.json
 
 # mac
 .DS_Store
+
+# generated in CI + published as a release artifact, never committed
+/splinter.json

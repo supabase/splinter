@@ -59,7 +59,15 @@ def load_sql_files(directory_path) -> Dict[str, str]:
     return queries
 
 
-sql_map = load_sql_files(LINTS_DIR)
+def compile_sql(sql_map: Dict[str, str]) -> str:
+    return HEADER + "\n" + "\nunion all\n".join(sql_map.values())
 
-with open("splinter.sql", "w") as f:
-    f.write(HEADER + "\n" + "\nunion all\n".join(sql_map.values()))
+
+def main() -> None:
+    sql_map = load_sql_files(LINTS_DIR)
+    with open("splinter.sql", "w") as f:
+        f.write(compile_sql(sql_map))
+
+
+if __name__ == "__main__":
+    main()
