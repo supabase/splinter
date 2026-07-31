@@ -32,7 +32,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compile  # noqa: E402  (bin/compile.py; import after sys.path setup)
 
 NAME_RE = re.compile(r"'([a-z0-9_]+)'\s+as\s+name", re.IGNORECASE)
-CATEGORIES_RE = re.compile(r"array\[(.*?)\]\s+as\s+categories", re.IGNORECASE | re.DOTALL)
+CATEGORIES_RE = re.compile(
+    r"array\[(.*?)\]\s+as\s+categories", re.IGNORECASE | re.DOTALL
+)
 
 
 def extract_name(stem: str, query: str) -> str:
@@ -48,7 +50,7 @@ def extract_name(stem: str, query: str) -> str:
 def extract_categories(stem: str, query: str) -> List[str]:
     match = CATEGORIES_RE.search(query)
     if not match:
-        raise SystemExit(f"lint {stem!r}: could not find \"array[...] as categories\"")
+        raise SystemExit(f'lint {stem!r}: could not find "array[...] as categories"')
     categories = [
         part.strip().strip("'\"") for part in match.group(1).split(",") if part.strip()
     ]
