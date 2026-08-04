@@ -29,3 +29,10 @@ repos:
     language: python
     always_run: true
     pass_filenames: false
+
+  - id: check-lints
+    name: Check lints are fully registered
+    entry: python bin/check_lints.py
+    language: python
+    always_run: true
+    pass_filenames: false
