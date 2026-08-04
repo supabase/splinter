@@ -39,6 +39,7 @@ from
         and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     not pi.indisvalid
+    and pi.indisready -- exclude indexes that are still being built
     and dep.objid is null -- exclude indexes owned by extensions
     and nsp.nspname not in (
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config',

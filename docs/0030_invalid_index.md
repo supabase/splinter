@@ -55,4 +55,5 @@ on public.orders (order_number);
 
 ### False Positives
 
-None expected — a valid, functioning index will never have `indisvalid = false`. If this lint fires, the index genuinely needs to be dropped or rebuilt.
+1. Partitioned parent indexes can be marked as invalid even after the children have been repaired, see the [Postgres mailing list for more information](https://www.postgresql.org/message-id/CAGnOmWqi1D9ycBgUeOGf6mOCd2Dcf%3D6sKhbf4sHLs5xAcKVCMQ%40mail.gmail.com)
+2. 1. In progress indexes - if an index is being created then it can show as invalid (we filter on !`indisready`) to address this but there may be edge cases
