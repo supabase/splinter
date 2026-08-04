@@ -18,4 +18,13 @@ services:
     command:
       - bash
       - -c
-      - "./bin/installcheck; cp /home/splinter/regression.diffs /home/splinter/regression.out /home/splinter/results/* /home/splinter/results_out/ 2>/dev/null || true"
+      # Copy the artifacts out whether or not the suite passed, then exit with
+      # installcheck's status.
+      - |
+        ./bin/installcheck
+        status=$$?
+        cp /home/splinter/regression.diffs \
+           /home/splinter/regression.out \
+           /home/splinter/results/* \
+           /home/splinter/results_out/ 2>/dev/null || true
+        exit $$status
