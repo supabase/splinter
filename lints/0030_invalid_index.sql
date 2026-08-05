@@ -39,13 +39,17 @@ from
         and dep.classid = 'pg_catalog.pg_class'::regclass
 where
     not pi.indisvalid
-    and pi.indisready -- exclude indexes that are still being built
+    and pi.indisready -- exclude indexes that are still being built (phase 1)
+    and not exists ( -- exclude indexes actively being built (phase 2+)
+        select 1 from pg_catalog.pg_stat_progress_create_index pci
+        where pci.index_relid = ic.oid
+    )
     and dep.objid is null -- exclude indexes owned by extensions
     and nsp.nspname not in (
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config',
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql',
         'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga',
-        'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog',
+        'pgsodium', 'pgsodium_masks', 'pgbouncer', 'pg_catalog',
         'pgtle', 'realtime', 'repack', 'storage', 'supabase_functions',
         'supabase_migrations', 'tiger', 'topology', 'vault'
     )
