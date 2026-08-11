@@ -54,6 +54,9 @@ from
         and con.contype = 'x'
 where
     not pi.indisvalid
+    -- partitioned parent indexes ('I') are invalid by design until every
+    -- child index attaches
+    and ic.relkind = 'i'
     and pi.indisready -- exclude indexes that are still being built (phase 1)
     and not exists ( -- exclude indexes actively being built (phase 2+)
         select 1 from pg_catalog.pg_stat_progress_create_index pci

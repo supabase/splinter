@@ -19,6 +19,19 @@ begin;
 (0 rows)
 
   rollback to savepoint a;
+  -- NEGATIVE EXAMPLE: a partitioned parent index created with ON ONLY is
+  -- marked invalid by design until every child index is attached; it should
+  -- NOT trigger
+  create table public.events(id int, ts date) partition by range (ts);
+  create table public.events_2026 partition of public.events
+    for values from ('2026-01-01') to ('2027-01-01');
+  create index idx_events_ts on only public.events (ts);
+  select * from lint."0030_invalid_index";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
   -- POSITIVE EXAMPLE: an index left invalid (as happens when
   -- CREATE INDEX CONCURRENTLY / REINDEX CONCURRENTLY fails partway through)
   -- Simulated here via direct catalog update since CONCURRENTLY cannot
