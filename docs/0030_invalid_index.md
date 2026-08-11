@@ -19,13 +19,18 @@ An invalid index is never used by the planner, but Postgres does not automatical
 
 ### How to Resolve
 
-**Option 1: Drop and recreate concurrently**
+**Option 1: Reindex concurrently**
 
 ```sql
-drop index concurrently if exists public.idx_orders_customer_id;
+reindex index concurrently public.idx_orders_customer_id;
+```
 
-create index concurrently idx_orders_customer_id
-on public.orders (customer_id);
+This rebuilds and validates the index without blocking writes to the table.
+
+Indexes backing exclusion constraints cannot be reindexed concurrently, and a plain `drop index` is rejected because the constraint requires the index. Only in that case, reindex non-concurrently. This blocks writes to the table and may take significant time on large tables, so run it in a maintenance window:
+
+```sql
+reindex index public.reservations_during_excl;
 ```
 
 **Option 2: Investigate why it failed first**
@@ -44,16 +49,13 @@ on public.orders (order_number);
 
 The resulting index is left behind as invalid — still consuming space, still slowing down writes, enforcing nothing.
 
-Fix by dropping and rebuilding it:
+Fix by rebuilding it:
 
 ```sql
-drop index concurrently idx_orders_order_number;
-
-create unique index concurrently idx_orders_order_number
-on public.orders (order_number);
+reindex index concurrently idx_orders_order_number;
 ```
 
 ### False Positives
 
 1. Partitioned parent indexes can be marked as invalid even after the children have been repaired, see the [Postgres mailing list for more information](https://www.postgresql.org/message-id/CAGnOmWqi1D9ycBgUeOGf6mOCd2Dcf%3D6sKhbf4sHLs5xAcKVCMQ%40mail.gmail.com)
-2. 1. In progress indexes - if an index is being created then it can show as invalid (we filter on !`indisready`) to address this but there may be edge cases
+2. In progress indexes - an index that is still being built can show as invalid. To address this the lint only considers indexes where `indisready` is true and excludes builds reported in `pg_stat_progress_create_index`, but there may be edge cases

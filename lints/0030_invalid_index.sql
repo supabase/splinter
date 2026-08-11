@@ -11,12 +11,24 @@ select
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
     'Detects indexes marked as invalid, typically left behind by a failed `CREATE INDEX CONCURRENTLY` or `REINDEX CONCURRENTLY`. Invalid indexes are ignored by the planner but still incur maintenance overhead.' as description,
-    format(
-        'Index `%s` on table `%s.%s` is invalid and is not used by the query planner.',
-        ic.relname,
-        nsp.nspname,
-        tc.relname
-    ) as detail,
+    case
+        when con.oid is not null then format(
+            'Index `%s` on table `%s.%s` is invalid and is not used by the query planner. It backs an exclusion constraint and cannot be reindexed concurrently. Rebuild it with `reindex index %s.%s;`. Note that a non-concurrent reindex blocks writes to the table and may take significant time on large tables.',
+            ic.relname,
+            nsp.nspname,
+            tc.relname,
+            pg_catalog.quote_ident(nsp.nspname),
+            pg_catalog.quote_ident(ic.relname)
+        )
+        else format(
+            'Index `%s` on table `%s.%s` is invalid and is not used by the query planner. Rebuild it with `reindex index concurrently %s.%s;`',
+            ic.relname,
+            nsp.nspname,
+            tc.relname,
+            pg_catalog.quote_ident(nsp.nspname),
+            pg_catalog.quote_ident(ic.relname)
+        )
+    end as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0030_invalid_index' as remediation,
     jsonb_build_object(
         'schema', nsp.nspname,
@@ -37,6 +49,9 @@ from
         on dep.objid = ic.oid
         and dep.deptype = 'e'
         and dep.classid = 'pg_catalog.pg_class'::regclass
+    left join pg_catalog.pg_constraint con
+        on con.conindid = ic.oid
+        and con.contype = 'x'
 where
     not pi.indisvalid
     and pi.indisready -- exclude indexes that are still being built (phase 1)

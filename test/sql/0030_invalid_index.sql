@@ -32,9 +32,31 @@ begin;
 
   select name, detail, cache_key from lint."0030_invalid_index";  -- expect 1 row
 
-  -- RESOLUTION: drop and recreate the index
-  drop index public.idx_orders_order_number;
-  create unique index idx_orders_order_number on public.orders (order_number);
+  -- RESOLUTION: reindex validates the index. The docs recommend
+  -- `reindex index concurrently` but CONCURRENTLY cannot run inside a
+  -- transaction block, so the test uses the non-concurrent form.
+  reindex index public.idx_orders_order_number;
+
+  select * from lint."0030_invalid_index";  -- expect 0 rows
+
+  rollback to savepoint a;
+
+  -- POSITIVE EXAMPLE (exception): an invalid index backing an exclusion
+  -- constraint cannot be reindexed concurrently, so the message recommends
+  -- a non-concurrent reindex instead.
+  create table public.reservations(
+    id int primary key,
+    during int4range,
+    constraint reservations_during_excl exclude using gist (during with &&)
+  );
+  update pg_catalog.pg_index
+    set indisvalid = false
+    where indexrelid = 'public.reservations_during_excl'::regclass;
+
+  select name, detail, cache_key from lint."0030_invalid_index";  -- expect 1 row
+
+  -- RESOLUTION: a non-concurrent reindex validates the index
+  reindex index public.reservations_during_excl;
 
   select * from lint."0030_invalid_index";  -- expect 0 rows
 

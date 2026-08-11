@@ -32,14 +32,40 @@ begin;
     set indisvalid = false
     where indexrelid = 'public.idx_orders_order_number'::regclass;
   select name, detail, cache_key from lint."0030_invalid_index";  -- expect 1 row
-     name      |                                                  detail                                                   |                      cache_key                      
----------------+-----------------------------------------------------------------------------------------------------------+-----------------------------------------------------
- invalid_index | Index `idx_orders_order_number` on table `public.orders` is invalid and is not used by the query planner. | invalid_index_public_orders_idx_orders_order_number
+     name      |                                                                                         detail                                                                                         |                      cache_key                      
+---------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------
+ invalid_index | Index `idx_orders_order_number` on table `public.orders` is invalid and is not used by the query planner. Rebuild it with `reindex index concurrently public.idx_orders_order_number;` | invalid_index_public_orders_idx_orders_order_number
 (1 row)
 
-  -- RESOLUTION: drop and recreate the index
-  drop index public.idx_orders_order_number;
-  create unique index idx_orders_order_number on public.orders (order_number);
+  -- RESOLUTION: reindex validates the index. The docs recommend
+  -- `reindex index concurrently` but CONCURRENTLY cannot run inside a
+  -- transaction block, so the test uses the non-concurrent form.
+  reindex index public.idx_orders_order_number;
+  select * from lint."0030_invalid_index";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  -- POSITIVE EXAMPLE (exception): an invalid index backing an exclusion
+  -- constraint cannot be reindexed concurrently, so the message recommends
+  -- a non-concurrent reindex instead.
+  create table public.reservations(
+    id int primary key,
+    during int4range,
+    constraint reservations_during_excl exclude using gist (during with &&)
+  );
+  update pg_catalog.pg_index
+    set indisvalid = false
+    where indexrelid = 'public.reservations_during_excl'::regclass;
+  select name, detail, cache_key from lint."0030_invalid_index";  -- expect 1 row
+     name      |                                                                                                                                                                                 detail                                                                                                                                                                                 |                         cache_key                          
+---------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------
+ invalid_index | Index `reservations_during_excl` on table `public.reservations` is invalid and is not used by the query planner. It backs an exclusion constraint and cannot be reindexed concurrently. Rebuild it with `reindex index public.reservations_during_excl;`. Note that a non-concurrent reindex blocks writes to the table and may take significant time on large tables. | invalid_index_public_reservations_reservations_during_excl
+(1 row)
+
+  -- RESOLUTION: a non-concurrent reindex validates the index
+  reindex index public.reservations_during_excl;
   select * from lint."0030_invalid_index";  -- expect 0 rows
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
