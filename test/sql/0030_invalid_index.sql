@@ -72,4 +72,32 @@ begin;
 
   select * from lint."0030_invalid_index";  -- expect 0 rows
 
+  rollback to savepoint a;
+
+  -- POSITIVE EXAMPLE: a LEAF partition's index left invalid IS flagged. Only the
+  -- partitioned PARENT index (relkind 'I') is excluded; a leaf partition's index
+  -- (relkind 'i') is an ordinary index and must still be linted.
+  create table public.events(id int, ts date) partition by range (ts);
+  create table public.events_2026 partition of public.events
+    for values from ('2026-01-01') to ('2027-01-01');
+  create index idx_events_2026_ts on public.events_2026 (ts);
+  update pg_catalog.pg_index
+    set indisvalid = false
+    where indexrelid = 'public.idx_events_2026_ts'::regclass;
+
+  select name, detail, cache_key from lint."0030_invalid_index";  -- expect 1 row
+
+  rollback to savepoint a;
+
+  -- NEGATIVE EXAMPLE: an invalid index in an internal (excluded) schema is NOT
+  -- flagged -- the lint only reports customer-facing schemas.
+  create schema repack;
+  create table repack.t(id int);
+  create unique index idx_repack_t_id on repack.t (id);
+  update pg_catalog.pg_index
+    set indisvalid = false
+    where indexrelid = 'repack.idx_repack_t_id'::regclass;
+
+  select * from lint."0030_invalid_index";  -- expect 0 rows
+
 rollback;
