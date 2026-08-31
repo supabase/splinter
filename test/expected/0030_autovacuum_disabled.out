@@ -1,0 +1,37 @@
+begin;
+  set local search_path = '';
+  -- BASELINE: no user tables, expect 0 rows
+  select * from lint."0030_autovacuum_disabled";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  savepoint a;
+  -- NEGATIVE: autovacuum_enabled=true explicitly set — must not fire
+  create table public.active_table (id int);
+  alter table public.active_table set (autovacuum_enabled = true);
+  select * from lint."0030_autovacuum_disabled";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  savepoint b;
+  -- POSITIVE: autovacuum_enabled=false explicitly set — must fire
+  create table public.orders (id int);
+  alter table public.orders set (autovacuum_enabled = false);
+  select name, detail, cache_key from lint."0030_autovacuum_disabled";
+        name         |                                      detail                                      |             cache_key             
+---------------------+----------------------------------------------------------------------------------+-----------------------------------
+ autovacuum_disabled | Table `public`.`orders` has autovacuum_enabled=false set as a storage parameter. | autovacuum_disabled_public_orders
+(1 row)
+
+  -- RESOLUTION: reset the storage parameter to re-enable autovacuum
+  alter table public.orders reset (autovacuum_enabled);
+  select * from lint."0030_autovacuum_disabled";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint b;
+rollback;
