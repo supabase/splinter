@@ -1074,7 +1074,7 @@ bloat_data as (
 select
     'table_bloat' as name,
     'Table Bloat' as title,
-    'INFO' as level,
+    'WARN' as level,
     'EXTERNAL' as facing,
     array['PERFORMANCE'] as categories,
     'Detects if a table has excess bloat and may benefit from maintenance operations like vacuum full or cluster.' as description,
@@ -1083,7 +1083,7 @@ select
         bloat_data.schemaname,
         bloat_data.object_name
     ) as detail,
-    'Consider running vacuum full (WARNING: incurs downtime) and tweaking autovacuum settings to reduce bloat.' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0020_table_bloat' as remediation,
     jsonb_build_object(
         'schema', bloat_data.schemaname,
         'name', bloat_data.object_name,
@@ -1117,7 +1117,7 @@ select
         c_rel.relname, -- referencing table
         c.conname -- fkey name
     ) as detail,
-    'Drop the foreign key constraint that references the auth schema.' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0021_fkey_to_auth_unique' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c_rel.relname,
