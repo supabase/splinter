@@ -13,7 +13,7 @@ select
         c_rel.relname, -- referencing table
         c.conname -- fkey name
     ) as detail,
-    'Drop the foreign key constraint that references the auth schema.' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0021_fkey_to_auth_unique' as remediation,
     jsonb_build_object(
         'schema', n.nspname,
         'name', c_rel.relname,
