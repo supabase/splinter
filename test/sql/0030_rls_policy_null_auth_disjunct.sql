@@ -1,0 +1,151 @@
+begin;
+  set local search_path = '';
+
+  -- BASELINE: 0 issues on empty schema
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+
+  create table public.documents(
+    id int primary key,
+    owner_id uuid,
+    is_public boolean
+  );
+  alter table public.documents enable row level security;
+
+  ----------------------------------------------------------------
+  -- POSITIVE: auth.uid() IS NULL disjunct, to public -> FLAG
+  ----------------------------------------------------------------
+  create policy "p_public" on public.documents for select to public
+    using (auth.uid() is null or owner_id = auth.uid());
+  select cache_key, metadata->>'roles' as roles, metadata->>'command' as command
+  from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_public" on public.documents;
+
+  -- POSITIVE: to anon -> FLAG
+  create policy "p_anon" on public.documents for select to anon
+    using (auth.uid() is null or owner_id = auth.uid());
+  select cache_key from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_anon" on public.documents;
+
+  -- POSITIVE: to authenticated -> FLAG (still a logic error for a null-sub session)
+  create policy "p_authn" on public.documents for select to authenticated
+    using (auth.uid() is null or owner_id = auth.uid());
+  select cache_key from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_authn" on public.documents;
+
+  -- POSITIVE: FOR ALL (USING is the read filter) -> FLAG
+  create policy "p_all" on public.documents for all to authenticated
+    using (auth.uid() is null or owner_id = auth.uid());
+  select cache_key, metadata->>'command' as command
+  from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_all" on public.documents;
+
+  -- POSITIVE: NOT (auth.uid() IS NOT NULL) inversion -> FLAG
+  create policy "p_inverted" on public.documents for select to public
+    using (not (auth.uid() is not null) or owner_id = auth.uid());
+  select cache_key from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_inverted" on public.documents;
+
+  -- POSITIVE: current_setting(name, true) IS NULL -> FLAG
+  create policy "p_setting_true" on public.documents for select to public
+    using (current_setting('app.tenant', true) is null or owner_id = auth.uid());
+  select cache_key from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_setting_true" on public.documents;
+
+  -- POSITIVE: null-check as the SECOND disjunct -> FLAG
+  create policy "p_second" on public.documents for select to public
+    using (owner_id = auth.uid() or auth.uid() is null);
+  select cache_key from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_second" on public.documents;
+
+  -- POSITIVE: auth.jwt() IS NULL -> FLAG
+  create policy "p_jwt" on public.documents for select to public
+    using (auth.jwt() is null or owner_id = auth.uid());
+  select cache_key from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_jwt" on public.documents;
+
+  -- POSITIVE: auth.role() IS NULL -> FLAG
+  create policy "p_role" on public.documents for select to public
+    using (auth.role() is null or owner_id = auth.uid());
+  select cache_key from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_role" on public.documents;
+
+  -- POSITIVE: NULL-check as one of three top-level OR disjuncts -> FLAG
+  create policy "p_three" on public.documents for select to public
+    using (owner_id = auth.uid() or is_public or auth.uid() is null);
+  select cache_key from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "p_three" on public.documents;
+
+  ----------------------------------------------------------------
+  -- NEGATIVE: IS NOT NULL AND ... (the correct form) -> 0 rows
+  ----------------------------------------------------------------
+  create policy "n_and" on public.documents for select to public
+    using (auth.uid() is not null and owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_and" on public.documents;
+
+  -- NEGATIVE: plain scoped predicate -> 0 rows
+  create policy "n_scoped" on public.documents for select to public
+    using (owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_scoped" on public.documents;
+
+  -- NEGATIVE: current_user IS NULL (never NULL) -> 0 rows
+  create policy "n_curuser" on public.documents for select to public
+    using (current_user is null or owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_curuser" on public.documents;
+
+  -- NEGATIVE: top-level OR but neither disjunct is a NULL-auth check -> 0 rows
+  create policy "n_jwt_value" on public.documents for select to public
+    using ((auth.jwt() ->> 'role') = 'admin' or owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_jwt_value" on public.documents;
+
+  -- NEGATIVE: current_setting(name, false) IS NULL (raises, not nullable) -> 0 rows
+  create policy "n_setting_false" on public.documents for select to public
+    using (current_setting('app.tenant', false) is null or owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_setting_false" on public.documents;
+
+  -- NEGATIVE: NULL-check gated by a top-level AND -> 0 rows
+  create policy "n_nested" on public.documents for select to public
+    using (owner_id = auth.uid() and (auth.uid() is null or is_public));
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_nested" on public.documents;
+
+  -- NEGATIVE: write command (UPDATE) is out of scope for this read-side lint -> 0 rows
+  create policy "n_update" on public.documents for update to authenticated
+    using (auth.uid() is null or owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_update" on public.documents;
+
+  -- NEGATIVE: custom role (not anon/authenticated/public) -> 0 rows
+  create role custom_role_0030;
+  create policy "n_customrole" on public.documents for select to custom_role_0030
+    using (auth.uid() is null or owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_customrole" on public.documents;
+  drop role custom_role_0030;
+
+  -- NEGATIVE: restrictive policy -> 0 rows (only permissive policies are flagged)
+  create policy "n_restrictive" on public.documents as restrictive for select to public
+    using (auth.uid() is null or owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "n_restrictive" on public.documents;
+
+  -- NEGATIVE: RLS not enabled on the table -> 0 rows
+  create table public.no_rls(id int primary key, owner_id uuid);
+  create policy "n_norls" on public.no_rls for select to public
+    using (auth.uid() is null or owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop table public.no_rls;
+
+  ----------------------------------------------------------------
+  -- RESOLUTION: drop the IS NULL disjunct -> 0 rows
+  ----------------------------------------------------------------
+  create policy "fixed" on public.documents for select to public
+    using (owner_id = auth.uid());
+  select * from lint."0030_rls_policy_null_auth_disjunct";
+  drop policy "fixed" on public.documents;
+
+rollback;
