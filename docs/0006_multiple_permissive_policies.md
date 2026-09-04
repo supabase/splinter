@@ -32,9 +32,9 @@ Since any one of N permissive policies can provide a user access to a given tabl
 Consider a table `employee_data` with two permissive policies:
 
 Policy A allows access to employees in the same department.
-Policy B allows access to employees at or above a certain grade level.
+Policy B allows access to employees at or below the querying user's grade level.
 
-Our intention is for users to be able to see employee data for employees within their own department who are below the querying user's grade level.
+Our intention is for users to be able to see employee data for employees within their own department who are at or below the querying user's grade level.
 
 ```sql
 -- Policy A
@@ -48,7 +48,7 @@ create policy grade_level_access on employee_data
     using (grade_level <= current_user_grade_level());
 ```
 
-The implementation contains a logic error. As written, every employee can see `employee_data` for every other employee within their departemnt. Similarly, every employee can see every other employee's data at or below their own grade level.
+The implementation contains a logic error. As written, every employee can see `employee_data` for every other employee within their department, regardless of grade level. Similarly, every employee can see every other employee's data at or below their own grade level, regardless of department.
 
 To address this issue, we can combine the two policies.
 
@@ -60,7 +60,7 @@ create policy consolidated_access on employee_data
     for select
     using (
         department = current_user_department()
-        or grade_level >= current_user_grade_level()
+        and grade_level <= current_user_grade_level()
     );
 ```
 
