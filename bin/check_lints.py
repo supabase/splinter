@@ -165,9 +165,7 @@ def check() -> list[str]:
         if not level_match:
             errors.append(f"{doc}: missing a '**Level:**' line")
         else:
-            # An empty set legitimately means "nothing to compare against" -- a doc with no
-            # matching lint view (e.g. 0012), or one whose own level column already errored
-            # above -- not a silent pass; _level_line_error skips the comparison either way.
+            # Empty set (no matching lint view, or its own level column already errored above) skips the comparison in _level_line_error rather than silently passing.
             doc_sql_levels = levels_by_number.get(doc.stem.split("_", 1)[0], set())
             level_error = _level_line_error(level_match.group(1), doc_sql_levels)
             if level_error:

@@ -15,7 +15,7 @@ from check_lints import _level_line_error, _levels_in_lint_sql  # noqa: E402
 
 CASES = {
     "bare literal": ("'INFO' as level,", {"INFO"}),
-    "single-line case (0030's own shape)": (
+    "single-line case (0031's own shape)": (
         "case when prs.wal_status = 'lost' then 'ERROR' else 'WARN' end as level,",
         {"ERROR", "WARN"},
     ),
@@ -45,8 +45,7 @@ for name, (column_line, expected) in CASES.items():
     if actual != expected:
         failures.append(f"{name}: expected {expected!r}, got {actual!r}")
 
-# _level_line_error: an empty sql_levels set means "nothing to compare against", never a
-# silent pass, and a doc mentioning no level word is always an error regardless.
+# An empty sql_levels set means _level_line_error skips the comparison rather than silently passing; a doc mentioning no level word is still always an error.
 if _level_line_error("WARN", set()) is not None:
     failures.append(
         "_level_line_error('WARN', set()) should skip comparison, not error"
