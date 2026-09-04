@@ -1,4 +1,4 @@
-create view lint."0030_unused_replication_slot" as
+create view lint."0031_unused_replication_slot" as
 
 select
     'unused_replication_slot' as name,
@@ -12,7 +12,7 @@ select
         prs.slot_name,
         prs.wal_status
     ) as detail,
-    'https://supabase.com/docs/guides/database/database-linter?lint=0030_unused_replication_slot' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0031_unused_replication_slot' as remediation,
     jsonb_build_object(
         -- Studio's getLintEntityString needs schema+name or entity to render anything, and slots have no schema, so entity is set to short-circuit straight to the slot name.
         'entity', prs.slot_name,

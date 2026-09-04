@@ -27,16 +27,16 @@ end
 $fn$;
 
 -- BASELINE: 0 issues, no slots exist. None of the fixtures below exercise `active = true`: pg_regress has no easy way to hold open a real walsender connection, so the view's `active = false` predicate itself is untested here.
-select * from lint."0030_unused_replication_slot";
+select * from lint."0031_unused_replication_slot";
 
 -- NEGATIVE EXAMPLE: a freshly created slot (LSN reserved, as a real replica connection would) is wal_status='reserved' while inactive, e.g. a replica that just restarted, and must NOT fire.
 do $$ begin perform pg_catalog.pg_create_physical_replication_slot('splinter_test_negative_slot', true); end $$;
-select name, detail, cache_key from lint."0030_unused_replication_slot";  -- expect 0 rows
+select name, detail, cache_key from lint."0031_unused_replication_slot";  -- expect 0 rows
 select pg_catalog.pg_drop_replication_slot('splinter_test_negative_slot');
 
 -- NEGATIVE EXAMPLE (logical slot): the same reserved/inactive guarantee applies to logical slots, not just physical
 do $$ begin perform pg_catalog.pg_create_logical_replication_slot('splinter_test_negative_logical_slot', 'test_decoding'); end $$;
-select name, detail, cache_key from lint."0030_unused_replication_slot";  -- expect 0 rows
+select name, detail, cache_key from lint."0031_unused_replication_slot";  -- expect 0 rows
 select pg_catalog.pg_drop_replication_slot('splinter_test_negative_logical_slot');
 
 -- NEGATIVE EXAMPLE (extended): max_wal_size exceeded but max_slot_wal_keep_size left at its default (disabled), so the slot is 'extended', not 'unreserved', and must NOT fire
@@ -45,7 +45,7 @@ alter system set max_wal_size = '2MB';
 select pg_catalog.pg_reload_conf();
 do $$ begin perform pg_temp.advance_wal(); end $$;
 select slot_name, wal_status from pg_catalog.pg_replication_slots where slot_name = 'splinter_test_extended_slot';  -- confirm wal_status is actually 'extended'
-select name, detail, cache_key from lint."0030_unused_replication_slot";  -- expect 0 rows
+select name, detail, cache_key from lint."0031_unused_replication_slot";  -- expect 0 rows
 select pg_catalog.pg_drop_replication_slot('splinter_test_extended_slot');
 alter system reset max_wal_size;
 select pg_catalog.pg_reload_conf();
@@ -59,26 +59,26 @@ select pg_catalog.pg_reload_conf();
 do $$ begin perform pg_temp.advance_wal(); end $$;
 
 -- before any checkpoint runs, the slot has exceeded max_slot_wal_keep_size but hasn't been invalidated yet: wal_status is 'unreserved', level WARN
-select name, level, detail, cache_key from lint."0030_unused_replication_slot";  -- expect 1 row, wal_status unreserved
+select name, level, detail, cache_key from lint."0031_unused_replication_slot";  -- expect 1 row, wal_status unreserved
 
 -- a checkpoint is what actually invalidates an 'unreserved' slot once its required WAL is gone: wal_status becomes 'lost', level ERROR
 checkpoint;
-select name, level, detail, cache_key from lint."0030_unused_replication_slot";  -- expect 1 row, wal_status lost
+select name, level, detail, cache_key from lint."0031_unused_replication_slot";  -- expect 1 row, wal_status lost
 
 -- dropping is the only way to stop WAL accumulation once the consumer is confirmed gone for good
 select pg_catalog.pg_drop_replication_slot('splinter_test_positive_slot');
-select * from lint."0030_unused_replication_slot";  -- expect 0 rows
+select * from lint."0031_unused_replication_slot";  -- expect 0 rows
 
 -- POSITIVE EXAMPLE (logical): same escalation as the physical case, but also proves the entity/plugin metadata Studio needs for logical slots is actually populated.
 do $$ begin perform pg_catalog.pg_create_logical_replication_slot('splinter_test_positive_logical_slot', 'test_decoding'); end $$;
 alter system set max_slot_wal_keep_size = '1MB';
 select pg_catalog.pg_reload_conf();
 do $$ begin perform pg_temp.advance_wal(); end $$;
-select name, level, metadata ->> 'entity' as entity, metadata ->> 'plugin' as plugin, metadata ->> 'database' as database, cache_key from lint."0030_unused_replication_slot";  -- expect 1 row, wal_status unreserved
+select name, level, metadata ->> 'entity' as entity, metadata ->> 'plugin' as plugin, metadata ->> 'database' as database, cache_key from lint."0031_unused_replication_slot";  -- expect 1 row, wal_status unreserved
 checkpoint;
-select name, level, metadata ->> 'entity' as entity, metadata ->> 'plugin' as plugin, metadata ->> 'database' as database, cache_key from lint."0030_unused_replication_slot";  -- expect 1 row, wal_status lost
+select name, level, metadata ->> 'entity' as entity, metadata ->> 'plugin' as plugin, metadata ->> 'database' as database, cache_key from lint."0031_unused_replication_slot";  -- expect 1 row, wal_status lost
 select pg_catalog.pg_drop_replication_slot('splinter_test_positive_logical_slot');
-select * from lint."0030_unused_replication_slot";  -- expect 0 rows
+select * from lint."0031_unused_replication_slot";  -- expect 0 rows
 
 alter system reset max_slot_wal_keep_size;
 alter system reset checkpoint_timeout;

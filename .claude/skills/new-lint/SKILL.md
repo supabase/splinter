@@ -23,7 +23,7 @@ Create a SQL view in the `lint` schema. The view **must** return exactly these 1
 |--------|------|-------|
 | `name` | text | snake_case identifier, e.g. `'my_lint_name'` |
 | `title` | text | Human-readable title |
-| `level` | text | `'ERROR'`, `'WARN'`, or `'INFO'` — a `case` expression is fine if severity varies per row (see `lints/0030_unused_replication_slot.sql`) |
+| `level` | text | `'ERROR'`, `'WARN'`, or `'INFO'` — a `case` expression is fine if severity varies per row (see `lints/0031_unused_replication_slot.sql`) |
 | `facing` | text | `'EXTERNAL'` or `'INTERNAL'` |
 | `categories` | text[] | e.g. `array['SECURITY']` or `array['PERFORMANCE']` |
 | `description` | text | What the lint checks and why it matters |
@@ -172,7 +172,7 @@ Cases where this lint may fire when the pattern is intentional, and how to handl
 
 ## Step 5 — Create `test/sql/XXXX_<name>.sql`
 
-Structure the test file exactly as follows, unless the lint touches non-transactional catalog state (replication slots, `ALTER SYSTEM`) that a `rollback` can't undo — see `test/sql/0030_unused_replication_slot.sql` for the explicit-cleanup pattern that case needs instead.
+Structure the test file exactly as follows, unless the lint touches non-transactional catalog state (replication slots, `ALTER SYSTEM`) that a `rollback` can't undo — see `test/sql/0031_unused_replication_slot.sql` for the explicit-cleanup pattern that case needs instead.
 
 ```sql
 begin;
@@ -303,5 +303,5 @@ Then check:
 | pgrst.db_schemas API exposure check | `lints/0023_sensitive_columns_exposed.sql`, `lints/0016_materialized_view_in_api.sql` |
 | pg_graphql extension-enabled check | `lints/0014_extension_in_public.sql` (for the `pg_catalog.pg_extension` pattern) |
 | begin/savepoint/rollback test structure | `test/sql/0024_rls_policy_always_true.sql` |
-| explicit-cleanup test structure (non-transactional catalog state) | `test/sql/0030_unused_replication_slot.sql` |
+| explicit-cleanup test structure (non-transactional catalog state) | `test/sql/0031_unused_replication_slot.sql` |
 | Doc format | `docs/0024_permissive_rls_policy.md` |
