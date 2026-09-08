@@ -15,8 +15,8 @@ begin;
                          1
 (1 row)
 
-  -- Test that the query returns proper column structure
-  -- This will help ensure the lint is properly formed
+  -- Verify the stable columns. The available (default) version is excluded
+  -- so the test doesn't depend on the amcheck version in the running image.
   select
     name,
     title,
@@ -24,14 +24,14 @@ begin;
     facing,
     categories,
     description,
-    detail,
     remediation,
-    metadata,
-    cache_key
+    cache_key,
+    metadata - 'default_version' as metadata,
+    detail like 'Extension `amcheck` is using version `1.0`%' as detail_reports_installed_version
   from lint."0022_extension_versions_outdated";
-            name             |            title            | level |  facing  | categories |                               description                                |                                                                              detail                                                                               |                                           remediation                                           |                                      metadata                                       |                cache_key                
------------------------------+-----------------------------+-------+----------+------------+--------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+-----------------------------------------
- extension_versions_outdated | Extension Versions Outdated | WARN  | EXTERNAL | {SECURITY} | Detects extensions that are not using the default (recommended) version. | Extension `amcheck` is using version `1.0` but version `1.3` is available. Using outdated extension versions may expose the database to security vulnerabilities. | https://supabase.com/docs/guides/database/database-linter?lint=0022_extension_versions_outdated | {"extension_name": "amcheck", "default_version": "1.3", "installed_version": "1.0"} | extension_versions_outdated_amcheck_1.0
+            name             |            title            | level |  facing  | categories |                               description                                |                                           remediation                                           |                cache_key                |                         metadata                          | detail_reports_installed_version 
+-----------------------------+-----------------------------+-------+----------+------------+--------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------+-----------------------------------------+-----------------------------------------------------------+----------------------------------
+ extension_versions_outdated | Extension Versions Outdated | WARN  | EXTERNAL | {SECURITY} | Detects extensions that are not using the default (recommended) version. | https://supabase.com/docs/guides/database/database-linter?lint=0022_extension_versions_outdated | extension_versions_outdated_amcheck_1.0 | {"extension_name": "amcheck", "installed_version": "1.0"} | t
 (1 row)
 
   drop extension amcheck;
