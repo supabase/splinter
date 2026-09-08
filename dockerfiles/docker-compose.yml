@@ -7,7 +7,7 @@ services:
         context: ..
         dockerfile: ./dockerfiles/Dockerfile
         args:
-          PG_VERSION: ${SUPABASE_VERSION:-15.1.1.13}
+          SUPABASE_VERSION: ${SUPABASE_VERSION:-15.14.1.169}
     healthcheck:
       test: pg_isready -U postgres -h localhost
       interval: 5s
