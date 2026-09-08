@@ -10,8 +10,8 @@ begin;
     count(*) as total_outdated_extensions
   from lint."0022_extension_versions_outdated";
 
-  -- Test that the query returns proper column structure
-  -- This will help ensure the lint is properly formed
+  -- Verify the stable columns. The available (default) version is excluded
+  -- so the test doesn't depend on the amcheck version in the running image.
   select
     name,
     title,
@@ -19,10 +19,10 @@ begin;
     facing,
     categories,
     description,
-    detail,
     remediation,
-    metadata,
-    cache_key
+    cache_key,
+    metadata - 'default_version' as metadata,
+    detail like 'Extension `amcheck` is using version `1.0`%' as detail_reports_installed_version
   from lint."0022_extension_versions_outdated";
 
   drop extension amcheck;
