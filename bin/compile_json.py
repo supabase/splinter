@@ -32,9 +32,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compile  # noqa: E402  (bin/compile.py; import after sys.path setup)
 
 NAME_RE = re.compile(r"'([a-z0-9_]+)'\s+as\s+name", re.IGNORECASE)
-CATEGORIES_RE = re.compile(
-    r"array\[(.*?)\]\s+as\s+categories", re.IGNORECASE | re.DOTALL
-)
+CATEGORIES_RE = re.compile(r"array\[([^\]]*)\]\s+as\s+categories", re.IGNORECASE)
+
+VALID_CATEGORIES = {"SECURITY", "PERFORMANCE"}
 
 
 def extract_name(stem: str, query: str) -> str:
@@ -56,6 +56,9 @@ def extract_categories(stem: str, query: str) -> List[str]:
     ]
     if not categories:
         raise SystemExit(f"lint {stem!r}: empty categories array")
+    invalid = [c for c in categories if c not in VALID_CATEGORIES]
+    if invalid:
+        raise SystemExit(f"lint {stem!r}: invalid categories {invalid}")
     return categories
 
 
