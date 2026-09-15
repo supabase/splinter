@@ -11,6 +11,10 @@ create view lint."0029_authenticated_security_definer_function_executable" as
 -- supported. Under open or auto-confirm signup, "authenticated" is in
 -- practice anyone with a throwaway email.
 --
+-- Projects that run signed-in requests as a custom PostgREST role
+-- rather than `authenticated` are covered too: any role `authenticator`
+-- can SET ROLE into counts, except `anon` and `service_role`.
+--
 -- See lint 0028 for the equivalent check against the `anon` role.
 -- Together with 0026/0027 they cover the four direct exposure paths:
 -- anon-vs-authenticated × table-vs-function.
@@ -61,7 +65,37 @@ from
                 on p.prolang = l.oid
         where
             p.prosecdef = true
-            and pg_catalog.has_function_privilege('authenticated', p.oid, 'EXECUTE')
+            and (
+                pg_catalog.has_function_privilege('authenticated', p.oid, 'EXECUTE')
+                -- A project can run signed-in requests as a custom PostgREST role (the
+                -- `custom_access_token` hook rewriting the `role` claim). Such a project moves
+                -- EXECUTE off `authenticated` onto that role, which would drop this lint to zero
+                -- findings -- indistinguishable from having remediated them. Those roles are
+                -- discoverable: `authenticator` is the login role PostgREST connects as, and it can
+                -- only SET ROLE into roles it is a member of.
+                --
+                -- `anon` is lint 0028's job. `service_role` is the trusted backend role rather than
+                -- a request role, and holds EXECUTE on exactly the functions a project means to keep
+                -- server-side, so including it would flag correctly-secured functions.
+                --
+                -- Kept as an OR against the original predicate so this is purely additive: every
+                -- finding reported before is still reported, including where `authenticator` does
+                -- not exist at all.
+                or exists (
+                    select
+                        1
+                    from
+                        pg_catalog.pg_auth_members m
+                        join pg_catalog.pg_roles request_role
+                            on request_role.oid = m.roleid
+                        join pg_catalog.pg_roles login_role
+                            on login_role.oid = m.member
+                    where
+                        login_role.rolname = 'authenticator'
+                        and request_role.rolname not in ('anon', 'service_role')
+                        and pg_catalog.has_function_privilege(request_role.rolname, p.oid, 'EXECUTE')
+                )
+            )
             and n.nspname = any(array(select trim(unnest(string_to_array(coalesce(current_setting('pgrst.db_schemas', 't'), 'public'), ',')))))
             and n.nspname not in (
                 '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'

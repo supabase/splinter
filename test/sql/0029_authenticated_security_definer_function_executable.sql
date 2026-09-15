@@ -105,4 +105,45 @@ begin;
 
   rollback to savepoint case_system_schema;
 
+  savepoint case_custom_request_role;
+
+  ----------------------------------------
+  -- POSITIVE (custom request role): a project that runs signed-in
+  -- requests as its own PostgREST role grants EXECUTE to that role
+  -- instead of `authenticated`. The function is still reachable
+  -- through the API, so it must still fire.
+  ----------------------------------------
+  create role authenticator;
+  create role app_user;
+  grant app_user to authenticator;
+  grant authenticated to app_user;
+
+  create function public.custom_role_op() returns int
+    language sql
+    security definer
+    as $$ select 1 $$;
+  revoke execute on function public.custom_role_op() from public, anon, authenticated;
+  grant execute on function public.custom_role_op() to app_user;
+
+  -- Exactly one row: the EXISTS must not multiply findings per role.
+  select
+    name,
+    metadata->>'name' as func_name,
+    cache_key
+  from lint."0029_authenticated_security_definer_function_executable";
+
+  ----------------------------------------
+  -- NEGATIVE: `service_role` is the trusted backend role, not a
+  -- request role. A function kept server-side by granting only to it
+  -- must not fire.
+  ----------------------------------------
+  create role service_role;
+  grant service_role to authenticator;
+
+  revoke execute on function public.custom_role_op() from app_user;
+  grant execute on function public.custom_role_op() to service_role;
+  select * from lint."0029_authenticated_security_definer_function_executable";
+
+  rollback to savepoint case_custom_request_role;
+
 rollback;
