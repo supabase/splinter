@@ -47,4 +47,41 @@ begin;
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
 
+  -- An aggregate is not reported: CREATE AGGREGATE has no SET clause, so its
+  -- pg_proc entry can never carry a search_path
+  create function public.uuid_min(uuid, uuid)
+    returns uuid
+    set search_path = ''
+    language sql
+    immutable strict
+  as $$
+    select least($1, $2);
+  $$;
+  create aggregate public.min_uuid(uuid) (
+    sfunc = public.uuid_min,
+    stype = uuid,
+    combinefunc = public.uuid_min,
+    parallel = safe
+  );
+  -- 0 issues
+  select * from lint."0011_function_search_path_mutable";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  -- The support function is still linted on its own
+  create or replace function public.uuid_min(uuid, uuid)
+    returns uuid
+    language sql
+    immutable strict
+  as $$
+    select least($1, $2);
+  $$;
+  -- 1 issue, for public.uuid_min and not for the aggregate
+  select * from lint."0011_function_search_path_mutable";
+             name             |            title             | level |  facing  | categories |                          description                          |                           detail                            |                                           remediation                                            |                           metadata                           |                                   cache_key                                   
+------------------------------+------------------------------+-------+----------+------------+---------------------------------------------------------------+-------------------------------------------------------------+--------------------------------------------------------------------------------------------------+--------------------------------------------------------------+-------------------------------------------------------------------------------
+ function_search_path_mutable | Function Search Path Mutable | WARN  | EXTERNAL | {SECURITY} | Detects functions where the search_path parameter is not set. | Function \`public.uuid_min\` has a role mutable search_path | https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable | {"name": "uuid_min", "type": "function", "schema": "public"} | function_search_path_mutable_public_uuid_min_f4e24529160b926c46151c3f612a6c29
+(1 row)
+
 rollback;
