@@ -1,0 +1,213 @@
+begin;
+  set local search_path = '';
+  set local pgrst.db_schemas = 'public';
+  -- 0 issues - no tables yet
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  -- test/fixtures.sql grants SELECT (only) on new tables in public to PUBLIC,
+  -- so anon and authenticated can read but not write
+  create table public.posts(
+    id int primary key,
+    user_id uuid,
+    title text
+  );
+  alter table public.posts enable row level security;
+  savepoint a;
+  ----------------------------------------
+  -- Test: SELECT policy where the role has SELECT should NOT be flagged
+  ----------------------------------------
+  create policy "select_own"
+  on public.posts
+  for select
+  to authenticated
+  using (user_id = auth.uid());
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: INSERT policy where the role lacks INSERT SHOULD be flagged
+  ----------------------------------------
+  create policy "insert_own"
+  on public.posts
+  for insert
+  to authenticated
+  with check (user_id = auth.uid());
+  select name, detail, cache_key from lint."0031_policy_without_privilege";
+           name           |                                                                       detail                                                                        |                    cache_key                     
+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------
+ policy_without_privilege | Table `public.posts` has RLS policy `insert_own` for `INSERT`, but authenticated has no INSERT privilege on the table, so the policy has no effect. | policy_without_privilege_public_posts_insert_own
+(1 row)
+
+  -- Resolution: grant the missing privilege
+  grant insert on public.posts to authenticated;
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: policy for anon and authenticated where only one role has the
+  -- privilege SHOULD be flagged, naming only the role without it
+  ----------------------------------------
+  grant insert on public.posts to authenticated;
+  create policy "insert_any"
+  on public.posts
+  for insert
+  to anon, authenticated
+  with check (true);
+  select detail, metadata->'roles' as roles from lint."0031_policy_without_privilege";
+                                                                   detail                                                                   |  roles   
+--------------------------------------------------------------------------------------------------------------------------------------------+----------
+ Table `public.posts` has RLS policy `insert_any` for `INSERT`, but anon has no INSERT privilege on the table, so the policy has no effect. | ["anon"]
+(1 row)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: DELETE policy for both API roles, neither has DELETE, SHOULD be flagged
+  ----------------------------------------
+  create policy "delete_own"
+  on public.posts
+  for delete
+  to anon, authenticated
+  using (user_id = auth.uid());
+  select detail, metadata->'roles' as roles from lint."0031_policy_without_privilege";
+                                                                            detail                                                                             |           roles           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------
+ Table `public.posts` has RLS policy `delete_own` for `DELETE`, but anon and authenticated have no DELETE privilege on the table, so the policy has no effect. | ["anon", "authenticated"]
+(1 row)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: policy for public (no TO clause) where no API role has the
+  -- privilege SHOULD be flagged
+  ----------------------------------------
+  create policy "update_own"
+  on public.posts
+  for update
+  using (user_id = auth.uid());
+  select detail, metadata->'roles' as roles from lint."0031_policy_without_privilege";
+                                                                            detail                                                                             |           roles           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------
+ Table `public.posts` has RLS policy `update_own` for `UPDATE`, but anon and authenticated have no UPDATE privilege on the table, so the policy has no effect. | ["anon", "authenticated"]
+(1 row)
+
+  -- Resolution: granting to authenticated alone is enough for a policy for public
+  grant update on public.posts to authenticated;
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: column-level grant satisfies the privilege and should NOT be flagged
+  ----------------------------------------
+  grant update (title) on public.posts to authenticated;
+  create policy "update_title"
+  on public.posts
+  for update
+  to authenticated
+  using (user_id = auth.uid());
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: FOR ALL policy where the role holds at least one privilege should NOT be flagged
+  ----------------------------------------
+  create policy "all_own"
+  on public.posts
+  for all
+  to authenticated
+  using (user_id = auth.uid());
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  ----------------------------------------
+  -- Test: FOR ALL policy where the role holds no privilege SHOULD be flagged
+  ----------------------------------------
+  revoke select on public.posts from public;
+  select name, detail, cache_key from lint."0031_policy_without_privilege";
+           name           |                                                                                  detail                                                                                  |                   cache_key                   
+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------
+ policy_without_privilege | Table `public.posts` has RLS policy `all_own` for `ALL`, but authenticated has no SELECT, INSERT, UPDATE, or DELETE privilege on the table, so the policy has no effect. | policy_without_privilege_public_posts_all_own
+(1 row)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: restrictive policy should NOT be flagged
+  -- Without the privilege the role is denied anyway, which is what a restrictive policy wants
+  ----------------------------------------
+  create policy "restrictive_insert"
+  on public.posts
+  as restrictive
+  for insert
+  to authenticated
+  with check (user_id = auth.uid());
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: policy for a custom role (not anon/authenticated) should NOT be flagged
+  ----------------------------------------
+  create role custom_role;
+  create policy "custom_insert"
+  on public.posts
+  for insert
+  to custom_role
+  with check (true);
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: table without RLS enabled should NOT be flagged (covered by 0007)
+  ----------------------------------------
+  alter table public.posts disable row level security;
+  create policy "insert_own"
+  on public.posts
+  for insert
+  to authenticated
+  with check (user_id = auth.uid());
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  ----------------------------------------
+  -- Test: table in a schema not exposed via the API should NOT be flagged
+  ----------------------------------------
+  create schema private;
+  create table private.notes(
+    id int primary key,
+    user_id uuid
+  );
+  alter table private.notes enable row level security;
+  create policy "insert_own"
+  on private.notes
+  for insert
+  to authenticated
+  with check (user_id = auth.uid());
+  select * from lint."0031_policy_without_privilege";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+rollback;
