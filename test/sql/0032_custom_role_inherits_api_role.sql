@@ -1,0 +1,49 @@
+begin;
+  set local search_path = '';
+
+  -- BASELINE: 0 issues, no custom role memberships
+  select * from lint."0032_custom_role_inherits_api_role";
+
+  savepoint a;
+
+  -- NEGATIVE EXAMPLE: a custom role that is not a member of any API role, and
+  -- one whose membership was revoked again. Must not fire.
+  create role lint_report_role;
+  create role lint_plain_role;
+  grant authenticated to lint_plain_role;
+  revoke authenticated from lint_plain_role;
+
+  select * from lint."0032_custom_role_inherits_api_role";  -- expect 0 rows
+
+  rollback to savepoint a;
+
+  -- NEGATIVE EXAMPLE: the platform connection role holds the API roles by
+  -- design. Excluded by name.
+  do $$
+  begin
+    if not exists (select 1 from pg_catalog.pg_roles where rolname = 'authenticator') then
+      create role authenticator noinherit;
+    end if;
+  end
+  $$;
+  grant anon, authenticated to authenticator;
+
+  select * from lint."0032_custom_role_inherits_api_role";  -- expect 0 rows
+
+  rollback to savepoint a;
+
+  -- POSITIVE EXAMPLE: custom roles are members of the API roles
+  create role lint_report_role;
+  create role lint_login_role login;
+  grant authenticated to lint_report_role;
+  grant anon, authenticated to lint_login_role;
+
+  select name, detail, cache_key from lint."0032_custom_role_inherits_api_role";  -- expect 3 rows
+
+  -- RESOLUTION: revoke the memberships
+  revoke authenticated from lint_report_role;
+  revoke anon, authenticated from lint_login_role;
+
+  select * from lint."0032_custom_role_inherits_api_role";  -- expect 0 rows
+
+rollback;
