@@ -1,0 +1,86 @@
+begin;
+  set local search_path = '';
+  -- BASELINE: 0 issues on an empty schema
+  select * from lint."0031_policy_function_not_executable";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  create table public.docs(
+    id int primary key,
+    owner_id uuid
+  );
+  alter table public.docs enable row level security;
+  create function public.is_owner(uid uuid) returns boolean
+  language sql stable as $$ select uid = auth.uid() $$;
+  savepoint a;
+  -- NEGATIVE EXAMPLE: the function keeps its default EXECUTE grant to PUBLIC,
+  -- so authenticated can run the policy expression. Must not fire.
+  create policy docs_select on public.docs
+    for select to authenticated
+    using (public.is_owner(owner_id));
+  select * from lint."0031_policy_function_not_executable";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  -- NEGATIVE EXAMPLE: execute is revoked from PUBLIC but granted back to the
+  -- role the policy applies to. Must not fire.
+  revoke execute on function public.is_owner(uuid) from public;
+  grant execute on function public.is_owner(uuid) to authenticated;
+  create policy docs_select on public.docs
+    for select to authenticated
+    using (public.is_owner(owner_id));
+  select * from lint."0031_policy_function_not_executable";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  -- NEGATIVE EXAMPLE: execute is revoked from authenticated, but RLS is
+  -- disabled so the policy is never evaluated. Must not fire.
+  revoke execute on function public.is_owner(uuid) from public;
+  create policy docs_select on public.docs
+    for select to authenticated
+    using (public.is_owner(owner_id));
+  alter table public.docs disable row level security;
+  select * from lint."0031_policy_function_not_executable";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  -- POSITIVE EXAMPLE: execute is revoked from PUBLIC and never granted to
+  -- authenticated. Every query by authenticated on public.docs now errors.
+  revoke execute on function public.is_owner(uuid) from public;
+  create policy docs_select on public.docs
+    for select to authenticated
+    using (public.is_owner(owner_id));
+  select name, detail, cache_key from lint."0031_policy_function_not_executable";  -- expect 1 row
+              name              |                                                                                               detail                                                                                                |                                           cache_key                                            
+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------
+ policy_function_not_executable | Policy `docs_select` on table `public.docs` calls function `public.is_owner(uid uuid)`, but role `authenticated` cannot execute it. Queries by this role on the table fail with a permission error. | policy_function_not_executable_public_docs_docs_select_public_is_owner(uid uuid)_authenticated
+(1 row)
+
+  -- POSITIVE EXAMPLE: a policy with no TO clause applies to PUBLIC, which is
+  -- expanded to anon and authenticated. Both roles are reported.
+  drop policy docs_select on public.docs;
+  create policy docs_all on public.docs
+    using (true)
+    with check (public.is_owner(owner_id));
+  select metadata->>'role' as role, metadata->>'command' as command from lint."0031_policy_function_not_executable";  -- expect 2 rows
+     role      | command 
+---------------+---------
+ anon          | ALL
+ authenticated | ALL
+(2 rows)
+
+  -- RESOLUTION: grant EXECUTE back to the roles the policy applies to
+  grant execute on function public.is_owner(uuid) to anon, authenticated;
+  select * from lint."0031_policy_function_not_executable";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+rollback;
