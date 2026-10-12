@@ -1,0 +1,75 @@
+begin;
+  set local search_path = '';
+  set local pgrst.db_schemas = 'public';
+  -- BASELINE: 0 issues on an empty schema
+  select * from lint."0033_column_grant_overridden_by_table_grant";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  -- The fixtures grant SELECT on new public tables to PUBLIC by default.
+  -- Revoke it so each case controls the table-level privileges itself.
+  create table public.profiles(
+    id int primary key,
+    display_name text,
+    email text
+  );
+  revoke all on table public.profiles from public, anon, authenticated;
+  savepoint a;
+  -- NEGATIVE EXAMPLE: column-level SELECT only, no table-level SELECT.
+  -- The grant really restricts the role to those columns. Must not fire.
+  grant select (id, display_name) on public.profiles to anon;
+  select * from lint."0033_column_grant_overridden_by_table_grant";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  -- NEGATIVE EXAMPLE: table-level SELECT only, no column-level entries.
+  grant select on public.profiles to anon;
+  select * from lint."0033_column_grant_overridden_by_table_grant";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  -- NEGATIVE EXAMPLE: table-level SELECT and column-level UPDATE are
+  -- different privileges, so neither overrides the other.
+  grant select on public.profiles to anon;
+  grant update (display_name) on public.profiles to anon;
+  select * from lint."0033_column_grant_overridden_by_table_grant";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  rollback to savepoint a;
+  -- POSITIVE EXAMPLE: the role holds table-level SELECT and a column-level
+  -- SELECT on two columns. The author meant to hide `email`, but the table
+  -- grant exposes it.
+  grant select on public.profiles to anon;
+  grant select (id, display_name) on public.profiles to anon;
+  select name, detail, cache_key from lint."0033_column_grant_overridden_by_table_grant";  -- expect 1 row
+                  name                  |                                                                                    detail                                                                                    |                             cache_key                              
+----------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------
+ column_grant_overridden_by_table_grant | Role `anon` has table-level `SELECT` on `public.profiles`, so its column-level `SELECT` grant on (id, display_name) does not restrict access. The role can use every column. | column_grant_overridden_by_table_grant_public_profiles_anon_SELECT
+(1 row)
+
+  rollback to savepoint a;
+  -- POSITIVE EXAMPLE: the table-level privilege is inherited from PUBLIC
+  -- rather than granted to the role directly. It still overrides.
+  grant select on public.profiles to public;
+  grant select (id, display_name) on public.profiles to anon;
+  select metadata->>'role' as role, metadata->>'privilege' as privilege from lint."0033_column_grant_overridden_by_table_grant";  -- expect 1 row
+ role | privilege 
+------+-----------
+ anon | SELECT
+(1 row)
+
+  -- RESOLUTION: drop the table-level privilege so the column grant restricts
+  revoke select on public.profiles from public;
+  select * from lint."0033_column_grant_overridden_by_table_grant";  -- expect 0 rows
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+rollback;
