@@ -38,6 +38,7 @@ nav:
       - Public Can Execute SECURITY DEFINER Function: '0028_anon_security_definer_function_executable.md'
       - Signed-In Users Can Execute SECURITY DEFINER Function: '0029_authenticated_security_definer_function_executable.md'
       - Autovacuum Disabled: '0030_autovacuum_disabled.md'
+      - SECURITY DEFINER Function Checks current_user: '0034_definer_function_uses_current_user.md'
 
 theme:
     name: 'material'
