@@ -37,7 +37,50 @@ begin;
 
   -- No issues, the policies are restrictive, which is fine
   select * from lint."0006_multiple_permissive_policies";
+  savepoint a;
 
+  -- Confirm that storage.objects will be scanned (#35)
+  create schema storage;
+  create table storage.objects(
+    id int primary key,
+    bucket_id text
+  );
 
+  alter table storage.objects enable row level security;
+
+  create policy avatars_read on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'avatars');
+
+  create policy documents_read on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'documents');
+
+  -- 1 entry for storage.objects, authenticated, SELECT
+  select * from lint."0006_multiple_permissive_policies";
+
+  rollback to savepoint a;
+
+  -- auth remains excluded: users do not author policies there
+  create table auth.sessions(
+    id int primary key
+  );
+
+  alter table auth.sessions enable row level security;
+
+  create policy sessions_read_1 on auth.sessions
+  for select
+  to authenticated
+  using (true);
+
+  create policy sessions_read_2 on auth.sessions
+  for select
+  to authenticated
+  using (true);
+
+  -- No issues
+  select * from lint."0006_multiple_permissive_policies";
 
 rollback;

@@ -91,4 +91,35 @@ begin;
     -- 1 entry for realtime.messages
     select * from lint."0003_auth_rls_initplan";
 
+    rollback to savepoint a;
+
+    -- Confirm that storage.objects will be scanned (#35)
+    create schema storage;
+    create table storage.objects( id int primary key, owner uuid);
+
+    create policy storage_owner_check on storage.objects
+    for select
+        to authenticated
+        using (owner = auth.uid());
+
+    alter table storage.objects enable row level security;
+
+    -- 1 entry for storage.objects
+    select * from lint."0003_auth_rls_initplan";
+
+    rollback to savepoint a;
+
+    -- auth remains excluded: users do not author policies there
+    create table auth.sessions( id int primary key, user_id uuid);
+
+    create policy auth_sessions_check on auth.sessions
+    for select
+        to authenticated
+        using (user_id = auth.uid());
+
+    alter table auth.sessions enable row level security;
+
+    -- No issues
+    select * from lint."0003_auth_rls_initplan";
+
 rollback;
