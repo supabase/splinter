@@ -284,7 +284,11 @@ where
             with_check like '%current\_setting(%)%'
             and lower(with_check) not like '%select current\_setting(%)%'
         )
-    ))
+    )
+order by
+    schema_name,
+    table_name,
+    policy_name)
 union all
 (
 select
