@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Dict
 
@@ -59,8 +60,38 @@ def load_sql_files(directory_path) -> Dict[str, str]:
     return queries
 
 
+# A CTE that several lints compute identically, between these markers. Each lint
+# keeps its own copy so it still runs on its own (tests, splinter.json); splinter.sql
+# lifts one materialized copy above the union so the work is done once.
+SHARED_CTE_RE = re.compile(
+    r"[ \t]*-- shared-cte-start: (\w+)\n(.*?)\n[ \t]*-- shared-cte-end\n", re.S
+)
+
+
+def hoist_shared_ctes(sql_map: Dict[str, str]) -> tuple[Dict[str, str], Dict[str, str]]:
+    shared: Dict[str, str] = {}
+    hoisted: Dict[str, str] = {}
+    for stem, query in sql_map.items():
+        for name, body in SHARED_CTE_RE.findall(query):
+            body = body.strip().rstrip(",")
+            if shared.setdefault(name, body) != body:
+                raise Exception(
+                    f"{stem}: shared CTE {name} differs from another lint's copy"
+                )
+        hoisted[stem] = SHARED_CTE_RE.sub("", query)
+    return shared, hoisted
+
+
 def compile_sql(sql_map: Dict[str, str]) -> str:
-    return HEADER + "\n" + "\nunion all\n".join(sql_map.values())
+    shared, sql_map = hoist_shared_ctes(sql_map)
+    with_clause = ""
+    if shared:
+        ctes = [
+            body.replace(f"{name} as (", f"{name} as materialized (", 1)
+            for name, body in shared.items()
+        ]
+        with_clause = "with\n" + ",\n".join(ctes) + "\n"
+    return HEADER + "\n" + with_clause + "\nunion all\n".join(sql_map.values())
 
 
 def main() -> None:

@@ -22,6 +22,19 @@ begin
     perform pg_catalog.set_config('splinter.public_buckets', buckets, true);
 end $$;
 
+with
+-- pg_policy with qual and with_check as pg_policies reports them
+    splinter_policies as materialized (
+        select
+            polname,
+            polrelid,
+            polcmd,
+            polpermissive,
+            polroles,
+            pg_catalog.pg_get_expr(polqual, polrelid) as qual,
+            pg_catalog.pg_get_expr(polwithcheck, polrelid) as with_check
+        from pg_catalog.pg_policy
+    )
 (
 with foreign_keys as (
     select
@@ -191,7 +204,8 @@ group by
     c.oid)
 union all
 (
-with policies as materialized (
+with
+    policies as materialized (
     select
         nsp.nspname as schema_name,
         pc.relname as table_name,
@@ -206,11 +220,10 @@ with policies as materialized (
             when 'd' then 'DELETE'
             when '*' then 'ALL'
         end as command,
-        -- what pg_policies reports as qual and with_check
-        pg_catalog.pg_get_expr(pa.polqual, pa.polrelid) as qual,
-        pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid) as with_check
+        pa.qual,
+        pa.with_check
     from
-        pg_catalog.pg_policy pa
+        splinter_policies pa
         join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
         join pg_catalog.pg_namespace nsp
@@ -788,16 +801,16 @@ where
     and pe.extnamespace::regnamespace::text = 'public')
 union all
 (
-with policies as (
+with
+    policies as (
     select
         nsp.nspname as schema_name,
         pc.relname as table_name,
         polname as policy_name,
-        -- what pg_policies reports as qual and with_check
-        pg_catalog.pg_get_expr(pa.polqual, pa.polrelid) as qual,
-        pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid) as with_check
+        pa.qual,
+        pa.with_check
     from
-        pg_catalog.pg_policy pa
+        splinter_policies pa
         join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
         join pg_catalog.pg_namespace nsp
@@ -1294,7 +1307,8 @@ union all
 (
 -- Detects RLS policies that are overly permissive (e.g., USING (true), USING (1=1))
 -- These policies effectively disable row-level security while giving a false sense of security
-with policies as (
+with
+    policies as (
     select
         nsp.nspname as schema_name,
         pc.relname as table_name,
@@ -1310,14 +1324,13 @@ with policies as (
             when 'd' then 'DELETE'
             when '*' then 'ALL'
         end as command,
-        -- what pg_policies reports as qual and with_check
-        pg_catalog.pg_get_expr(pa.polqual, pa.polrelid) as qual,
-        pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid) as with_check,
+        pa.qual,
+        pa.with_check,
         -- Normalize expressions by removing whitespace and lowercasing
-        replace(replace(replace(lower(coalesce(pg_catalog.pg_get_expr(pa.polqual, pa.polrelid), '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_qual,
-        replace(replace(replace(lower(coalesce(pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid), '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_with_check
+        replace(replace(replace(lower(coalesce(pa.qual, '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_qual,
+        replace(replace(replace(lower(coalesce(pa.with_check, '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_with_check
     from
-        pg_catalog.pg_policy pa
+        splinter_policies pa
         join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
         join pg_catalog.pg_namespace nsp
