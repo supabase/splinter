@@ -189,7 +189,7 @@ group by
     c.oid)
 union all
 (
-with policies as (
+with policies as materialized (
     select
         nsp.nspname as schema_name,
         pb.tablename as table_name,

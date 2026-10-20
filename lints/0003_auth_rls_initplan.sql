@@ -1,6 +1,6 @@
 create view lint."0003_auth_rls_initplan" as
 
-with policies as (
+with policies as materialized (
     select
         nsp.nspname as schema_name,
         pb.tablename as table_name,
