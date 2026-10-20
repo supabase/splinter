@@ -28,7 +28,9 @@ index_ as (
     select
         pi.indrelid as table_oid,
         indexrelid::regclass as index_,
-        string_to_array(indkey::text, ' ')::smallint[] as col_attnums
+        -- int2vector -> int2[] keeps its 0 lower bound; slices are rebased to 1, so they
+        -- compare equal to the 1-based conkey
+        pi.indkey::smallint[] as col_attnums
     from
         pg_catalog.pg_index pi
     where
@@ -60,7 +62,7 @@ from
     foreign_keys fk
     left join index_ idx
         on fk.table_oid = idx.table_oid
-        and fk.col_attnums = idx.col_attnums[1:array_length(fk.col_attnums, 1)]
+        and fk.col_attnums = idx.col_attnums[0:array_length(fk.col_attnums, 1) - 1]
     left join pg_catalog.pg_depend dep
         on idx.table_oid = dep.objid
         and dep.deptype = 'e'
