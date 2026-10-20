@@ -61,7 +61,9 @@ $fn$;
 
 
 def psql(sql, user, check=True, variables=None, single_transaction=False):
-    args = ["psql", "-X", "-q", "-At", "-F", "|", "-U", user] + (["--single-transaction"] if single_transaction else [])
+    args = ["psql", "-X", "-q", "-At", "-F", "|", "-U", user] + (
+        ["--single-transaction"] if single_transaction else []
+    )
     if check:
         args += ["-v", "ON_ERROR_STOP=1"]
     for k, v in (variables or {}).items():
@@ -74,7 +76,9 @@ def psql(sql, user, check=True, variables=None, single_transaction=False):
 
 def load_lints(checkout):
     """Per-lint query text, compiled the way that checkout's bin/compile.py compiles it."""
-    spec = importlib.util.spec_from_file_location(f"compile_{abs(hash(checkout))}", checkout / "bin" / "compile.py")
+    spec = importlib.util.spec_from_file_location(
+        f"compile_{abs(hash(checkout))}", checkout / "bin" / "compile.py"
+    )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     lints = dict(mod.load_sql_files(checkout / "lints"))
@@ -94,13 +98,20 @@ def build_fixture(lo, hi, admin):
 
 def apply_project(migrations, user, admin):
     """Apply a project's migrations in order. A failing file is skipped and counted: real
-    projects lean on services (auth, storage) that the bare image only partly provides."""
+    projects lean on services (auth, storage) that the bare image only partly provides.
+    """
     psql((PROJECTS / "services-stub.sql").read_text(), admin)
     failed = []
     files = sorted(Path(migrations).glob("*.sql"))
     for f in files:
         # One transaction per file, so a failed migration leaves nothing half-applied.
-        proc = psql(f.read_text(), user, check=False, variables={"ON_ERROR_STOP": 1}, single_transaction=True)
+        proc = psql(
+            f.read_text(),
+            user,
+            check=False,
+            variables={"ON_ERROR_STOP": 1},
+            single_transaction=True,
+        )
         if proc.returncode != 0:
             errors = [l for l in proc.stderr.splitlines() if "ERROR" in l] or ["failed"]
             failed.append(f"{f.name}: {errors[0].strip()}")
@@ -145,9 +156,13 @@ def round_script(sides, scenarios, flip):
             order.reverse()
         for side, (header, lints) in order:
             if scenario in lints:
-                parts.append(txn(header,
-                    f"select '{side}', '{scenario}', ms, n, digest "
-                    f"from splinter_bench.run({QUOTE}{lints[scenario]}{QUOTE});"))
+                parts.append(
+                    txn(
+                        header,
+                        f"select '{side}', '{scenario}', ms, n, digest "
+                        f"from splinter_bench.run({QUOTE}{lints[scenario]}{QUOTE});",
+                    )
+                )
     return "".join(parts)
 
 
@@ -157,7 +172,12 @@ def plan_script(sides, scenarios):
         for side, (header, lints) in sides.items():
             if scenario in lints:
                 parts.append(f"\\echo {MARK}{side}|{scenario}\n")
-                parts.append(txn(header, f"explain (analyze, buffers, format json) {lints[scenario]};"))
+                parts.append(
+                    txn(
+                        header,
+                        f"explain (analyze, buffers, format json) {lints[scenario]};",
+                    )
+                )
     return "".join(parts)
 
 
@@ -172,8 +192,11 @@ def repeated_scans(node, found):
     loops = node.get("Actual Loops", 1)
     rel = node.get("Relation Name", "")
     if rel.startswith("pg_") and loops > 1 and own / loops > REPEATED_SCAN_BLOCKS:
-        found.append(f"{node['Node Type']} on {rel}" + (f" using {node['Index Name']}" if "Index Name" in node else "")
-                     + f": {loops} loops × {own / loops:.0f} blocks")
+        found.append(
+            f"{node['Node Type']} on {rel}"
+            + (f" using {node['Index Name']}" if "Index Name" in node else "")
+            + f": {loops} loops × {own / loops:.0f} blocks"
+        )
     for c in children:
         repeated_scans(c, found)
     return found
@@ -198,7 +221,9 @@ def collect_plans(sides, scenarios, user, runs):
     for cells in runs.values():
         for cell in cells.values():
             if "buffers" not in cell and not cell["error"]:
-                cell["error"] = "EXPLAIN failed: " + (proc.stderr.strip()[-300:] or "no plan")
+                cell["error"] = "EXPLAIN failed: " + (
+                    proc.stderr.strip()[-300:] or "no plan"
+                )
 
 
 def measure(args):
@@ -212,8 +237,11 @@ def measure(args):
         label, migrations = args.project.split("=", 1)
         t0 = time.monotonic()
         applied = apply_project(migrations, args.user, args.admin_user)
-        print(f"[{label}] {applied['migrations'] - len(applied['failed'])}/{applied['migrations']} migrations "
-              f"applied in {time.monotonic() - t0:.0f}s", file=sys.stderr)
+        print(
+            f"[{label}] {applied['migrations'] - len(applied['failed'])}/{applied['migrations']} migrations "
+            f"applied in {time.monotonic() - t0:.0f}s",
+            file=sys.stderr,
+        )
         stages = [(label, lambda: applied)]
     else:
         stages = []
@@ -229,7 +257,8 @@ def measure(args):
             built = int(n)
 
     result = {
-        "target": args.target or (args.project.split("=")[0] if args.project else "synthetic"),
+        "target": args.target
+        or (args.project.split("=")[0] if args.project else "synthetic"),
         "pg_version": psql("show server_version", args.user).stdout.strip(),
         "rounds": args.rounds,
         "sizes": {},
@@ -237,14 +266,24 @@ def measure(args):
     for label, build in stages:
         t0 = time.monotonic()
         source = build()
-        print(f"[{label}] schema ready in {time.monotonic() - t0:.0f}s", file=sys.stderr)
+        print(
+            f"[{label}] schema ready in {time.monotonic() - t0:.0f}s", file=sys.stderr
+        )
 
-        runs = {s: {side: {"ms": [], "n": None, "digest": None, "error": None} for side in sides if s in sides[side][1]}
-                for s in scenarios}
+        runs = {
+            s: {
+                side: {"ms": [], "n": None, "digest": None, "error": None}
+                for side in sides
+                if s in sides[side][1]
+            }
+            for s in scenarios
+        }
         # Round 0 warms caches and is discarded.
         for r in range(args.rounds + 1):
             t0 = time.monotonic()
-            proc = psql(round_script(sides, scenarios, flip=r % 2 == 1), args.user, check=False)
+            proc = psql(
+                round_script(sides, scenarios, flip=r % 2 == 1), args.user, check=False
+            )
             seen = set()
             for line in proc.stdout.splitlines():
                 side, scenario, ms, count, digest = line.split("|")
@@ -259,9 +298,16 @@ def measure(args):
                 for side, cell in cells.items():
                     if (side, scenario) not in seen:
                         cell["error"] = proc.stderr.strip()[-500:] or "no result"
-            print(f"[{label}] round {r}/{args.rounds} in {time.monotonic() - t0:.1f}s", file=sys.stderr)
+            print(
+                f"[{label}] round {r}/{args.rounds} in {time.monotonic() - t0:.1f}s",
+                file=sys.stderr,
+            )
         collect_plans(sides, scenarios, args.user, runs)
-        result["sizes"][label] = {"source": source, "stats": catalog_stats(args.user), "scenarios": runs}
+        result["sizes"][label] = {
+            "source": source,
+            "stats": catalog_stats(args.user),
+            "scenarios": runs,
+        }
 
     Path(args.out).write_text(json.dumps(result, indent=2))
 
@@ -270,7 +316,9 @@ def fetch(args):
     project = json.loads((PROJECTS / "projects.json").read_text())[args.name]
     dest = Path(args.dest)
     dest.mkdir(parents=True, exist_ok=True)
-    git = lambda *a: subprocess.run(["git", "-C", str(dest), *a], check=True, capture_output=True)
+    git = lambda *a: subprocess.run(
+        ["git", "-C", str(dest), *a], check=True, capture_output=True
+    )
     git("init", "-q")
     git("remote", "add", "origin", f"https://github.com/{project['repo']}.git")
     git("sparse-checkout", "set", "--no-cone", project["migrations"])
@@ -281,14 +329,21 @@ def fetch(args):
 
 def judge(base, head):
     """Every (status, detail) that applies to one scenario at one size; [("same", "")] if none.
-    Statuses are independent so that waiving one (say, a results change) cannot hide another."""
+    Statuses are independent so that waiving one (say, a results change) cannot hide another.
+    """
     if head is None:
         return [("removed", "")]
     if head["error"]:
         return [("error", head["error"])]
-    base_scans = set() if base is None or base["error"] else {s.split(":")[0] for s in base.get("repeated_scans", [])}
+    base_scans = (
+        set()
+        if base is None or base["error"]
+        else {s.split(":")[0] for s in base.get("repeated_scans", [])}
+    )
     found = []
-    new_scans = [s for s in head.get("repeated_scans", []) if s.split(":")[0] not in base_scans]
+    new_scans = [
+        s for s in head.get("repeated_scans", []) if s.split(":")[0] not in base_scans
+    ]
     if new_scans:
         found.append(("plan", "; ".join(new_scans)))
     if base is None:
@@ -301,9 +356,17 @@ def judge(base, head):
     if hb >= bb * BUFFERS_RATIO and hb - bb >= BUFFERS_MIN:
         found.append(("buffers", f"{bb:,} → {hb:,} blocks"))
     b, h = statistics.median(base["ms"]), statistics.median(head["ms"])
-    if h >= b * REGRESSION_RATIO and h - b >= REGRESSION_MIN_MS and min(head["ms"]) > max(base["ms"]):
+    if (
+        h >= b * REGRESSION_RATIO
+        and h - b >= REGRESSION_MIN_MS
+        and min(head["ms"]) > max(base["ms"])
+    ):
         found.append(("slower", ""))
-    elif b >= h * REGRESSION_RATIO and b - h >= REGRESSION_MIN_MS and min(base["ms"]) > max(head["ms"]):
+    elif (
+        b >= h * REGRESSION_RATIO
+        and b - h >= REGRESSION_MIN_MS
+        and min(base["ms"]) > max(head["ms"])
+    ):
         found.append(("faster", ""))
     return found or [("same", "")]
 
@@ -321,7 +384,13 @@ ICONS = {
     "removed": "removed",
 }
 # Which label waives which status. Errors on head are never waived.
-WAIVERS = {"slower": "perf", "buffers": "perf", "plan": "perf", "base-error": "perf", "results-changed": "results"}
+WAIVERS = {
+    "slower": "perf",
+    "buffers": "perf",
+    "plan": "perf",
+    "base-error": "perf",
+    "results-changed": "results",
+}
 
 
 def fmt_ms(cell):
@@ -334,15 +403,25 @@ def fmt_buf(cell):
 
 def describe(size):
     st, src = size["stats"], size["source"]
-    what = (f"{src['fixture_tables']} fixture tables" if "fixture_tables" in src
-            else f"{src['migrations'] - len(src['failed'])}/{src['migrations']} migrations applied")
-    return (f"{what}: {st['tables']} tables, {st['views']} views, {st['indexes']} indexes, "
-            f"{st['functions']} functions, {st['policies']} policies, {st['pg_depend']:,} pg_depend rows")
+    what = (
+        f"{src['fixture_tables']} fixture tables"
+        if "fixture_tables" in src
+        else f"{src['migrations'] - len(src['failed'])}/{src['migrations']} migrations applied"
+    )
+    return (
+        f"{what}: {st['tables']} tables, {st['views']} views, {st['indexes']} indexes, "
+        f"{st['functions']} functions, {st['policies']} policies, {st['pg_depend']:,} pg_depend rows"
+    )
 
 
 def compare(args):
     results = [json.loads(Path(p).read_text()) for p in args.results]
-    has_base = any("base" in cells for d in results for s in d["sizes"].values() for cells in s["scenarios"].values())
+    has_base = any(
+        "base" in cells
+        for d in results
+        for s in d["sizes"].values()
+        for cells in s["scenarios"].values()
+    )
     failures = {"perf": [], "results": [], "error": []}
     lines = [
         "<!-- splinter-bench -->\n## splinter lint benchmark\n",
@@ -352,11 +431,18 @@ def compare(args):
         f"or its median is ≥{REGRESSION_RATIO - 1:.0%} and ≥{REGRESSION_MIN_MS:g} ms slower with every head round slower than every base round.\n",
     ]
     details = []
-    header = ("| lint | rows | base ms | head ms | Δ | buffers | |\n|---|--:|--:|--:|--:|--:|---|" if has_base
-              else "| lint | rows | ms | buffers | |\n|---|--:|--:|--:|---|")
+    header = (
+        "| lint | rows | base ms | head ms | Δ | buffers | |\n|---|--:|--:|--:|--:|--:|---|"
+        if has_base
+        else "| lint | rows | ms | buffers | |\n|---|--:|--:|--:|---|"
+    )
     for data in results:
         for label, size in data["sizes"].items():
-            title = f"{data['target']} / {label}" if data["target"] == "synthetic" else data["target"]
+            title = (
+                f"{data['target']} / {label}"
+                if data["target"] == "synthetic"
+                else data["target"]
+            )
             lines.append(f"\n### {title}\n{describe(size)}\n")
             rows, flagged = [], []
             scenarios = size["scenarios"]
@@ -364,7 +450,11 @@ def compare(args):
                 base, head = scenarios[name].get("base"), scenarios[name].get("head")
                 key = f"{title}/{name}"
                 if not has_base:
-                    status = "error" if head["error"] else ("plan" if head.get("repeated_scans") else "same")
+                    status = (
+                        "error"
+                        if head["error"]
+                        else ("plan" if head.get("repeated_scans") else "same")
+                    )
                     detail = head["error"] or "; ".join(head.get("repeated_scans", []))
                     if head["error"]:
                         failures["error"].append(key)
@@ -373,13 +463,26 @@ def compare(args):
                     continue
                 verdicts = judge(base, head)
                 delta = "–"
-                if base and head and base["ms"] and head["ms"] and statistics.median(base["ms"]):
+                if (
+                    base
+                    and head
+                    and base["ms"]
+                    and head["ms"]
+                    and statistics.median(base["ms"])
+                ):
                     b, h = statistics.median(base["ms"]), statistics.median(head["ms"])
                     delta = f"{(h - b) / b:+.0%}"
-                buf = f"{fmt_buf(base)} → {fmt_buf(head)}" if base and head and base.get("buffers") != head.get("buffers") else fmt_buf(head or base)
-                row = (f"| `{name}` | {head['n'] if head and head['n'] is not None else '–'} | {fmt_ms(base)} | "
-                       f"{fmt_ms(head)} | {delta} | {buf} | "
-                       + "<br>".join(f"{ICONS[s]} {d}".strip() for s, d in verdicts) + " |")
+                buf = (
+                    f"{fmt_buf(base)} → {fmt_buf(head)}"
+                    if base and head and base.get("buffers") != head.get("buffers")
+                    else fmt_buf(head or base)
+                )
+                row = (
+                    f"| `{name}` | {head['n'] if head and head['n'] is not None else '–'} | {fmt_ms(base)} | "
+                    f"{fmt_ms(head)} | {delta} | {buf} | "
+                    + "<br>".join(f"{ICONS[s]} {d}".strip() for s, d in verdicts)
+                    + " |"
+                )
                 rows.append(row)
                 if verdicts != [("same", "")] or name == "all":
                     flagged.append(row)
@@ -394,8 +497,11 @@ def compare(args):
             else:
                 lines += [header, *rows]
             if size["source"].get("failed"):
-                lines.append(f"\n<details><summary>{len(size['source']['failed'])} migrations failed to apply</summary>\n\n"
-                             + "\n".join(f"- `{f}`" for f in size["source"]["failed"]) + "\n</details>\n")
+                lines.append(
+                    f"\n<details><summary>{len(size['source']['failed'])} migrations failed to apply</summary>\n\n"
+                    + "\n".join(f"- `{f}`" for f in size["source"]["failed"])
+                    + "\n</details>\n"
+                )
     if details:
         lines += ["\n<details><summary>All lints</summary>\n", *details, "\n</details>"]
 
@@ -403,10 +509,19 @@ def compare(args):
     if failures["error"]:
         blocking.append(f"lints failed on head: {', '.join(failures['error'])}")
     if failures["results"] and not args.accept_results:
-        blocking.append(f"results changed: {', '.join(failures['results'])} (add the `lint-results-changed` label if intended)")
+        blocking.append(
+            f"results changed: {', '.join(failures['results'])} (add the `lint-results-changed` label if intended)"
+        )
     if failures["perf"] and not args.accept_perf:
-        blocking.append(f"performance: {', '.join(failures['perf'])} (add the `perf-accepted` label if intended)")
-    lines.insert(1, "**Verdict:** " + ("🔴 " + "; ".join(blocking) if blocking else "✅ no regression") + "\n")
+        blocking.append(
+            f"performance: {', '.join(failures['perf'])} (add the `perf-accepted` label if intended)"
+        )
+    lines.insert(
+        1,
+        "**Verdict:** "
+        + ("🔴 " + "; ".join(blocking) if blocking else "✅ no regression")
+        + "\n",
+    )
     report = "\n".join(lines) + "\n"
     if args.markdown:
         Path(args.markdown).write_text(report)
@@ -415,22 +530,46 @@ def compare(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     sub = parser.add_subparsers(dest="cmd", required=True)
-    m = sub.add_parser("measure", help="load a schema and time the lints (connects with the PG* env vars)")
-    m.add_argument("--head", default=".", help="checkout whose lints are measured (default: .)")
-    m.add_argument("--base", help="checkout to compare against; omit for absolute numbers only")
-    m.add_argument("--sizes", default=DEFAULT_SIZES, help=f"synthetic fixture, label=n_tables ascending (default: {DEFAULT_SIZES})")
-    m.add_argument("--project", help="label=path/to/migrations: apply a real project's migrations instead of the fixture")
-    m.add_argument("--target", help="name of this run in the report (default: synthetic or the project label)")
+    m = sub.add_parser(
+        "measure",
+        help="load a schema and time the lints (connects with the PG* env vars)",
+    )
+    m.add_argument(
+        "--head", default=".", help="checkout whose lints are measured (default: .)"
+    )
+    m.add_argument(
+        "--base", help="checkout to compare against; omit for absolute numbers only"
+    )
+    m.add_argument(
+        "--sizes",
+        default=DEFAULT_SIZES,
+        help=f"synthetic fixture, label=n_tables ascending (default: {DEFAULT_SIZES})",
+    )
+    m.add_argument(
+        "--project",
+        help="label=path/to/migrations: apply a real project's migrations instead of the fixture",
+    )
+    m.add_argument(
+        "--target",
+        help="name of this run in the report (default: synthetic or the project label)",
+    )
     m.add_argument("--rounds", type=int, default=5)
     m.add_argument("--user", default="postgres")
     m.add_argument("--admin-user", default="supabase_admin")
     m.add_argument("--out", default="bench-results.json")
-    f = sub.add_parser("fetch", help="download a project from projects/projects.json at its pinned commit")
+    f = sub.add_parser(
+        "fetch",
+        help="download a project from projects/projects.json at its pinned commit",
+    )
     f.add_argument("name")
     f.add_argument("--dest", required=True)
-    c = sub.add_parser("compare", help="report on measure outputs; exits 1 on a regression")
+    c = sub.add_parser(
+        "compare", help="report on measure outputs; exits 1 on a regression"
+    )
     c.add_argument("results", nargs="+")
     c.add_argument("--markdown", help="also write the report here")
     c.add_argument("--accept-perf", action="store_true")
