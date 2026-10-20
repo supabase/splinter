@@ -82,7 +82,9 @@ def load_lints(checkout):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     lints = dict(mod.load_sql_files(checkout / "lints"))
-    lints["all"] = "\nunion all\n".join(lints.values())
+    # What splinter.sql runs, minus the header (sent separately): each checkout's own
+    # compile_sql, so changes to how lints are combined are measured too.
+    lints["all"] = mod.compile_sql(dict(lints)).removeprefix(mod.HEADER)
     return mod.HEADER, lints
 
 
