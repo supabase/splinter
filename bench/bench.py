@@ -357,6 +357,8 @@ def judge(base, head):
     hb, bb = head["buffers"], base["buffers"]
     if hb >= bb * BUFFERS_RATIO and hb - bb >= BUFFERS_MIN:
         found.append(("buffers", f"{bb:,} → {hb:,} blocks"))
+    elif bb >= hb * BUFFERS_RATIO and bb - hb >= BUFFERS_MIN:
+        found.append(("fewer-buffers", ""))
     b, h = statistics.median(base["ms"]), statistics.median(head["ms"])
     if (
         h >= b * REGRESSION_RATIO
@@ -376,6 +378,7 @@ def judge(base, head):
 ICONS = {
     "same": "",
     "faster": "🚀 faster",
+    "fewer-buffers": "🚀 fewer buffers",
     "slower": "🔴 slower",
     "buffers": "🔴 more buffers",
     "plan": "🔴 repeated catalog scan",
@@ -396,7 +399,10 @@ WAIVERS = {
 
 
 def fmt_ms(cell):
-    return f"{statistics.median(cell['ms']):,.1f}" if cell and cell["ms"] else "–"
+    if not cell or not cell["ms"]:
+        return "–"
+    ms = cell["ms"]
+    return f"{statistics.median(ms):,.1f} ({min(ms):,.1f}–{max(ms):,.1f})"
 
 
 def fmt_buf(cell):
@@ -427,12 +433,11 @@ def compare(args):
     failures = {"perf": [], "results": [], "error": []}
     lines = [
         "<!-- splinter-bench -->\n## splinter lint benchmark\n",
-        f"supabase/postgres {results[0]['pg_version']}, median of {results[0]['rounds']} interleaved rounds per side. "
+        f"supabase/postgres {results[0]['pg_version']}, median (min–max) of {results[0]['rounds']} interleaved rounds per side. "
         f"Fails when a lint's rows change (count + digest of sorted rows), it errors, its plan gains a catalog scan "
         f"repeated per row (>{REPEATED_SCAN_BLOCKS} blocks per loop), it reads ≥{BUFFERS_RATIO - 1:.0%} and ≥{BUFFERS_MIN} more buffers, "
         f"or its median is ≥{REGRESSION_RATIO - 1:.0%} and ≥{REGRESSION_MIN_MS:g} ms slower with every head round slower than every base round.\n",
     ]
-    details = []
     header = (
         "| lint | rows | base ms | head ms | Δ | buffers | |\n|---|--:|--:|--:|--:|--:|---|"
         if has_base
@@ -485,7 +490,6 @@ def compare(args):
                     + "<br>".join(f"{ICONS[s]} {d}".strip() for s, d in verdicts)
                     + " |"
                 )
-                rows.append(row)
                 if verdicts != [("same", "")] or name == "all":
                     flagged.append(row)
                 for status, _ in verdicts:
@@ -494,8 +498,12 @@ def compare(args):
                     elif status in WAIVERS and key not in failures[WAIVERS[status]]:
                         failures[WAIVERS[status]].append(key)
             if has_base:
+                unchanged = len(scenarios) - len(flagged)
                 lines += [header, *flagged, ""]
-                details += [f"\n**{title}**\n", header, *rows]
+                if unchanged:
+                    lines.append(
+                        f"{unchanged} lints within noise (rows identical, time and buffers inside the bounds above).\n"
+                    )
             else:
                 lines += [header, *rows]
             if size["source"].get("failed"):
@@ -504,9 +512,6 @@ def compare(args):
                     + "\n".join(f"- `{f}`" for f in size["source"]["failed"])
                     + "\n</details>\n"
                 )
-    if details:
-        lines += ["\n<details><summary>All lints</summary>\n", *details, "\n</details>"]
-
     blocking = []
     if failures["error"]:
         blocking.append(f"lints failed on head: {', '.join(failures['error'])}")
