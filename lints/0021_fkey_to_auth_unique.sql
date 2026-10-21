@@ -33,9 +33,11 @@ from
         on c_rel.relnamespace = n.oid
     join pg_catalog.pg_class ref_rel
         on c.confrelid = ref_rel.oid
+    join pg_catalog.pg_namespace cn
+        on ref_rel.relnamespace = cn.oid
     join pg_catalog.pg_index i
         on c.conindid = i.indexrelid
 where c.contype = 'f'
-    and ref_rel.relnamespace = pg_catalog.to_regnamespace('auth') -- null, so no rows, if auth is missing
+    and cn.nspname = 'auth'
     and i.indisunique
     and not i.indisprimary;
