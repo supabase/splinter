@@ -283,6 +283,7 @@ Then check:
 - [ ] `docs/XXXX_<name>.md` exists
 - [ ] `test/sql/XXXX_<name>.sql` exists
 - [ ] `test/expected/XXXX_<name>.out` exists
+- [ ] `bench/fixture/` creates objects the new lint reports, so the benchmark measures it on a non-empty result
 
 ---
 
