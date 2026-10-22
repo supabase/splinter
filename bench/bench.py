@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 FIXTURE = HERE / "fixture"
 PROJECTS = HERE / "projects"
 CHUNK = 200
-DEFAULT_SIZES = "small=20,medium=300,large=2000"
+DEFAULT_SIZES = "large=2000"
 EXPOSED_SCHEMAS = "public, app, billing, pgmq_public, graphql_public"
 QUOTE = "$splinter_bench$"
 MARK = "@@splinter_bench@@"
@@ -302,7 +302,10 @@ def measure(args):
                 f"[{label}] round {r}/{args.rounds} in {time.monotonic() - t0:.1f}s",
                 file=sys.stderr,
             )
-        collect_plans(sides, scenarios, args.user, runs)
+        # With no timed rounds the target only checks rows; small schemas give
+        # buffer and plan deltas too small to judge.
+        if args.rounds:
+            collect_plans(sides, scenarios, args.user, runs)
         result["sizes"][label] = {
             "source": source,
             "stats": catalog_stats(args.user),
@@ -352,6 +355,8 @@ def judge(base, head):
         return found + [("base-error", base["error"])]
     if (base["n"], base["digest"]) != (head["n"], head["digest"]):
         found.append(("results-changed", f"{base['n']} → {head['n']} rows"))
+    if not head["ms"]:
+        return found or [("same", "")]
     hb, bb = head["buffers"], base["buffers"]
     if hb >= bb * BUFFERS_RATIO and hb - bb >= BUFFERS_MIN:
         found.append(("buffers", f"{bb:,} → {hb:,} blocks"))
@@ -431,7 +436,7 @@ def compare(args):
     failures = {"perf": [], "results": [], "error": []}
     lines = [
         "<!-- splinter-bench -->\n## splinter lint benchmark\n",
-        f"supabase/postgres {results[0]['pg_version']}, median (min–max) of {results[0]['rounds']} interleaved rounds per side. "
+        f"supabase/postgres {results[0]['pg_version']}, median (min–max) of {max(d['rounds'] for d in results)} interleaved rounds per side. "
         f"Fails when a lint's rows change (count + digest of sorted rows), it errors, its plan gains a catalog scan "
         f"repeated per row (>{REPEATED_SCAN_BLOCKS} blocks per loop), it reads ≥{BUFFERS_RATIO - 1:.0%} and ≥{BUFFERS_MIN} more buffers, "
         f"or its median is ≥{REGRESSION_RATIO - 1:.0%} and ≥{REGRESSION_MIN_MS:g} ms slower with every head round slower than every base round.\n",
@@ -448,7 +453,10 @@ def compare(args):
                 if data["target"] == "synthetic"
                 else data["target"]
             )
-            lines.append(f"\n### {title}\n{describe(size)}\n")
+            timed = data["rounds"] > 0
+            lines.append(
+                f"\n### {title}{'' if timed else ' (rows only)'}\n{describe(size)}\n"
+            )
             rows, flagged = [], []
             scenarios = size["scenarios"]
             for name in sorted(scenarios, key=lambda s: (s != "all", s)):
@@ -488,7 +496,7 @@ def compare(args):
                     + "<br>".join(f"{ICONS[s]} {d}".strip() for s, d in verdicts)
                     + " |"
                 )
-                if verdicts != [("same", "")] or name == "all":
+                if verdicts != [("same", "")] or (name == "all" and timed):
                     flagged.append(row)
                 for status, _ in verdicts:
                     if status == "error":
@@ -497,8 +505,11 @@ def compare(args):
                         failures[WAIVERS[status]].append(key)
             if has_base:
                 unchanged = len(scenarios) - len(flagged)
-                lines += [header, *flagged, ""]
-                if unchanged:
+                if flagged:
+                    lines += [header, *flagged, ""]
+                if not timed:
+                    lines.append(f"{unchanged} queries return identical rows.\n")
+                elif unchanged:
                     lines.append(
                         f"{unchanged} lints within noise (rows identical, time and buffers inside the bounds above).\n"
                     )
@@ -562,7 +573,12 @@ def main():
         "--target",
         help="name of this run in the report (default: synthetic or the project label)",
     )
-    m.add_argument("--rounds", type=int, default=5)
+    m.add_argument(
+        "--rounds",
+        type=int,
+        default=5,
+        help="timed rounds per side; 0 only checks errors and rows (default: 5)",
+    )
     m.add_argument("--user", default="postgres")
     m.add_argument("--admin-user", default="supabase_admin")
     m.add_argument("--out", default="bench-results.json")

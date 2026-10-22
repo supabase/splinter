@@ -4,7 +4,7 @@ Times every lint, and the full `splinter.sql` union, on Supabase schemas, compar
 
 ## Targets
 
-- **synthetic**: `fixture/` built at 20, 300 and 2,000 tables. The sizes are cumulative, so one database serves all three. Every lint has findings at every size.
+- **synthetic**: `fixture/` built at 2,000 tables, a scaling stress test that surfaces lints whose cost grows faster than the catalog. Every lint has findings. `--sizes small=20,large=2000` builds several sizes cumulatively on one database.
 - **Real projects**: the open-source apps from the dogfooding corpus, fetched from GitHub at the commits pinned in `projects/projects.json`. Their `supabase/migrations` are applied in order on the bare image, after `projects/services-stub.sql` stands in for the tables storage-api, GoTrue and realtime would create. Each migration runs in one transaction; one that still fails is rolled back, skipped and listed in the report.
 
 | target | tables | policies | `pg_depend` rows | migrations applied |
@@ -17,6 +17,8 @@ Times every lint, and the full `splinter.sql` union, on Supabase schemas, compar
 | basejump | 82 | 13 | 2k | 4 / 4 |
 
 Table counts include the image's own schemas.
+
+Only the large targets are timed. The small projects run with `--rounds 0`: their full run takes 50–100 ms, mostly fixed overhead, and per-lint differences stay inside runner noise, so they only check that every lint returns the same rows as base. Their real-world SQL still catches rewrites that break on patterns the fixture lacks.
 
 ## What fails the check
 
@@ -34,7 +36,7 @@ Buffer counts are deterministic, so they catch plan regressions that are too sma
 ## When you change the benchmark
 
 - When you add a lint, extend `fixture/` so it has findings.
-- When you add a project, pin a commit in `projects/projects.json` and add it to the matrix in `.github/workflows/bench.yml`.
+- When you add a project, pin a commit in `projects/projects.json` and add it to the matrix in `.github/workflows/bench.yml`, timed (`rounds: 5`) only if it is large enough for lint timings to move beyond noise.
 
 ## Run locally
 

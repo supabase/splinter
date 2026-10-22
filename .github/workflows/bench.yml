@@ -27,7 +27,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [synthetic, basejump, atomic-crm, wacrm, grida, carbon]
+        # Small schemas only check rows: their timings sit inside runner noise.
+        include:
+          - { target: synthetic, rounds: 5 }
+          - { target: carbon, rounds: 5 }
+          - { target: deskcomm, rounds: 5 }
+          - { target: basejump, rounds: 0 }
+          - { target: atomic-crm, rounds: 0 }
+          - { target: wacrm, rounds: 0 }
+          - { target: grida, rounds: 0 }
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -66,9 +74,10 @@ jobs:
       - name: Measure
         env:
           TARGET: ${{ matrix.target }}
+          ROUNDS: ${{ matrix.rounds }}
           BASE: ${{ github.event_name == 'pull_request' && 'base' || '' }}
         run: |
-          args=(--head head --out "results-$TARGET.json")
+          args=(--head head --rounds "$ROUNDS" --out "results-$TARGET.json")
           if [ -n "$BASE" ]; then args+=(--base "$BASE"); fi
           if [ "$TARGET" != synthetic ]; then
             migrations=$(python head/bench/bench.py fetch "$TARGET" --dest "project-$TARGET")
