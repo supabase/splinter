@@ -189,10 +189,10 @@ group by
     c.oid)
 union all
 (
-with policies as (
+with policies as materialized (
     select
         nsp.nspname as schema_name,
-        pb.tablename as table_name,
+        pc.relname as table_name,
         pc.relrowsecurity as is_rls_active,
         polname as policy_name,
         polpermissive as is_permissive, -- if not, then restrictive
@@ -204,18 +204,15 @@ with policies as (
             when 'd' then 'DELETE'
             when '*' then 'ALL'
         end as command,
-        qual,
-        with_check
+        -- what pg_policies reports as qual and with_check
+        pg_catalog.pg_get_expr(pa.polqual, pa.polrelid) as qual,
+        pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid) as with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
         join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_catalog.pg_policies pb
-            on pc.relname = pb.tablename
-            and nsp.nspname = pb.schemaname
-            and pa.polname = pb.policyname
 )
 select
     'auth_rls_initplan' as name,
@@ -287,7 +284,11 @@ where
             with_check like '%current\_setting(%)%'
             and lower(with_check) not like '%select current\_setting(%)%'
         )
-    ))
+    )
+order by
+    schema_name,
+    table_name,
+    policy_name)
 union all
 (
 select
@@ -317,8 +318,6 @@ from
     pg_catalog.pg_class pgc
     join pg_catalog.pg_namespace pgns
         on pgns.oid = pgc.relnamespace
-    left join pg_catalog.pg_index pgi
-        on pgi.indrelid = pgc.oid
     left join pg_catalog.pg_depend dep
         on pgc.oid = dep.objid
         and dep.deptype = 'e'
@@ -329,12 +328,12 @@ where
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude tables owned by extensions
-group by
-    pgc.oid,
-    pgns.nspname,
-    pgc.relname
-having
-    max(coalesce(pgi.indisprimary, false)::int) = 0)
+    and not exists (
+        select 1
+        from pg_catalog.pg_index pgi
+        where pgi.indrelid = pgc.oid
+            and pgi.indisprimary
+    ))
 union all
 (
 select
@@ -782,20 +781,17 @@ union all
 with policies as (
     select
         nsp.nspname as schema_name,
-        pb.tablename as table_name,
+        pc.relname as table_name,
         polname as policy_name,
-        qual,
-        with_check
+        -- what pg_policies reports as qual and with_check
+        pg_catalog.pg_get_expr(pa.polqual, pa.polrelid) as qual,
+        pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid) as with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
         join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_catalog.pg_policies pb
-            on pc.relname = pb.tablename
-            and nsp.nspname = pb.schemaname
-            and pa.polname = pb.policyname
 )
 select
     'rls_references_user_metadata' as name,
@@ -1026,14 +1022,8 @@ bloat_info as (
             bs,
             sum((1 - null_frac) * avg_width) as datawidth,
             max(null_frac) as maxfracsum,
-            hdr + (
-                select 1 + count(*) / 8
-                from pg_stats s2
-                where
-                    null_frac <> 0
-                    and s2.schemaname = s.schemaname
-                    and s2.tablename = s.tablename
-            ) as nullhdr
+            -- the same pg_stats rows the correlated subquery used to re-read: this group's
+            hdr + 1 + count(*) filter (where null_frac <> 0) / 8 as nullhdr
         from pg_stats s, constants
         group by 1, 2, 3, 4, 5
     ) as foo
@@ -1299,7 +1289,7 @@ union all
 with policies as (
     select
         nsp.nspname as schema_name,
-        pb.tablename as table_name,
+        pc.relname as table_name,
         pc.relrowsecurity as is_rls_active,
         pa.polname as policy_name,
         pa.polpermissive as is_permissive,
@@ -1312,21 +1302,18 @@ with policies as (
             when 'd' then 'DELETE'
             when '*' then 'ALL'
         end as command,
-        pb.qual,
-        pb.with_check,
+        -- what pg_policies reports as qual and with_check
+        pg_catalog.pg_get_expr(pa.polqual, pa.polrelid) as qual,
+        pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid) as with_check,
         -- Normalize expressions by removing whitespace and lowercasing
-        replace(replace(replace(lower(coalesce(pb.qual, '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_qual,
-        replace(replace(replace(lower(coalesce(pb.with_check, '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_with_check
+        replace(replace(replace(lower(coalesce(pg_catalog.pg_get_expr(pa.polqual, pa.polrelid), '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_qual,
+        replace(replace(replace(lower(coalesce(pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid), '')), ' ', ''), E'\n', ''), E'\t', '') as normalized_with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
         join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_catalog.pg_policies pb
-            on pc.relname = pb.tablename
-            and nsp.nspname = pb.schemaname
-            and pa.polname = pb.policyname
     where
         pc.relkind = 'r' -- regular tables
         and nsp.nspname not in (

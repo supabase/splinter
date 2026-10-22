@@ -21,14 +21,8 @@ bloat_info as (
             bs,
             sum((1 - null_frac) * avg_width) as datawidth,
             max(null_frac) as maxfracsum,
-            hdr + (
-                select 1 + count(*) / 8
-                from pg_stats s2
-                where
-                    null_frac <> 0
-                    and s2.schemaname = s.schemaname
-                    and s2.tablename = s.tablename
-            ) as nullhdr
+            -- the same pg_stats rows the correlated subquery used to re-read: this group's
+            hdr + 1 + count(*) filter (where null_frac <> 0) / 8 as nullhdr
         from pg_stats s, constants
         group by 1, 2, 3, 4, 5
     ) as foo

@@ -3,20 +3,17 @@ create view lint."0015_rls_references_user_metadata" as
 with policies as (
     select
         nsp.nspname as schema_name,
-        pb.tablename as table_name,
+        pc.relname as table_name,
         polname as policy_name,
-        qual,
-        with_check
+        -- what pg_policies reports as qual and with_check
+        pg_catalog.pg_get_expr(pa.polqual, pa.polrelid) as qual,
+        pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid) as with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
         join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_catalog.pg_policies pb
-            on pc.relname = pb.tablename
-            and nsp.nspname = pb.schemaname
-            and pa.polname = pb.policyname
 )
 select
     'rls_references_user_metadata' as name,

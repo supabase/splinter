@@ -27,8 +27,6 @@ from
     pg_catalog.pg_class pgc
     join pg_catalog.pg_namespace pgns
         on pgns.oid = pgc.relnamespace
-    left join pg_catalog.pg_index pgi
-        on pgi.indrelid = pgc.oid
     left join pg_catalog.pg_depend dep
         on pgc.oid = dep.objid
         and dep.deptype = 'e'
@@ -39,9 +37,9 @@ where
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude tables owned by extensions
-group by
-    pgc.oid,
-    pgns.nspname,
-    pgc.relname
-having
-    max(coalesce(pgi.indisprimary, false)::int) = 0;
+    and not exists (
+        select 1
+        from pg_catalog.pg_index pgi
+        where pgi.indrelid = pgc.oid
+            and pgi.indisprimary
+    );
