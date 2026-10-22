@@ -324,9 +324,18 @@ def fetch(args):
     )
     git("init", "-q")
     git("remote", "add", "origin", f"https://github.com/{project['repo']}.git")
-    git("sparse-checkout", "set", "--no-cone", project["migrations"])
+    paths = [project["migrations"]] + (
+        [project["baseline"]] if "baseline" in project else []
+    )
+    git("sparse-checkout", "set", "--no-cone", *paths)
     git("fetch", "-q", "--depth", "1", "--filter=blob:none", "origin", project["sha"])
     git("checkout", "-q", "FETCH_HEAD")
+    if "baseline" in project:
+        # Some projects keep their initial schema outside migrations/; applied first.
+        # A pg_dump baseline assumes the extensions its source database had.
+        (dest / project["migrations"] / "00000000000000_baseline.sql").write_text(
+            project.get("setup", "") + "\n" + (dest / project["baseline"]).read_text()
+        )
     print(dest / project["migrations"])
 
 

@@ -11,6 +11,7 @@ Times every lint, and the full `splinter.sql` union, on Supabase schemas, compar
 | -- | --: | --: | --: | --: |
 | synthetic / large | 2,197 | 2,736 | 64k | – |
 | carbon | 520 | 1,501 | 41k | 1,230 / 1,230 |
+| deskcomm | 283 | 669 | 17k | 520 / 530 (baseline dump + migrations) |
 | grida | 174 | 89 | 7k | 76 / 87 (timescaledb is not in the image) |
 | wacrm | 113 | 114 | 5k | 54 / 54 |
 | atomic-crm | 88 | 36 | 3k | 28 / 28 |
@@ -36,6 +37,7 @@ Buffer counts are deterministic, so they catch plan regressions that are too sma
 ## When you change the benchmark
 
 - When you add a lint, extend `fixture/` so it has findings.
+- A project whose initial schema is a dump outside its migrations sets `baseline` (applied first) and, for the extensions the dump assumes, `setup` in `projects/projects.json`.
 - When you add a project, pin a commit in `projects/projects.json` and add it to the matrix in `.github/workflows/bench.yml`, timed (`rounds: 5`) only if it is large enough for lint timings to move beyond noise.
 
 ## Run locally
