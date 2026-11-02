@@ -187,4 +187,33 @@ begin;
 
   select * from lint."0031_policy_without_privilege";
 
+  rollback to savepoint a;
+
+  ----------------------------------------
+  -- Test: partitioned table is checked on the parent; its partitions are skipped
+  -- because requests reach them through the parent's privileges and policies
+  ----------------------------------------
+  create table public.events(
+    id int,
+    happened_on date
+  ) partition by range (happened_on);
+  create table public.events_2026 partition of public.events
+    for values from ('2026-01-01') to ('2027-01-01');
+  alter table public.events enable row level security;
+  alter table public.events_2026 enable row level security;
+  revoke all on public.events from public, anon, authenticated;
+  revoke all on public.events_2026 from public, anon, authenticated;
+  create policy "read_events"
+  on public.events
+  for select
+  to anon
+  using (true);
+  create policy "read_events_2026"
+  on public.events_2026
+  for select
+  to anon
+  using (true);
+
+  select name, detail, cache_key from lint."0031_policy_without_privilege";
+
 rollback;

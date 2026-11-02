@@ -39,6 +39,17 @@ Privileges inherited from role membership or granted to `PUBLIC` count, and so d
 
 Restrictive policies are not checked. Without the privilege the role is already denied, which is what a restrictive policy is for.
 
+Partitioned tables are checked on the parent table. Requests through the parent use the parent's privileges and policies, so partitions themselves are skipped.
+
+### Commands that also need `SELECT`
+
+The lint checks the privilege for each policy's own command. Some requests also read the table, and then Postgres requires `SELECT` as well. That means both the privilege and a matching `SELECT` (or `FOR ALL`) policy:
+
+- `UPDATE` and `DELETE` with a filter, for example `.update(...).eq('id', 1)` in supabase-js. Without a `SELECT` policy that matches the rows, the update or delete silently affects 0 rows.
+- Any write that returns rows, such as `RETURNING` or `.insert(...).select()`. Upserts (`INSERT ... ON CONFLICT DO UPDATE`) need `SELECT` too.
+
+If a role should be able to run these requests, grant `SELECT` and add a `SELECT` policy alongside the write policy.
+
 ### How to Resolve
 
 If the policy is meant to be used, grant the matching privilege to the role:

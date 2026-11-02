@@ -37,7 +37,10 @@ policies as (
             and dep.deptype = 'e'
             and dep.classid = 'pg_catalog.pg_class'::regclass
     where
-        c.relkind = 'r' -- regular tables
+        -- regular and partitioned tables. Requests reach partitions through the
+        -- parent, whose privileges and policies apply, so children are skipped
+        c.relkind in ('r', 'p')
+        and not c.relispartition
         and c.relrowsecurity
         and p.polpermissive
         and n.nspname = any(array(select trim(unnest(string_to_array(coalesce(current_setting('pgrst.db_schemas', 't'), 'public'), ',')))))
