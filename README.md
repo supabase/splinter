@@ -95,3 +95,7 @@ To run the test suite:
 ```sh
 docker rmi -f dockerfiles-test && SUPABASE_VERSION=15.1.1.13 docker-compose -f dockerfiles/docker-compose.yml run --rm test
 ```
+
+## Benchmark
+
+PRs that change a lint are benchmarked against their base on a synthetic schema at three sizes and on real open-source Supabase projects. The check fails when findings change, a lint errors, or its plan, buffer reads or run time regress. See [bench/README.md](bench/README.md).

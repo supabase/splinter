@@ -1,0 +1,144 @@
+name: benchmark
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    paths:
+      - "lints/**"
+      - "bin/compile.py"
+      - "bench/**"
+      - ".github/workflows/bench.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    name: Measure (${{ matrix.target }})
+    # Label events other than the two waivers would only repeat the last run.
+    if: >-
+      github.event_name != 'pull_request'
+      || !contains(fromJSON('["labeled","unlabeled"]'), github.event.action)
+      || contains(fromJSON('["perf-accepted","lint-results-changed"]'), github.event.label.name)
+    strategy:
+      fail-fast: false
+      matrix:
+        # Small schemas only check rows: their timings sit inside runner noise.
+        include:
+          - { target: synthetic, rounds: 5 }
+          - { target: carbon, rounds: 5 }
+          - { target: deskcomm, rounds: 5 }
+          - { target: basejump, rounds: 0 }
+          - { target: atomic-crm, rounds: 0 }
+          - { target: wacrm, rounds: 0 }
+          - { target: grida, rounds: 0 }
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: supabase/postgres:17.6.1.169
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -h localhost"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout head
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: head
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Checkout base
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: base
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Measure
+        env:
+          TARGET: ${{ matrix.target }}
+          ROUNDS: ${{ matrix.rounds }}
+          BASE: ${{ github.event_name == 'pull_request' && 'base' || '' }}
+        run: |
+          args=(--head head --rounds "$ROUNDS" --out "results-$TARGET.json")
+          if [ -n "$BASE" ]; then args+=(--base "$BASE"); fi
+          if [ "$TARGET" != synthetic ]; then
+            migrations=$(python head/bench/bench.py fetch "$TARGET" --dest "project-$TARGET")
+            args+=(--project "$TARGET=$migrations")
+          fi
+          python head/bench/bench.py measure "${args[@]}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-${{ matrix.target }}
+          path: results-${{ matrix.target }}.json
+
+  verdict:
+    name: Verdict
+    needs: measure
+    if: always() && needs.measure.result != 'skipped'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout head
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          sparse-checkout: bench
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bench-*
+          merge-multiple: true
+
+      - name: Compare
+        env:
+          ACCEPT_PERF: ${{ contains(github.event.pull_request.labels.*.name, 'perf-accepted') && '--accept-perf' || '' }}
+          ACCEPT_RESULTS: ${{ contains(github.event.pull_request.labels.*.name, 'lint-results-changed') && '--accept-results' || '' }}
+          MEASURED: ${{ needs.measure.result }}
+        run: |
+          set +e
+          # shellcheck disable=SC2086 # the waiver flags are empty or one word
+          python3 bench/bench.py compare results-*.json --markdown report.md $ACCEPT_PERF $ACCEPT_RESULTS
+          status=$?
+          if [ "$MEASURED" != success ]; then
+            printf '\n**A measure job failed**, so some targets are missing above.\n' >> report.md
+            status=1
+          fi
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+
+      - name: Comment on PR
+        # Fork PRs get a read-only token; they still have the job summary.
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && hashFiles('report.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.body | startswith("<!-- splinter-bench -->")) | .id' | head -n1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@report.md >/dev/null
+          else
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@report.md >/dev/null
+          fi
