@@ -9,7 +9,7 @@
 
 ### Rationale
 
-In PostgreSQL, the `search_path` determines the order in which schemas are searched to find unqualified objects (like tables, functions, etc.). Setting `search_path` explicitly for a function is a best practice that ensures its behavior is consistent and secure, regardless of the executing user's default `search_path` settings. We recommend pinning functions' `search_path` to an empty string, `search_path = ''`, which forces all references within the function's body to be fully qualified. This helps prevent unexpected behavior due to changes in the `search_path` and mitigates potential security vulnerabilities.
+In PostgreSQL, the `search_path` determines the order in which schemas are searched to find unqualified objects (like tables, functions, etc.). Setting `search_path` explicitly for a function is a best practice that ensures its behavior is consistent and secure, regardless of the executing user's default `search_path` settings. We recommend pinning functions' `search_path` to  `search_path = 'pg_catalog, pg_temp'`, which forces all references within the function's body to be fully qualified, except `pg_catalog` and `pg_temp`. This helps prevent unexpected behavior due to changes in the `search_path` and mitigates potential security vulnerabilities.
 
 ### What is the Search Path?
 
@@ -24,7 +24,7 @@ When a function does not have its `search_path` explicitly set, it inherits the 
 
 ### How to Resolve
 
-To ensure that your functions are secure and behave consistently, set the search path explicitly to an empty string within the function's definition.
+To ensure that your functions are secure and behave consistently, set the search path explicitly to `pg_catalog, pg_temp` within the function's definition.
 
 Given a function like:
 
@@ -43,10 +43,10 @@ You can `create or replace` the function and add the `search_path` setting.
 create or replace function example_function()
   returns void
   language sql
-  set search_path = '' -- LOOK HERE
+  set search_path = 'pg_catalog, pg_temp' -- LOOK HERE
 as $$
   -- Your SQL code here.
 $$;
 ```
 
-Remember that once you set the `search_path = ''` all references to tables/functions/views/etc in your function's body must be qualified with a schema name.
+Remember that once you set the `search_path = 'pg_catalog, pg_temp'` all references to tables/functions/views/etc in your function's body which are no in `pg_catalog` or `pg_temp`, must be qualified with a schema name.
