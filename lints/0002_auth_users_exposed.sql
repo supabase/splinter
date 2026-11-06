@@ -29,6 +29,11 @@ from
     -- Depends on auth.users
     join pg_catalog.pg_depend d
         on d.refobjid = auth_users_pg_class.oid
+        -- Only match dependencies on the relation auth.users, not objects in
+        -- other catalogs (pg_proc, pg_type, ...) whose oid can numerically
+        -- collide with it. Mirrors the classid filter the other pg_depend
+        -- joins in this suite already use (see 0001, 0016, 0017).
+        and d.refclassid = 'pg_catalog.pg_class'::regclass
     join pg_catalog.pg_rewrite r
         on r.oid = d.objid
     join pg_catalog.pg_class c
