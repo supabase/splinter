@@ -60,6 +60,10 @@ from
                 on p.prolang = l.oid
         where
             p.prosecdef = true
+            -- PostgREST only exposes ordinary functions: procedures are not
+            -- callable via /rpc, and neither are trigger functions.
+            and p.prokind = 'f'
+            and p.prorettype <> 'pg_catalog.trigger'::regtype
             and pg_catalog.has_function_privilege('anon', p.oid, 'EXECUTE')
             and n.nspname = any(array(select trim(unnest(string_to_array(coalesce(current_setting('pgrst.db_schemas', 't'), 'public'), ',')))))
             and n.nspname not in (

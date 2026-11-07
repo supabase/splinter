@@ -105,4 +105,26 @@ begin;
 
   rollback to savepoint case_system_schema;
 
+  savepoint case_not_rpc_callable;
+
+  ----------------------------------------
+  -- NEGATIVE: procedures are not exposed by PostgREST, so a
+  -- SECURITY DEFINER procedure must not be reported as callable via
+  -- /rest/v1/rpc.
+  ----------------------------------------
+  create procedure public.secdef_proc() language sql security definer
+    as $$ select 1 $$;
+  select * from lint."0029_authenticated_security_definer_function_executable";
+
+  ----------------------------------------
+  -- NEGATIVE: trigger functions return trigger and are not exposed
+  -- as RPC endpoints either.
+  ----------------------------------------
+  create function public.secdef_trigger() returns trigger
+    language plpgsql security definer
+    as $$ begin return new; end $$;
+  select * from lint."0029_authenticated_security_definer_function_executable";
+
+  rollback to savepoint case_not_rpc_callable;
+
 rollback;
