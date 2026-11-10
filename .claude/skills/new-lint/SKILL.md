@@ -23,14 +23,16 @@ Create a SQL view in the `lint` schema. The view **must** return exactly these 1
 |--------|------|-------|
 | `name` | text | snake_case identifier, e.g. `'my_lint_name'` |
 | `title` | text | Human-readable title |
-| `level` | text | `'ERROR'`, `'WARN'`, or `'INFO'` |
+| `level` | text | `'ERROR'`, `'WARN'`, or `'INFO'` — a `case` expression is fine if severity varies per row (see `lints/0031_unused_replication_slot.sql`) |
 | `facing` | text | `'EXTERNAL'` or `'INTERNAL'` |
 | `categories` | text[] | e.g. `array['SECURITY']` or `array['PERFORMANCE']` |
 | `description` | text | What the lint checks and why it matters |
 | `detail` | text | `format()`-interpolated message naming the specific object |
 | `remediation` | text | `'https://supabase.com/docs/guides/database/database-linter?lint=XXXX_<name>'` |
-| `metadata` | jsonb | `jsonb_build_object('schema', ..., 'name', ..., 'type', ...)` |
+| `metadata` | jsonb | `jsonb_build_object('schema', ..., 'name', ..., 'type', ...)`. If the flagged object has no schema (e.g. a replication slot, a role), set `entity` instead of `name` — Studio's `getLintEntityString` needs either `schema`+`name` or `entity` to render anything. |
 | `cache_key` | text | `format('<name>_%s_%s', schema, object)` — unique per violation |
+
+Whether `level` is a literal or a `case` expression, it must sit on one physical line ending `as level`, with no trailing comment: `bin/check_lints.py`'s check is line-anchored, not SQL-aware.
 
 **Copy guidance for Advisor surfaces:**
 - Keep `description` to 1-2 short sentences: what the lint detects and the first likely action.
@@ -108,15 +110,19 @@ order by
 
 Read `bin/installcheck`. Find line 55 — the long `psql` command that loads all lint files. It currently ends with something like:
 ```
--f lints/0024*.sql -d contrib_regression
+-f lints/<highest-numbered-existing-lint>*.sql -d contrib_regression
 ```
 
 Insert the new lint **before** `-d contrib_regression`, maintaining numeric order:
 ```
--f lints/0024*.sql -f lints/XXXX*.sql -d contrib_regression
+-f lints/<highest-numbered-existing-lint>*.sql -f lints/XXXX*.sql -d contrib_regression
 ```
 
 ## Step 4 — Create `docs/XXXX_<name>.md`
+
+- Pick the level your lint always emits.
+- If level varies per row (a `case` expression in Step 2), replace the `**Level:**` line with an explicit statement of which value maps to which level instead, e.g. "`**Level:** WARN (unreserved) or ERROR (lost)`".
+- Never leave the `**Level:** WARN|ERROR|INFO` placeholder unfilled; `bin/check_lints.py` rejects it whenever it names a level set different from what the lint's own SQL emits.
 
 ```markdown
 **Level:** WARN|ERROR|INFO
@@ -166,7 +172,7 @@ Cases where this lint may fire when the pattern is intentional, and how to handl
 
 ## Step 5 — Create `test/sql/XXXX_<name>.sql`
 
-Structure the test file exactly as follows:
+Structure the test file exactly as follows, unless the lint touches non-transactional catalog state (replication slots, `ALTER SYSTEM`) that a `rollback` can't undo — see `test/sql/0031_unused_replication_slot.sql` for the explicit-cleanup pattern that case needs instead.
 
 ```sql
 begin;
@@ -229,13 +235,17 @@ cp results/XXXX_<name>.out test/expected/XXXX_<name>.out
 
 ## Step 7 — Update `test/sql/queries_are_unionable.sql`
 
-Read the file. Before the final semicolon (on the last `select * from lint."0024_..."` line), append:
+Read the file. Before the final semicolon (on the last `select * from lint."<highest-numbered-existing-lint>"` line), append:
 ```sql
     union all
     select * from lint."XXXX_<name>"
 ```
 
 The file ends with a semicolon after the last view reference, then `rollback;`. Add the new entry before that semicolon.
+
+## Step 7b — Add the doc page to `mkdocs.yaml`'s nav
+
+Read `mkdocs.yaml` and add `docs/XXXX_<name>.md` under `nav:` -> `Lints:`, alongside the existing entries. `bin/check_lints.py` (see the Verification Checklist below) fails the build if a doc page exists but isn't linked from the nav.
 
 ## Step 8 — Verify and promote `test/expected/queries_are_unionable.out`
 
@@ -278,11 +288,9 @@ docker rmi -f dockerfiles-test && SUPABASE_VERSION=15.1.1.13 docker-compose -f d
 Then check:
 - [ ] `results/regression.diffs` is empty (no unexpected diffs)
 - [ ] `git diff test/expected/` shows only the new files you intentionally added/changed
-- [ ] `splinter.sql` includes the new lint in the `UNION ALL`
-- [ ] `lints/XXXX_<name>.sql` exists
-- [ ] `docs/XXXX_<name>.md` exists
-- [ ] `test/sql/XXXX_<name>.sql` exists
-- [ ] `test/expected/XXXX_<name>.out` exists
+- [ ] `lints/XXXX_<name>.sql` exists — `check_lints.py` iterates this glob, so a missing file just means fewer lints get checked, not an error
+- [ ] `splinter.sql` includes the new lint in the `UNION ALL` — regenerated automatically by the `compile-script` pre-commit hook, not checked by `check_lints.py`
+- [ ] `python bin/check_lints.py` passes — covers everything else: registration, nav linkage, and that each doc's `**Level:**` line matches what its view actually emits
 
 ---
 
@@ -295,4 +303,5 @@ Then check:
 | pgrst.db_schemas API exposure check | `lints/0023_sensitive_columns_exposed.sql`, `lints/0016_materialized_view_in_api.sql` |
 | pg_graphql extension-enabled check | `lints/0014_extension_in_public.sql` (for the `pg_catalog.pg_extension` pattern) |
 | begin/savepoint/rollback test structure | `test/sql/0024_rls_policy_always_true.sql` |
+| explicit-cleanup test structure (non-transactional catalog state) | `test/sql/0031_unused_replication_slot.sql` |
 | Doc format | `docs/0024_permissive_rls_policy.md` |
