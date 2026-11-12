@@ -75,7 +75,7 @@ cleaned as (
         e.*,
         -- ignore `USING` bound values and quote_*(param) wrappers
         regexp_replace(
-            regexp_replace(e.body, '\musing\s+[^(;\s][^;]*', '', 'g'),
+            regexp_replace(e.body, '\musing\s+[^(\x3b\s][^\x3b]*', '', 'g'),
             'quote_(ident|literal|nullable)\s*\(\s*' || e.arg_re || '\s*\)',
             '',
             'g'
@@ -92,7 +92,7 @@ matches as (
         cl.is_security_definer,
         cl.owner_name,
         cl.arg_name,
-        cl.exec_body ~ ('\mexecute\M[^;]*[^a-z0-9_$]' || cl.arg_re || '([^a-z0-9_]|$)') as direct_use,
+        cl.exec_body ~ ('\mexecute\M[^\x3b]*[^a-z0-9_$]' || cl.arg_re || '([^a-z0-9_]|$)') as direct_use,
         cl.arg_name in ('sql', 'query', 'queries', 'stmt', 'statement', 'command', 'cmd', 'sql_text', 'sql_query', 'sql_string', 'query_text', 'query_string', 'raw_sql', 'raw_query')
             and cl.exec_body ~ '\mexecute\M' as renamed_use
     from
