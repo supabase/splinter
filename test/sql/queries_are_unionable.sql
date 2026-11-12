@@ -58,6 +58,10 @@ begin;
     union all
     select * from lint."0029_authenticated_security_definer_function_executable"
     union all
-    select * from lint."0030_autovacuum_disabled";
+    select * from lint."0030_autovacuum_disabled"
+    union all
+    select * from lint."0031_anon_dynamic_sql_function_executable"
+    union all
+    select * from lint."0032_authenticated_dynamic_sql_function_executable";
 
 rollback;
