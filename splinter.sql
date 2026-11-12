@@ -1902,7 +1902,19 @@ with candidates as (
         l.lanname as function_language,
         p.prosecdef as is_security_definer,
         pg_catalog.pg_get_userbyid(p.proowner) as owner_name,
-        regexp_replace(lower(p.prosrc), '--[^\n]*', '', 'g') as body,
+        -- body with comments removed and string literals blanked out, so
+        -- keywords and semicolons inside literals are not mistaken for code
+        regexp_replace(
+            regexp_replace(
+                regexp_replace(lower(p.prosrc), '--[^\n]*', '', 'g'),
+                '\$([a-z_]*?)\$.*?\$\1\$',
+                '''''',
+                'g'
+            ),
+            '''([^'']|'''')*''',
+            '''''',
+            'g'
+        ) as body,
         p.proargnames,
         p.proargmodes,
         coalesce(p.proallargtypes, p.proargtypes::pg_catalog.oid[]) as all_arg_types
@@ -1955,9 +1967,10 @@ escaped as (
 cleaned as (
     select
         e.*,
-        -- ignore `USING` bound values and quote_*(param) wrappers
+        -- ignore `USING` bound values (literals are already blanked, so
+        -- this only matches a real USING clause) and quote_*(param) wrappers
         regexp_replace(
-            regexp_replace(e.body, '\musing\s+[^(\x3b\s][^\x3b]*', '', 'g'),
+            regexp_replace(e.body, '\musing\s[^\x3b]*', '', 'g'),
             'quote_(ident|literal|nullable)\s*\(\s*' || e.arg_re || '\s*\)',
             '',
             'g'
@@ -2068,7 +2081,19 @@ with candidates as (
         l.lanname as function_language,
         p.prosecdef as is_security_definer,
         pg_catalog.pg_get_userbyid(p.proowner) as owner_name,
-        regexp_replace(lower(p.prosrc), '--[^\n]*', '', 'g') as body,
+        -- body with comments removed and string literals blanked out, so
+        -- keywords and semicolons inside literals are not mistaken for code
+        regexp_replace(
+            regexp_replace(
+                regexp_replace(lower(p.prosrc), '--[^\n]*', '', 'g'),
+                '\$([a-z_]*?)\$.*?\$\1\$',
+                '''''',
+                'g'
+            ),
+            '''([^'']|'''')*''',
+            '''''',
+            'g'
+        ) as body,
         p.proargnames,
         p.proargmodes,
         coalesce(p.proallargtypes, p.proargtypes::pg_catalog.oid[]) as all_arg_types
@@ -2121,9 +2146,10 @@ escaped as (
 cleaned as (
     select
         e.*,
-        -- ignore `USING` bound values and quote_*(param) wrappers
+        -- ignore `USING` bound values (literals are already blanked, so
+        -- this only matches a real USING clause) and quote_*(param) wrappers
         regexp_replace(
-            regexp_replace(e.body, '\musing\s+[^(\x3b\s][^\x3b]*', '', 'g'),
+            regexp_replace(e.body, '\musing\s[^\x3b]*', '', 'g'),
             'quote_(ident|literal|nullable)\s*\(\s*' || e.arg_re || '\s*\)',
             '',
             'g'

@@ -147,6 +147,34 @@ begin;
 
   rollback to savepoint case_unnamed;
 
+  savepoint case_using_in_literal;
+
+  ----------------------------------------
+  -- POSITIVE (ERROR): the SQL text contains the word `using` before the
+  -- concatenated parameter (DELETE ... USING, CREATE INDEX ... USING).
+  -- These are not EXECUTE's own USING clause and must not hide the
+  -- parameter. The `;` inside the literal must not hide it either.
+  ----------------------------------------
+  create function public.exec_delete_using(query text) returns void
+    language plpgsql
+    security definer
+    as $$
+    begin
+      execute 'delete from public.t using public.u where ' || query;
+    end $$;
+  create function public.exec_index_using(query text) returns void
+    language plpgsql
+    security definer
+    as $$
+    begin
+      execute 'select 1; create index on public.t using gin (' || query || ')';
+    end $$;
+
+  select name, level, metadata->'name' as func_name, cache_key
+  from lint."0031_anon_dynamic_sql_function_executable";
+
+  rollback to savepoint case_using_in_literal;
+
   savepoint case_variadic;
 
   ----------------------------------------
