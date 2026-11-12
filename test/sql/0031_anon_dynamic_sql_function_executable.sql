@@ -54,6 +54,57 @@ begin;
     end $$;
   select * from lint."0031_anon_dynamic_sql_function_executable";
 
+  -- NEGATIVE: the parameter is only bound with USING; the variable holds
+  -- static SQL
+  create function public.static_var(p_name text) returns int
+    language plpgsql
+    security definer
+    as $$
+    declare q text := 'select count(*)::int from auth.users where email = $1'; r int;
+    begin
+      execute q into r using p_name;
+      return r;
+    end $$;
+  select * from lint."0031_anon_dynamic_sql_function_executable";
+
+  -- NEGATIVE: the parameter is quoted before it is put in a variable
+  create function public.quoted_var(p_table text) returns int
+    language plpgsql
+    security definer
+    as $$
+    declare q text; r int;
+    begin
+      q := 'select count(*)::int from ' || quote_ident(p_table);
+      execute q into r;
+      return r;
+    end $$;
+  select * from lint."0031_anon_dynamic_sql_function_executable";
+
+  -- NEGATIVE: parameters passed to format() only in %I / %L slots
+  create function public.fmt_quoted(p_table text, p_val text) returns int
+    language plpgsql
+    security definer
+    as $$
+    declare r int;
+    begin
+      execute format('select count(*)::int from %I where name = %L', p_table, p_val) into r;
+      return r;
+    end $$;
+  select * from lint."0031_anon_dynamic_sql_function_executable";
+
+  -- POSITIVE (ERROR): the second argument goes into a %s slot
+  create function public.fmt_unquoted(p_table text, p_val text) returns int
+    language plpgsql
+    security definer
+    as $$
+    declare r int;
+    begin
+      execute format('select count(*)::int from %I where name = %s', p_table, p_val) into r;
+      return r;
+    end $$;
+  select name, level, metadata->'sql_parameters' as sql_parameters, cache_key
+  from lint."0031_anon_dynamic_sql_function_executable";
+
   rollback to savepoint a;
 
   savepoint case_definer;
@@ -146,6 +197,55 @@ begin;
   from lint."0031_anon_dynamic_sql_function_executable";
 
   rollback to savepoint case_unnamed;
+
+  savepoint case_positional;
+
+  ----------------------------------------
+  -- POSITIVE (ERROR): named parameter referenced as $1 in the EXECUTE
+  ----------------------------------------
+  create function public.run_positional(p text) returns void
+    language plpgsql
+    security definer
+    as $$
+    begin
+      execute $1;
+    end $$;
+
+  select name, level, metadata->'sql_parameters' as sql_parameters, cache_key
+  from lint."0031_anon_dynamic_sql_function_executable";
+
+  rollback to savepoint case_positional;
+
+  savepoint case_variable;
+
+  ----------------------------------------
+  -- POSITIVE (ERROR): the parameter is built into a local variable, either
+  -- by assignment or in the declaration, and the variable is EXECUTEd.
+  ----------------------------------------
+  create function public.count_rows(p_table text) returns int
+    language plpgsql
+    security definer
+    as $$
+    declare q text; r int;
+    begin
+      q := 'select count(*)::int from ' || p_table;
+      execute q into r;
+      return r;
+    end $$;
+  create function public.count_rows_declared(p_table text) returns int
+    language plpgsql
+    security definer
+    as $$
+    declare q text := 'select count(*)::int from ' || p_table; r int;
+    begin
+      execute q into r;
+      return r;
+    end $$;
+
+  select name, level, metadata->'name' as func_name, cache_key
+  from lint."0031_anon_dynamic_sql_function_executable";
+
+  rollback to savepoint case_variable;
 
   savepoint case_using_in_literal;
 

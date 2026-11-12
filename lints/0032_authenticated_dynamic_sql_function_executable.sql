@@ -7,9 +7,10 @@ create view lint."0032_authenticated_dynamic_sql_function_executable" as
 -- function owner (SECURITY DEFINER) or as `authenticated` (SECURITY INVOKER).
 --
 -- A function is flagged when either:
---   1. a text/varchar parameter (or array of either) is used inside an EXECUTE statement
---      (EXECUTE ... USING bound values and quote_ident/quote_literal/
---      quote_nullable(param) are ignored), or
+--   1. a text/varchar parameter (or array of either) is used inside an EXECUTE statement,
+--      or in an expression assigned to a variable (`v := ... || param`) that
+--      is then used in an EXECUTE (EXECUTE ... USING bound values and
+--      quote_ident/quote_literal/quote_nullable(param) are ignored), or
 --   2. a text/varchar parameter (or array of either) has a SQL-like name (sql, query, stmt,
 --      ...) and the body contains an EXECUTE anywhere.
 --
@@ -25,19 +26,7 @@ with candidates as (
         l.lanname as function_language,
         p.prosecdef as is_security_definer,
         pg_catalog.pg_get_userbyid(p.proowner) as owner_name,
-        -- body with comments removed and string literals blanked out, so
-        -- keywords and semicolons inside literals are not mistaken for code
-        regexp_replace(
-            regexp_replace(
-                regexp_replace(lower(p.prosrc), '--[^\n]*', '', 'g'),
-                '\$([a-z_]*?)\$.*?\$\1\$',
-                '''''',
-                'g'
-            ),
-            '''([^'']|'''')*''',
-            '''''',
-            'g'
-        ) as body,
+        regexp_replace(lower(p.prosrc), '--[^\n]*', '', 'g') as body,
         p.proargnames,
         p.proargmodes,
         coalesce(p.proallargtypes, p.proargtypes::pg_catalog.oid[]) as all_arg_types
@@ -67,10 +56,17 @@ with candidates as (
 text_params as (
     select
         c.*,
-        lower(coalesce(nullif(c.proargnames[a.ord], ''), '$' || a.ord)) as arg_name
+        ip.pos as arg_pos,
+        lower(coalesce(nullif(c.proargnames[a.ord], ''), '$' || ip.pos)) as arg_name
     from
         candidates c
         cross join lateral unnest(c.all_arg_types) with ordinality as a(typ, ord)
+        -- position among input arguments, which is what `$N` refers to
+        cross join lateral (
+            select count(*) as pos
+            from generate_series(1, a.ord::int) g
+            where coalesce(c.proargmodes[g]::text, 'i') in ('i', 'b', 'v')
+        ) ip
     where
         coalesce(c.proargmodes[a.ord]::text, 'i') in ('i', 'b', 'v')
         and a.typ in (
@@ -83,23 +79,65 @@ text_params as (
 escaped as (
     select
         tp.*,
-        regexp_replace(tp.arg_name, '([^a-z0-9_])', '\\\1', 'g') as arg_re
+        -- match the parameter by name or by position (`$N` also works for
+        -- named parameters in PL/pgSQL)
+        '(?:' || regexp_replace(tp.arg_name, '([^a-z0-9_])', '\\\1', 'g') || '|\$' || tp.arg_pos || ')' as arg_re
     from
         text_params tp
 ),
-cleaned as (
+formatted as (
     select
         e.*,
-        -- ignore `USING` bound values (literals are already blanked, so
-        -- this only matches a real USING clause) and quote_*(param) wrappers
+        -- a parameter passed to format() in a %I or %L slot is quoted, so
+        -- it is replaced with `null` (like quote_ident/quote_literal).
+        -- Only format() calls with simple, comma-free arguments and
+        -- sequential specifiers (no `%1$s`) are recognised; anything else
+        -- is left in place and counts as a use of the parameter.
         regexp_replace(
-            regexp_replace(e.body, '\musing\s[^\x3b]*', '', 'g'),
-            'quote_(ident|literal|nullable)\s*\(\s*' || e.arg_re || '\s*\)',
+            e.body,
+            '(?<=(?:' || (
+                select string_agg(
+                    'format\s*\(\s*''(?:[^''%]|%%|'''')*(?:%[-0-9]*[sil](?:[^''%]|%%|'''')*){' || (k - 1) || '}%[-0-9]*[il](?:[^'']|'''')*''\s*(?:,[^,()]+){' || (k - 1) || '},\s*',
+                    '|'
+                )
+                from generate_series(1, 8) k
+            ) || '))' || e.arg_re || '(?=\s*[,)])',
+            'null',
+            'g'
+        ) as fmt_body
+    from
+        escaped e
+),
+cleaned as (
+    select
+        f.*,
+        -- string literals blanked out (so keywords and semicolons inside
+        -- them are not mistaken for code), `USING` bound values removed
+        -- (only a real USING clause is left to match), and quote_*(param)
+        -- wrappers removed
+        regexp_replace(
+            regexp_replace(
+                regexp_replace(
+                    regexp_replace(
+                        f.fmt_body,
+                        '\$([a-z_]*?)\$.*?\$\1\$',
+                        '''''',
+                        'g'
+                    ),
+                    '''([^'']|'''')*''',
+                    '''''',
+                    'g'
+                ),
+                '\musing\s[^\x3b]*',
+                '',
+                'g'
+            ),
+            'quote_(ident|literal|nullable)\s*\(\s*' || f.arg_re || '\s*\)',
             '',
             'g'
         ) as exec_body
     from
-        escaped e
+        formatted f
 ),
 matches as (
     select
@@ -110,7 +148,21 @@ matches as (
         cl.is_security_definer,
         cl.owner_name,
         cl.arg_name,
-        cl.exec_body ~ ('\mexecute\M[^\x3b]*[^a-z0-9_$]' || cl.arg_re || '([^a-z0-9_]|$)') as direct_use,
+        (
+            -- the parameter is used inside an EXECUTE statement
+            cl.exec_body ~ ('\mexecute\M[^\x3b]*[^a-z0-9_$]' || cl.arg_re || '([^a-z0-9_]|$)')
+            -- or a variable assigned from the parameter (`v := ... || param`
+            -- or `declare v text := ... || param`) is used in an EXECUTE
+            or exists (
+                select 1
+                from regexp_matches(
+                    cl.exec_body,
+                    '(?:([a-z_][a-z0-9_]*)\s+(?:text|varchar(?:\(\d+\))?|character\s+varying(?:\(\d+\))?)|([a-z_][a-z0-9_]*))\s*:=([^\x3b]*[^a-z0-9_$])?' || cl.arg_re || '([^a-z0-9_]|$)',
+                    'g'
+                ) as m
+                where cl.exec_body ~ ('\mexecute\M[^\x3b]*[^a-z0-9_$]' || coalesce(m[1], m[2]) || '([^a-z0-9_]|$)')
+            )
+        ) as direct_use,
         cl.arg_name in ('sql', 'query', 'queries', 'stmt', 'statement', 'command', 'cmd', 'sql_text', 'sql_query', 'sql_string', 'query_text', 'query_string', 'raw_sql', 'raw_query')
             and cl.exec_body ~ '\mexecute\M' as renamed_use
     from
