@@ -166,6 +166,25 @@ begin;
 (1 row)
 
   rollback to savepoint case_unnamed;
+  savepoint case_variadic;
+  ----------------------------------------
+  -- POSITIVE (ERROR): VARIADIC text[] parameter used in an EXECUTE
+  ----------------------------------------
+  create function public.exec_many(variadic queries text[]) returns void
+    language plpgsql
+    security definer
+    as $$
+    begin
+      execute queries[1];
+    end $$;
+  select name, level, metadata->'sql_parameters' as sql_parameters, cache_key
+  from lint."0032_authenticated_dynamic_sql_function_executable";
+                     name                      | level | sql_parameters |                                       cache_key                                        
+-----------------------------------------------+-------+----------------+----------------------------------------------------------------------------------------
+ authenticated_dynamic_sql_function_executable | ERROR | ["queries"]    | authenticated_dynamic_sql_function_executable_public_exec_many_VARIADIC queries text[]
+(1 row)
+
+  rollback to savepoint case_variadic;
   savepoint case_system_schema;
   ----------------------------------------
   -- NEGATIVE: function in a system schema is excluded

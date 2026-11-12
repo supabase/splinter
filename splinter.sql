@@ -1884,10 +1884,10 @@ union all
 -- function owner (SECURITY DEFINER) or as `anon` (SECURITY INVOKER).
 --
 -- A function is flagged when either:
---   1. a text/varchar parameter is used inside an EXECUTE statement
+--   1. a text/varchar parameter (or array of either) is used inside an EXECUTE statement
 --      (EXECUTE ... USING bound values and quote_ident/quote_literal/
 --      quote_nullable(param) are ignored), or
---   2. a text/varchar parameter has a SQL-like name (sql, query, stmt,
+--   2. a text/varchar parameter (or array of either) has a SQL-like name (sql, query, stmt,
 --      ...) and the body contains an EXECUTE anywhere.
 --
 -- Level is ERROR for SECURITY DEFINER functions matching (1), WARN
@@ -1938,7 +1938,12 @@ text_params as (
         cross join lateral unnest(c.all_arg_types) with ordinality as a(typ, ord)
     where
         coalesce(c.proargmodes[a.ord]::text, 'i') in ('i', 'b', 'v')
-        and a.typ in ('pg_catalog.text'::pg_catalog.regtype, 'pg_catalog.varchar'::pg_catalog.regtype)
+        and a.typ in (
+            'pg_catalog.text'::pg_catalog.regtype,
+            'pg_catalog.varchar'::pg_catalog.regtype,
+            'pg_catalog.text[]'::pg_catalog.regtype,
+            'pg_catalog.varchar[]'::pg_catalog.regtype
+        )
 ),
 escaped as (
     select
@@ -2045,10 +2050,10 @@ union all
 -- function owner (SECURITY DEFINER) or as `authenticated` (SECURITY INVOKER).
 --
 -- A function is flagged when either:
---   1. a text/varchar parameter is used inside an EXECUTE statement
+--   1. a text/varchar parameter (or array of either) is used inside an EXECUTE statement
 --      (EXECUTE ... USING bound values and quote_ident/quote_literal/
 --      quote_nullable(param) are ignored), or
---   2. a text/varchar parameter has a SQL-like name (sql, query, stmt,
+--   2. a text/varchar parameter (or array of either) has a SQL-like name (sql, query, stmt,
 --      ...) and the body contains an EXECUTE anywhere.
 --
 -- Level is ERROR for SECURITY DEFINER functions matching (1), WARN
@@ -2099,7 +2104,12 @@ text_params as (
         cross join lateral unnest(c.all_arg_types) with ordinality as a(typ, ord)
     where
         coalesce(c.proargmodes[a.ord]::text, 'i') in ('i', 'b', 'v')
-        and a.typ in ('pg_catalog.text'::pg_catalog.regtype, 'pg_catalog.varchar'::pg_catalog.regtype)
+        and a.typ in (
+            'pg_catalog.text'::pg_catalog.regtype,
+            'pg_catalog.varchar'::pg_catalog.regtype,
+            'pg_catalog.text[]'::pg_catalog.regtype,
+            'pg_catalog.varchar[]'::pg_catalog.regtype
+        )
 ),
 escaped as (
     select

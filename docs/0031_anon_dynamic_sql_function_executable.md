@@ -14,8 +14,8 @@ Helpers like `exec_sql(query text)` or `run_query(sql text)` let a client send S
 
 This lint reads the function body, and only for PL/pgSQL functions in exposed schemas. A function is flagged when:
 
-1. a `text` or `varchar` parameter is used inside an `EXECUTE` statement, or
-2. a `text` or `varchar` parameter is named like SQL (`sql`, `query`, `stmt`, `statement`, `command`, `cmd`, ...) and the body contains an `EXECUTE` anywhere.
+1. a `text` or `varchar` parameter (or an array of either, including `VARIADIC`) is used inside an `EXECUTE` statement, or
+2. a `text` or `varchar` parameter (or an array of either, including `VARIADIC`) is named like SQL (`sql`, `query`, `stmt`, `statement`, `command`, `cmd`, ...) and the body contains an `EXECUTE` anywhere.
 
 Parameters bound with `EXECUTE ... USING` and parameters wrapped in `quote_ident()`, `quote_literal()` or `quote_nullable()` are not counted.
 
