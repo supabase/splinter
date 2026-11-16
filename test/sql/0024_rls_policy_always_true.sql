@@ -282,18 +282,21 @@ begin;
   drop policy "all_true_using_no_with_check" on public.posts;
 
   ----------------------------------------
-  -- Test: INSERT with no WITH CHECK (null) SHOULD be flagged
+  -- Test: Policies with no USING / WITH CHECK should NOT be flagged
+  -- Postgres skips a permissive policy with a NULL expression, so it grants no rows
   ----------------------------------------
-  create policy "insert_no_with_check"
-  on public.posts
-  for insert
-  to authenticated;
+  create policy "select_no_using" on public.posts for select to anon;
+  create policy "update_no_using" on public.posts for update to anon;
+  create policy "delete_no_using" on public.posts for delete to anon;
+  create policy "all_no_using" on public.posts for all to anon;
+  create policy "insert_no_with_check" on public.posts for insert to anon;
 
-  select
-    metadata->>'policy_name' as policy_name,
-    metadata->>'permissive_with_check' as permissive_with_check
-  from lint."0024_rls_policy_always_true";
+  select count(*) from lint."0024_rls_policy_always_true";
 
+  drop policy "select_no_using" on public.posts;
+  drop policy "update_no_using" on public.posts;
+  drop policy "delete_no_using" on public.posts;
+  drop policy "all_no_using" on public.posts;
   drop policy "insert_no_with_check" on public.posts;
 
 rollback;

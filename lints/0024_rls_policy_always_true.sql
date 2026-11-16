@@ -45,17 +45,12 @@ permissive_patterns as (
         -- Check for always-true USING clause patterns
         case when (
             command in ('SELECT', 'UPDATE', 'DELETE', 'ALL')
-            and (
-                normalized_qual in ('true', '(true)', '1=1', '(1=1)')
-                -- Empty or null qual on permissive policy means allow all
-                or (qual is null and is_permissive)
-            )
+            -- A NULL qual is not allow-all: Postgres skips the policy, so it grants no rows
+            and normalized_qual in ('true', '(true)', '1=1', '(1=1)')
         ) then true else false end as has_permissive_using,
         -- Check for always-true WITH CHECK clause patterns
         case when (
             normalized_with_check in ('true', '(true)', '1=1', '(1=1)')
-            -- Empty with_check on INSERT means allow all (INSERT has no USING to fall back on)
-            or (with_check is null and is_permissive and command = 'INSERT')
             -- Empty with_check on UPDATE/ALL with permissive USING means allow all writes
             or (with_check is null and is_permissive and command in ('UPDATE', 'ALL')
                 and normalized_qual in ('true', '(true)', '1=1', '(1=1)'))
