@@ -1,5 +1,5 @@
 
-**Level:** WARN
+**Level:** ERROR for INSERT, UPDATE, DELETE and ALL policies; WARN for SELECT policies
 
 **Summary:** Security policy allows unrestricted access
 
@@ -127,8 +127,8 @@ using (auth.uid() = user_id);
 
 ### False Positives
 
-In some cases, `USING (true)` may be intentional:
+In some cases, `USING (true)` on a `SELECT` policy may be intentional:
 - Public read-only tables (e.g., blog posts, product catalogs)
 - Tables where access is controlled by other means (e.g., API layer)
 
-If the policy is intentional, you can document why in a comment or consider suppressing this lint for specific tables.
+If a table is meant to be publicly readable, make sure it holds no sensitive data, since anyone with the anon key can read every row. If the policy is intentional, document why in a comment or suppress this lint for that table.
