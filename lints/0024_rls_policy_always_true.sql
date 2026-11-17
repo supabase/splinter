@@ -43,20 +43,14 @@ permissive_patterns as (
     select
         p.*,
         -- Check for always-true USING clause patterns
-        -- Note: SELECT with (true) is often intentional and documented, so we only flag UPDATE/DELETE
         case when (
-            command in ('UPDATE', 'DELETE', 'ALL')
-            and (
-                normalized_qual in ('true', '(true)', '1=1', '(1=1)')
-                -- Empty or null qual on permissive policy means allow all
-                or (qual is null and is_permissive)
-            )
+            command in ('SELECT', 'UPDATE', 'DELETE', 'ALL')
+            -- A NULL qual is not allow-all: Postgres skips the policy, so it grants no rows
+            and normalized_qual in ('true', '(true)', '1=1', '(1=1)')
         ) then true else false end as has_permissive_using,
         -- Check for always-true WITH CHECK clause patterns
         case when (
             normalized_with_check in ('true', '(true)', '1=1', '(1=1)')
-            -- Empty with_check on INSERT means allow all (INSERT has no USING to fall back on)
-            or (with_check is null and is_permissive and command = 'INSERT')
             -- Empty with_check on UPDATE/ALL with permissive USING means allow all writes
             or (with_check is null and is_permissive and command in ('UPDATE', 'ALL')
                 and normalized_qual in ('true', '(true)', '1=1', '(1=1)'))
@@ -81,10 +75,11 @@ permissive_patterns as (
 select
     'rls_policy_always_true' as name,
     'RLS Policy Always True' as title,
-    'WARN' as level,
+    -- Write access (INSERT/UPDATE/DELETE/ALL) is an ERROR; unrestricted reads are a WARN
+    case when command in ('INSERT', 'UPDATE', 'DELETE', 'ALL') then 'ERROR' else 'WARN' end as level,
     'EXTERNAL' as facing,
     array['SECURITY'] as categories,
-    'Detects RLS policies that use overly permissive expressions like \`USING (true)\` or \`WITH CHECK (true)\` for UPDATE, DELETE, or INSERT operations. SELECT policies with \`USING (true)\` are intentionally excluded as this pattern is often used deliberately for public read access.' as description,
+    'Detects RLS policies that use overly permissive expressions like \`USING (true)\` or \`WITH CHECK (true)\` for SELECT, INSERT, UPDATE, or DELETE operations.' as description,
     format(
         'Table `%s.%s` has an RLS policy `%s` for `%s` that allows unrestricted access%s. This effectively bypasses row-level security for %s.',
         schema_name,

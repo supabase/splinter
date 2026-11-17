@@ -1,5 +1,5 @@
 
-**Level:** WARN
+**Level:** ERROR for INSERT, UPDATE, DELETE and ALL policies; WARN for SELECT policies
 
 **Summary:** Security policy allows unrestricted access
 
@@ -24,12 +24,13 @@ The lint identifies policies with these always-true patterns:
 - `USING (true)` - explicitly allows reading all rows
 - `USING (1=1)` - tautology that always evaluates to true
 - `USING ('a'='a')` - string comparison tautology
-- Missing USING clause on permissive SELECT policies
 
 **WITH CHECK Clause (controls which rows can be written):**
 - `WITH CHECK (true)` - allows writing any row
 - `WITH CHECK (1=1)` - tautology that always evaluates to true
-- Missing WITH CHECK clause on permissive INSERT/UPDATE policies
+- Missing WITH CHECK clause on UPDATE/ALL policies whose USING clause is always true (Postgres reuses USING)
+
+Policies with no `USING` or `WITH CHECK` expression at all are not flagged: Postgres skips them, so they grant no access.
 
 ### Security Impact
 
@@ -45,7 +46,7 @@ This is particularly dangerous when the policy applies to `anon` or `authenticat
 
 **Option 1: Add proper row-level conditions**
 
-Replace the permissive policy with one that properly restricts access:
+Replace the permissive policy with one that properly restricts access. The lint checks each permissive policy on its own, so layering a restrictive policy on top of an always-true one does not clear it:
 
 ```sql
 -- Instead of: USING (true)
@@ -58,28 +59,7 @@ for select
 using (auth.uid() = user_id);
 ```
 
-**Option 2: Use restrictive policies in combination**
-
-If you need a base permissive policy, combine it with restrictive policies:
-
-```sql
--- Base permissive policy
-create policy "authenticated_access"
-on public.posts
-for select
-to authenticated
-using (true);
-
--- Restrictive policy to limit access
-create policy "only_published"
-on public.posts
-as restrictive
-for select
-to authenticated
-using (status = 'published' or auth.uid() = user_id);
-```
-
-**Option 3: Remove the policy if RLS is not needed**
+**Option 2: Remove the policy if RLS is not needed**
 
 If you don't need row-level restrictions, consider whether RLS should be disabled:
 
@@ -127,8 +107,8 @@ using (auth.uid() = user_id);
 
 ### False Positives
 
-In some cases, `USING (true)` may be intentional:
+In some cases, `USING (true)` on a `SELECT` policy may be intentional:
 - Public read-only tables (e.g., blog posts, product catalogs)
 - Tables where access is controlled by other means (e.g., API layer)
 
-If the policy is intentional, you can document why in a comment or consider suppressing this lint for specific tables.
+If a table is meant to be publicly readable, make sure it holds no sensitive data, since anyone with the anon key can read every row. If the policy is intentional, document why in a comment or suppress this lint for that table.

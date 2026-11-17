@@ -14,8 +14,7 @@ begin;
   alter table public.posts enable row level security;
 
   ----------------------------------------
-  -- Test: SELECT with USING (true) should NOT be flagged
-  -- SELECT with (true) is often intentional for public read access
+  -- Test: SELECT with USING (true) SHOULD be flagged
   ----------------------------------------
   create policy "select_using_true"
   on public.posts
@@ -23,9 +22,35 @@ begin;
   to authenticated
   using (true);
 
-  select count(*) from lint."0024_rls_policy_always_true";
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, level from lint."0024_rls_policy_always_true";
 
   drop policy "select_using_true" on public.posts;
+
+  ----------------------------------------
+  -- Test: SELECT with USING (true) for anon SHOULD be flagged
+  ----------------------------------------
+  create policy "anon_select_using_true"
+  on public.posts
+  for select
+  to anon
+  using (true);
+
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, level from lint."0024_rls_policy_always_true";
+
+  drop policy "anon_select_using_true" on public.posts;
+
+  ----------------------------------------
+  -- Test: SELECT with a real condition should NOT be flagged
+  ----------------------------------------
+  create policy "select_scoped"
+  on public.posts
+  for select
+  to authenticated
+  using (user_id = auth.uid());
+
+  select count(*) from lint."0024_rls_policy_always_true";
+
+  drop policy "select_scoped" on public.posts;
 
   ----------------------------------------
   -- Test: UPDATE with USING (true) SHOULD be flagged
@@ -36,7 +61,7 @@ begin;
   to authenticated
   using (true);
 
-  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, level from lint."0024_rls_policy_always_true";
 
   drop policy "update_using_true" on public.posts;
 
@@ -49,7 +74,7 @@ begin;
   to authenticated
   using (true);
 
-  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, level from lint."0024_rls_policy_always_true";
 
   drop policy "delete_using_true" on public.posts;
 
@@ -62,7 +87,7 @@ begin;
   to authenticated
   using (true);
 
-  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, level from lint."0024_rls_policy_always_true";
 
   drop policy "all_using_true" on public.posts;
 
@@ -75,7 +100,7 @@ begin;
   to authenticated
   with check (true);
 
-  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, level from lint."0024_rls_policy_always_true";
 
   drop policy "insert_with_check_true" on public.posts;
 
@@ -88,7 +113,7 @@ begin;
   to authenticated
   with check (1=1);
 
-  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, level from lint."0024_rls_policy_always_true";
 
   drop policy "insert_with_check_1eq1" on public.posts;
 
@@ -102,7 +127,7 @@ begin;
   using (user_id = auth.uid())
   with check (true);
 
-  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, level from lint."0024_rls_policy_always_true";
 
   drop policy "update_with_check_true" on public.posts;
 
@@ -257,18 +282,21 @@ begin;
   drop policy "all_true_using_no_with_check" on public.posts;
 
   ----------------------------------------
-  -- Test: INSERT with no WITH CHECK (null) SHOULD be flagged
+  -- Test: Policies with no USING / WITH CHECK should NOT be flagged
+  -- Postgres skips a permissive policy with a NULL expression, so it grants no rows
   ----------------------------------------
-  create policy "insert_no_with_check"
-  on public.posts
-  for insert
-  to authenticated;
+  create policy "select_no_using" on public.posts for select to anon;
+  create policy "update_no_using" on public.posts for update to anon;
+  create policy "delete_no_using" on public.posts for delete to anon;
+  create policy "all_no_using" on public.posts for all to anon;
+  create policy "insert_no_with_check" on public.posts for insert to anon;
 
-  select
-    metadata->>'policy_name' as policy_name,
-    metadata->>'permissive_with_check' as permissive_with_check
-  from lint."0024_rls_policy_always_true";
+  select count(*) from lint."0024_rls_policy_always_true";
 
+  drop policy "select_no_using" on public.posts;
+  drop policy "update_no_using" on public.posts;
+  drop policy "delete_no_using" on public.posts;
+  drop policy "all_no_using" on public.posts;
   drop policy "insert_no_with_check" on public.posts;
 
 rollback;
