@@ -38,6 +38,8 @@ nav:
       - Public Can Execute SECURITY DEFINER Function: '0028_anon_security_definer_function_executable.md'
       - Signed-In Users Can Execute SECURITY DEFINER Function: '0029_authenticated_security_definer_function_executable.md'
       - Autovacuum Disabled: '0030_autovacuum_disabled.md'
+      - Public Can Execute Dynamic SQL Function: '0031_anon_dynamic_sql_function_executable.md'
+      - Signed-In Users Can Execute Dynamic SQL Function: '0032_authenticated_dynamic_sql_function_executable.md'
 
 theme:
     name: 'material'
