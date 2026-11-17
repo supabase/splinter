@@ -308,4 +308,302 @@ begin;
 (1 row)
 
   drop policy "insert_no_with_check" on public.posts;
+  ----------------------------------------
+  -- Test: SELECT with USING (true) whose name claims ownership SHOULD be flagged
+  -- The name says the policy is per-user, so the always-true expression is not intentional public read access
+  ----------------------------------------
+  create policy "Users can view their own posts"
+  on public.posts
+  for select
+  to authenticated
+  using (true);
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, detail, cache_key from lint."0024_rls_policy_always_true";
+          policy_name           | command |                                                                                                                                                                        detail                                                                                                                                                                        |                             cache_key                              
+--------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------
+ Users can view their own posts | SELECT  | Table `public.posts` has an RLS policy `Users can view their own posts` for `SELECT` that allows unrestricted access (USING clause is always true). This effectively bypasses row-level security for authenticated. The policy name suggests access is limited to the row owner or a specific role, but the policy does not check who the caller is. | rls_policy_always_true_public_posts_Users can view their own posts
+(1 row)
+
+  drop policy "Users can view their own posts" on public.posts;
+  ----------------------------------------
+  -- Test: name matching treats underscores and hyphens as word separators
+  ----------------------------------------
+  create policy "select_own_posts"
+  on public.posts
+  for select
+  to authenticated
+  using (true);
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+   policy_name    
+------------------
+ select_own_posts
+(1 row)
+
+  drop policy "select_own_posts" on public.posts;
+  ----------------------------------------
+  -- Test: SELECT with USING (true) whose name claims a role SHOULD be flagged
+  ----------------------------------------
+  create policy "Admins can view all posts"
+  on public.posts
+  for select
+  to authenticated
+  using (true);
+  create policy "Service role can read posts"
+  on public.posts
+  for select
+  using (true);
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0024_rls_policy_always_true";
+         policy_name         | command 
+-----------------------------+---------
+ Admins can view all posts   | SELECT
+ Service role can read posts | SELECT
+(2 rows)
+
+  drop policy "Admins can view all posts" on public.posts;
+  drop policy "Service role can read posts" on public.posts;
+  ----------------------------------------
+  -- Test: SELECT with USING (true) and a public-sounding or neutral name should NOT be flagged
+  -- "own" inside another word (e.g. "shown") must not match
+  ----------------------------------------
+  create policy "Public profiles are viewable by everyone."
+  on public.posts
+  for select
+  using (true);
+  create policy "Posts shown on the homepage"
+  on public.posts
+  for select
+  to anon
+  using (true);
+  create policy "Public read only"
+  on public.posts
+  for select
+  to anon, authenticated
+  using (true);
+  select count(*) from lint."0024_rls_policy_always_true";
+ count 
+-------
+     0
+(1 row)
+
+  drop policy "Public profiles are viewable by everyone." on public.posts;
+  drop policy "Posts shown on the homepage" on public.posts;
+  drop policy "Public read only" on public.posts;
+  ----------------------------------------
+  -- Test: real SELECT USING (true) policy names that claim per-user or admin scope SHOULD be flagged
+  ----------------------------------------
+  create policy "Admin reads all activity" on public.posts for select to authenticated using (true);
+  create policy "Users can view their restaurant's marketing data" on public.posts for select to authenticated using (true);
+  create policy "Users can view their own import jobs" on public.posts for select to authenticated using (true);
+  create policy "Allow authenticated read for admin" on public.posts for select to authenticated using (true);
+  create policy "admin_select_responses" on public.posts for select to authenticated using (true);
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+                   policy_name                    
+--------------------------------------------------
+ Admin reads all activity
+ Allow authenticated read for admin
+ Users can view their own import jobs
+ Users can view their restaurant's marketing data
+ admin_select_responses
+(5 rows)
+
+  drop policy "Admin reads all activity" on public.posts;
+  drop policy "Users can view their restaurant's marketing data" on public.posts;
+  drop policy "Users can view their own import jobs" on public.posts;
+  drop policy "Allow authenticated read for admin" on public.posts;
+  drop policy "admin_select_responses" on public.posts;
+  ----------------------------------------
+  -- Test: real SELECT USING (true) policy names should NOT be flagged when the owner or admin word
+  -- describes the table's contents, or when the name declares public or anyone access
+  ----------------------------------------
+  create policy "Allow reading admin users" on public.posts for select to authenticated using (true);
+  create policy "Allow public read access for admins" on public.posts for select using (true);
+  create policy "Allow public read access for admin activity logs" on public.posts for select using (true);
+  create policy "Public can view vehicle owners" on public.posts for select using (true);
+  create policy "Anyone can read own payments by phone" on public.posts for select using (true);
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+ policy_name 
+-------------
+(0 rows)
+
+  drop policy "Allow reading admin users" on public.posts;
+  drop policy "Allow public read access for admins" on public.posts;
+  drop policy "Allow public read access for admin activity logs" on public.posts;
+  drop policy "Public can view vehicle owners" on public.posts;
+  drop policy "Anyone can read own payments by phone" on public.posts;
+  ----------------------------------------
+  -- Test: each owner and admin phrase SHOULD be flagged on its own, an "all users" name that
+  -- claims ownership SHOULD be flagged, and USING (1=1) counts as always true for SELECT
+  ----------------------------------------
+  create policy "Owners can view posts" on public.posts for select to authenticated using (true);
+  create policy "Only owners can read" on public.posts for select to authenticated using (true);
+  create policy "Readable by only the owner" on public.posts for select to authenticated using (true);
+  create policy "Read access for the owner" on public.posts for select to authenticated using (true);
+  create policy "Owner only read" on public.posts for select to authenticated using (true);
+  create policy "Visible to only admins" on public.posts for select to authenticated using (true);
+  create policy "All users can view their own posts" on public.posts for select to authenticated using (true);
+  create policy "Users can view own posts" on public.posts for select to authenticated using (1=1);
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+            policy_name             
+------------------------------------
+ All users can view their own posts
+ Only owners can read
+ Owner only read
+ Owners can view posts
+ Read access for the owner
+ Readable by only the owner
+ Users can view own posts
+ Visible to only admins
+(8 rows)
+
+  drop policy "Owners can view posts" on public.posts;
+  drop policy "Only owners can read" on public.posts;
+  drop policy "Readable by only the owner" on public.posts;
+  drop policy "Read access for the owner" on public.posts;
+  drop policy "Owner only read" on public.posts;
+  drop policy "Visible to only admins" on public.posts;
+  drop policy "All users can view their own posts" on public.posts;
+  drop policy "Users can view own posts" on public.posts;
+  ----------------------------------------
+  -- Test: "for admin" only counts at the end of the name, and "everyone" blocks a scope word
+  ----------------------------------------
+  create policy "Authenticated can read for admin reports" on public.posts for select to authenticated using (true);
+  create policy "Everyone can view their posts" on public.posts for select using (true);
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+ policy_name 
+-------------
+(0 rows)
+
+  drop policy "Authenticated can read for admin reports" on public.posts;
+  drop policy "Everyone can view their posts" on public.posts;
+  ----------------------------------------
+  -- Test: each word after "admin" SHOULD be flagged on its own
+  -- ("can", "reads" and "select" are covered above)
+  ----------------------------------------
+  create policy "Admin only" on public.posts for select to authenticated using (true);
+  create policy "Admin read posts" on public.posts for select to authenticated using (true);
+  create policy "Admin view" on public.posts for select to authenticated using (true);
+  create policy "Admin views posts" on public.posts for select to authenticated using (true);
+  create policy "Admins see posts" on public.posts for select to authenticated using (true);
+  create policy "Admin sees posts" on public.posts for select to authenticated using (true);
+  create policy "Admins manage posts" on public.posts for select to authenticated using (true);
+  create policy "Admin manages posts" on public.posts for select to authenticated using (true);
+  select metadata->>'policy_name' as policy_name from lint."0024_rls_policy_always_true";
+     policy_name     
+---------------------
+ Admin manages posts
+ Admin only
+ Admin read posts
+ Admin sees posts
+ Admin view
+ Admin views posts
+ Admins manage posts
+ Admins see posts
+(8 rows)
+
+  drop policy "Admin only" on public.posts;
+  drop policy "Admin read posts" on public.posts;
+  drop policy "Admin view" on public.posts;
+  drop policy "Admin views posts" on public.posts;
+  drop policy "Admins see posts" on public.posts;
+  drop policy "Admin sees posts" on public.posts;
+  drop policy "Admins manage posts" on public.posts;
+  drop policy "Admin manages posts" on public.posts;
+  ----------------------------------------
+  -- Test: write policies named "admin insert/update/delete" get the name note in detail,
+  -- and a write policy with a neutral name does not
+  ----------------------------------------
+  create policy "admin_insert_posts" on public.posts for insert to authenticated with check (true);
+  create policy "admin_update_posts" on public.posts for update to authenticated using (true);
+  create policy "admin_delete_posts" on public.posts for delete to authenticated using (true);
+  create policy "update_any_post" on public.posts for update to authenticated using (true);
+  select metadata->>'policy_name' as policy_name, detail from lint."0024_rls_policy_always_true";
+    policy_name     |                                                                                                                                                                         detail                                                                                                                                                                         
+--------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ admin_delete_posts | Table `public.posts` has an RLS policy `admin_delete_posts` for `DELETE` that allows unrestricted access (USING clause is always true). This effectively bypasses row-level security for authenticated. The policy name suggests access is limited to the row owner or a specific role, but the policy does not check who the caller is.
+ admin_insert_posts | Table `public.posts` has an RLS policy `admin_insert_posts` for `INSERT` that allows unrestricted access (WITH CHECK clause is always true). This effectively bypasses row-level security for authenticated. The policy name suggests access is limited to the row owner or a specific role, but the policy does not check who the caller is.
+ admin_update_posts | Table `public.posts` has an RLS policy `admin_update_posts` for `UPDATE` that allows unrestricted access (both USING and WITH CHECK are always true). This effectively bypasses row-level security for authenticated. The policy name suggests access is limited to the row owner or a specific role, but the policy does not check who the caller is.
+ update_any_post    | Table `public.posts` has an RLS policy `update_any_post` for `UPDATE` that allows unrestricted access (both USING and WITH CHECK are always true). This effectively bypasses row-level security for authenticated.
+(4 rows)
+
+  drop policy "admin_insert_posts" on public.posts;
+  drop policy "admin_update_posts" on public.posts;
+  drop policy "admin_delete_posts" on public.posts;
+  drop policy "update_any_post" on public.posts;
+  ----------------------------------------
+  -- Test: SELECT whose name claims ownership and whose USING checks the owner should NOT be flagged
+  ----------------------------------------
+  create policy "Users can view their own posts"
+  on public.posts
+  for select
+  to authenticated
+  using (user_id = auth.uid());
+  select count(*) from lint."0024_rls_policy_always_true";
+ count 
+-------
+     0
+(1 row)
+
+  drop policy "Users can view their own posts" on public.posts;
+  ----------------------------------------
+  -- Test: write policies whose name claims ownership get the name note in detail
+  -- when nothing in the policy checks the caller
+  ----------------------------------------
+  create policy "Users can update their own posts"
+  on public.posts
+  for update
+  to authenticated
+  using (true);
+  create policy "Users can insert their own posts"
+  on public.posts
+  for insert
+  to authenticated
+  with check (true);
+  select metadata->>'policy_name' as policy_name, detail from lint."0024_rls_policy_always_true";
+           policy_name            |                                                                                                                                                                                detail                                                                                                                                                                                
+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Users can insert their own posts | Table `public.posts` has an RLS policy `Users can insert their own posts` for `INSERT` that allows unrestricted access (WITH CHECK clause is always true). This effectively bypasses row-level security for authenticated. The policy name suggests access is limited to the row owner or a specific role, but the policy does not check who the caller is.
+ Users can update their own posts | Table `public.posts` has an RLS policy `Users can update their own posts` for `UPDATE` that allows unrestricted access (both USING and WITH CHECK are always true). This effectively bypasses row-level security for authenticated. The policy name suggests access is limited to the row owner or a specific role, but the policy does not check who the caller is.
+(2 rows)
+
+  drop policy "Users can update their own posts" on public.posts;
+  drop policy "Users can insert their own posts" on public.posts;
+  ----------------------------------------
+  -- Test: UPDATE policies where one clause is always true and the other checks the owner
+  -- are still flagged, without the name note, because part of the policy does check the caller
+  ----------------------------------------
+  create policy "Users can update their own posts"
+  on public.posts
+  for update
+  to authenticated
+  using (user_id = auth.uid())
+  with check (true);
+  create policy "Owners can update posts"
+  on public.posts
+  for update
+  to authenticated
+  using (true)
+  with check (user_id = auth.uid());
+  select metadata->>'policy_name' as policy_name, detail from lint."0024_rls_policy_always_true";
+           policy_name            |                                                                                                           detail                                                                                                           
+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Owners can update posts          | Table `public.posts` has an RLS policy `Owners can update posts` for `UPDATE` that allows unrestricted access (USING clause is always true). This effectively bypasses row-level security for authenticated.
+ Users can update their own posts | Table `public.posts` has an RLS policy `Users can update their own posts` for `UPDATE` that allows unrestricted access (WITH CHECK clause is always true). This effectively bypasses row-level security for authenticated.
+(2 rows)
+
+  drop policy "Users can update their own posts" on public.posts;
+  drop policy "Owners can update posts" on public.posts;
+  ----------------------------------------
+  -- Test: a DELETE policy with no USING is still flagged, but without the name note,
+  -- since a missing USING only counts as "checks nobody" for INSERT
+  ----------------------------------------
+  create policy "Users can delete their own posts"
+  on public.posts
+  for delete
+  to authenticated;
+  select metadata->>'policy_name' as policy_name, detail from lint."0024_rls_policy_always_true";
+           policy_name            |                                                                                                        detail                                                                                                         
+----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Users can delete their own posts | Table `public.posts` has an RLS policy `Users can delete their own posts` for `DELETE` that allows unrestricted access (USING clause is always true). This effectively bypasses row-level security for authenticated.
+(1 row)
+
+  drop policy "Users can delete their own posts" on public.posts;
 rollback;
