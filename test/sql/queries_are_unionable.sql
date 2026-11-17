@@ -2,6 +2,10 @@ begin;
 
     set local search_path = '';
 
+    -- test/fixtures.sql mirrors the pre-October-30 platform default, which
+    -- lint 0033 reports; clear it so the union stays empty on a clean schema.
+    alter default privileges in schema public revoke select on tables from public;
+
     select * from lint."0001_unindexed_foreign_keys"
     union all
     select * from lint."0002_auth_users_exposed"
@@ -62,6 +66,8 @@ begin;
     union all
     select * from lint."0031_anon_dynamic_sql_function_executable"
     union all
-    select * from lint."0032_authenticated_dynamic_sql_function_executable";
+    select * from lint."0032_authenticated_dynamic_sql_function_executable"
+    union all
+    select * from lint."0033_default_privileges_expose_new_tables";
 
 rollback;
