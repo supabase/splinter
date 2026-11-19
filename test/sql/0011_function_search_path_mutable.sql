@@ -38,6 +38,16 @@ begin;
   -- 1 issue
   select * from lint."0011_function_search_path_mutable";
 
+  -- Replace function and set search_path to 'pg_catalog, pg_temp'
+  create or replace function public.abc()
+    returns int
+    set search_path=pg_catalog, pg_temp
+    language sql
+  as $$
+    select 1;
+  $$;
 
+  -- 0 issue
+  select * from lint."0011_function_search_path_mutable";
 
 rollback;

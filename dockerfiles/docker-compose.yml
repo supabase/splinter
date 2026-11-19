@@ -23,6 +23,7 @@ services:
       - |
         ./bin/installcheck
         status=$$?
+        cat /home/splinter/regression.diffs
         cp /home/splinter/regression.diffs \
            /home/splinter/regression.out \
            /home/splinter/results/* \
