@@ -1863,7 +1863,15 @@ from pg_catalog.pg_class cls
 join pg_catalog.pg_namespace nsp on cls.relnamespace = nsp.oid
 where
     cls.relkind = 'r'
-    and 'autovacuum_enabled=false' = any(cls.reloptions)
+    -- Postgres stores the value as written (false, off, 0, no, ...), so
+    -- parse it as a boolean instead of matching one spelling
+    and exists (
+        select 1
+        from pg_catalog.unnest(cls.reloptions) as opt
+        where
+            opt like 'autovacuum_enabled=%'
+            and not pg_catalog.substr(opt, 20)::boolean
+    )
     and nsp.nspname not in (
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config',
         '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql',

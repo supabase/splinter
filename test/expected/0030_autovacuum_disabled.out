@@ -34,4 +34,25 @@ begin;
 (0 rows)
 
   rollback to savepoint b;
+  savepoint c;
+  -- NEGATIVE: autovacuum_enabled=on (another spelling of true) — must not fire
+  create table public.active_on (id int) with (autovacuum_enabled = on);
+  select * from lint."0030_autovacuum_disabled";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
+  -- POSITIVE: other spellings of false that Postgres stores verbatim — must fire
+  create table public.events (id int) with (autovacuum_enabled = off);
+  create table public.logs (id int) with (autovacuum_enabled = 0);
+  create table public.metrics (id int) with (autovacuum_enabled = 'no');
+  select name, detail, cache_key from lint."0030_autovacuum_disabled";
+        name         |                                      detail                                       |             cache_key              
+---------------------+-----------------------------------------------------------------------------------+------------------------------------
+ autovacuum_disabled | Table `public`.`events` has autovacuum_enabled=false set as a storage parameter.  | autovacuum_disabled_public_events
+ autovacuum_disabled | Table `public`.`logs` has autovacuum_enabled=false set as a storage parameter.    | autovacuum_disabled_public_logs
+ autovacuum_disabled | Table `public`.`metrics` has autovacuum_enabled=false set as a storage parameter. | autovacuum_disabled_public_metrics
+(3 rows)
+
+  rollback to savepoint c;
 rollback;
