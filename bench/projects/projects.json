@@ -1,0 +1,8 @@
+{
+  "basejump": {"repo": "usebasejump/basejump", "sha": "7a1f95ccef74eb2e638d5e4233b66b6cbbe175e6", "migrations": "supabase/migrations"},
+  "atomic-crm": {"repo": "marmelab/atomic-crm", "sha": "c6a7bc842c8fe51c845f93680d15ee1f985f0ab2", "migrations": "supabase/migrations"},
+  "wacrm": {"repo": "ArnasDon/wacrm", "sha": "34bce1a8abf56281505d90bac165123b6ab7d51a", "migrations": "supabase/migrations"},
+  "grida": {"repo": "gridaco/grida", "sha": "9cbacacc89517971aec37d3de1c82202fb4d7986", "migrations": "supabase/migrations"},
+  "carbon": {"repo": "crbnos/carbon", "sha": "493b720c3f62883c9cb72242ff9e1daef72ca844", "migrations": "packages/database/supabase/migrations"},
+  "deskcomm": {"repo": "melgarafael/DeskcommCRM", "sha": "dc921fa337909ddfac71fc5aab10a18cb15cadaa", "migrations": "supabase/migrations", "baseline": "supabase/baseline.sql", "setup": "create extension if not exists vector with schema public; create extension if not exists citext with schema public; create extension if not exists pg_trgm with schema public;"}
+}
