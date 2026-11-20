@@ -278,18 +278,21 @@ def measure(args):
             }
             for s in scenarios
         }
-        # Round 0 warms caches and is discarded.
-        for r in range(args.rounds + 1):
+        for r in range(max(args.rounds, 1)):
             t0 = time.monotonic()
-            proc = psql(
-                round_script(sides, scenarios, flip=r % 2 == 1), args.user, check=False
-            )
+            script = round_script(sides, scenarios, flip=r % 2 == 1)
+            # Every round is a fresh session whose first run of a lint pays the
+            # catalog-cache warm-up, so an untimed pass runs everything first and
+            # its output is dropped.
+            if args.rounds:
+                script = script + f"\\echo {MARK}\n" + script
+            proc = psql(script, args.user, check=False)
             seen = set()
-            for line in proc.stdout.splitlines():
+            for line in proc.stdout.split(f"{MARK}\n")[-1].splitlines():
                 side, scenario, ms, count, digest = line.split("|")
                 seen.add((side, scenario))
                 cell = runs[scenario][side]
-                if r > 0:
+                if args.rounds:
                     cell["ms"].append(float(ms))
                 if cell["digest"] not in (None, digest):
                     cell["error"] = "results differ between rounds"
@@ -299,7 +302,7 @@ def measure(args):
                     if (side, scenario) not in seen:
                         cell["error"] = proc.stderr.strip()[-500:] or "no result"
             print(
-                f"[{label}] round {r}/{args.rounds} in {time.monotonic() - t0:.1f}s",
+                f"[{label}] round {r + 1}/{max(args.rounds, 1)} in {time.monotonic() - t0:.1f}s",
                 file=sys.stderr,
             )
         # With no timed rounds the target only checks rows; small schemas give
@@ -436,6 +439,8 @@ def describe(size):
 
 def compare(args):
     results = [json.loads(Path(p).read_text()) for p in args.results]
+    skipped = [d for d in results if "skipped" in d]
+    results = [d for d in results if "skipped" not in d]
     has_base = any(
         "base" in cells
         for d in results
@@ -449,6 +454,7 @@ def compare(args):
         f"Fails when a lint's rows change (count + digest of sorted rows), it errors, its plan gains a catalog scan "
         f"repeated per row (>{REPEATED_SCAN_BLOCKS} blocks per loop), it reads ≥{BUFFERS_RATIO - 1:.0%} and ≥{BUFFERS_MIN} more buffers, "
         f"or its median is ≥{REGRESSION_RATIO - 1:.0%} and ≥{REGRESSION_MIN_MS:g} ms slower with every head round slower than every base round.\n",
+        *(f"⚠️ {d['target']}: {d['skipped']}, skipped\n" for d in skipped),
     ]
     header = (
         "| lint | rows | base ms | head ms | Δ | buffers | |\n|---|--:|--:|--:|--:|--:|---|"
@@ -585,8 +591,8 @@ def main():
     m.add_argument(
         "--rounds",
         type=int,
-        default=5,
-        help="timed rounds per side; 0 only checks errors and rows (default: 5)",
+        default=6,
+        help="timed rounds per side, even so neither side goes first more often; 0 only checks errors and rows (default: 6)",
     )
     m.add_argument("--user", default="postgres")
     m.add_argument("--admin-user", default="supabase_admin")
