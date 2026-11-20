@@ -5,7 +5,7 @@ Times every lint, and the full `splinter.sql` union, on Supabase schemas, compar
 ## Targets
 
 - **synthetic**: `fixture/` built at 2,000 tables, a scaling stress test that surfaces lints whose cost grows faster than the catalog. Every lint has findings. `--sizes small=20,large=2000` builds several sizes cumulatively on one database.
-- **Real projects**: the open-source apps from the dogfooding corpus, fetched from GitHub at the commits pinned in `projects/projects.json`. Their `supabase/migrations` are applied in order on the bare image, after `projects/services-stub.sql` stands in for the tables storage-api, GoTrue and realtime would create. Each migration runs in one transaction; one that still fails is rolled back, skipped and listed in the report.
+- **Real projects**: the open-source apps from the dogfooding corpus, fetched from GitHub at the commits pinned in `projects/projects.json`. Their `supabase/migrations` are applied in order on the bare image, after `projects/services-stub.sql` stands in for the tables storage-api, GoTrue and realtime would create. Each migration runs in one transaction; one that still fails is rolled back, skipped and listed in the report. A project that can no longer be fetched is skipped with a warning in the report, and the verdict comes from the other targets.
 
 | target | tables | policies | `pg_depend` rows | migrations applied |
 | -- | --: | --: | --: | --: |
@@ -32,13 +32,13 @@ Only the large targets are timed. The small projects run with `--rounds 0`: thei
 | Wall time | The median is at least 15% and 3 ms slower, and every head round is slower than every base round | `perf-accepted` |
 | Base errors | The lint errors on base, so there is nothing to compare | `perf-accepted` |
 
-Buffer counts are deterministic, so they catch plan regressions that are too small to see in wall time on a noisy runner. The plan pass runs twice and keeps the second, so catalog-cache warm-up does not count. Wall time runs base and head in interleaved rounds on the same database, alternating which goes first, and is measured server-side around the query.
+Buffer counts are deterministic, so they catch plan regressions that are too small to see in wall time on a noisy runner. The plan pass runs twice and keeps the second, so catalog-cache warm-up does not count. Wall time runs base and head in interleaved rounds on the same database, alternating which goes first, and is measured server-side around the query. Each round is a fresh session that first runs every query once untimed, so no round counts the session's catalog-cache warm-up. The round count is even, so each side goes first equally often.
 
 ## When you change the benchmark
 
 - When you add a lint, extend `fixture/` so it has findings.
 - A project whose initial schema is a dump outside its migrations sets `baseline` (applied first) and, for the extensions the dump assumes, `setup` in `projects/projects.json`.
-- When you add a project, pin a commit in `projects/projects.json` and add it to the matrix in `.github/workflows/bench.yml`, timed (`rounds: 5`) only if it is large enough for lint timings to move beyond noise.
+- When you add a project, pin a commit in `projects/projects.json` and add it to the matrix in `.github/workflows/bench.yml`, timed (`rounds: 6`) only if it is large enough for lint timings to move beyond noise.
 
 ## Run locally
 

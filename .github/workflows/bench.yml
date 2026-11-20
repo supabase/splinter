@@ -13,7 +13,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: bench-${{ github.ref }}
+  # Label events other than the two waivers skip every job, so they get their own
+  # group instead of cancelling a real run.
+  group: >-
+    bench-${{ github.ref }}${{
+      contains(fromJSON('["labeled","unlabeled"]'), github.event.action)
+      && !contains(fromJSON('["perf-accepted","lint-results-changed"]'), github.event.label.name)
+      && format('-{0}', github.run_id) || ''
+    }}
   cancel-in-progress: true
 
 jobs:
@@ -29,9 +36,9 @@ jobs:
       matrix:
         # Small schemas only check rows: their timings sit inside runner noise.
         include:
-          - { target: synthetic, rounds: 5 }
-          - { target: carbon, rounds: 5 }
-          - { target: deskcomm, rounds: 5 }
+          - { target: synthetic, rounds: 6 }
+          - { target: carbon, rounds: 6 }
+          - { target: deskcomm, rounds: 6 }
           - { target: basejump, rounds: 0 }
           - { target: atomic-crm, rounds: 0 }
           - { target: wacrm, rounds: 0 }
@@ -80,7 +87,12 @@ jobs:
           args=(--head head --rounds "$ROUNDS" --out "results-$TARGET.json")
           if [ -n "$BASE" ]; then args+=(--base "$BASE"); fi
           if [ "$TARGET" != synthetic ]; then
-            migrations=$(python head/bench/bench.py fetch "$TARGET" --dest "project-$TARGET")
+            # A third-party repo that vanished must not fail every lint PR.
+            if ! migrations=$(python head/bench/bench.py fetch "$TARGET" --dest "project-$TARGET"); then
+              echo "::warning::$TARGET could not be fetched, skipped"
+              printf '{"target": "%s", "skipped": "project could not be fetched"}\n' "$TARGET" > "results-$TARGET.json"
+              exit 0
+            fi
             args+=(--project "$TARGET=$migrations")
           fi
           python head/bench/bench.py measure "${args[@]}"
