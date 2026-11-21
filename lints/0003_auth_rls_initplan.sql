@@ -1,9 +1,9 @@
 create view lint."0003_auth_rls_initplan" as
 
-with policies as (
+with policies as materialized (
     select
         nsp.nspname as schema_name,
-        pb.tablename as table_name,
+        pc.relname as table_name,
         pc.relrowsecurity as is_rls_active,
         polname as policy_name,
         polpermissive as is_permissive, -- if not, then restrictive
@@ -15,18 +15,15 @@ with policies as (
             when 'd' then 'DELETE'
             when '*' then 'ALL'
         end as command,
-        qual,
-        with_check
+        -- what pg_policies reports as qual and with_check
+        pg_catalog.pg_get_expr(pa.polqual, pa.polrelid) as qual,
+        pg_catalog.pg_get_expr(pa.polwithcheck, pa.polrelid) as with_check
     from
         pg_catalog.pg_policy pa
         join pg_catalog.pg_class pc
             on pa.polrelid = pc.oid
         join pg_catalog.pg_namespace nsp
             on pc.relnamespace = nsp.oid
-        join pg_catalog.pg_policies pb
-            on pc.relname = pb.tablename
-            and nsp.nspname = pb.schemaname
-            and pa.polname = pb.policyname
 )
 select
     'auth_rls_initplan' as name,
@@ -98,4 +95,8 @@ where
             with_check like '%current\_setting(%)%'
             and lower(with_check) not like '%select current\_setting(%)%'
         )
-    );
+    )
+order by
+    schema_name,
+    table_name,
+    policy_name;
