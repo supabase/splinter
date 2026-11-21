@@ -778,7 +778,7 @@ where
     and pe.extnamespace::regnamespace::text = 'public')
 union all
 (
-with policies as (
+with policies as materialized (
     select
         nsp.nspname as schema_name,
         pc.relname as table_name,
@@ -827,7 +827,11 @@ where
         or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
         or with_check like '%auth.jwt()%user_metadata%'
         or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
-    ))
+    )
+order by
+    schema_name,
+    table_name,
+    policy_name)
 union all
 (
 select
@@ -1022,7 +1026,6 @@ bloat_info as (
             bs,
             sum((1 - null_frac) * avg_width) as datawidth,
             max(null_frac) as maxfracsum,
-            -- the same pg_stats rows the correlated subquery used to re-read: this group's
             hdr + 1 + count(*) filter (where null_frac <> 0) / 8 as nullhdr
         from pg_stats s, constants
         group by 1, 2, 3, 4, 5

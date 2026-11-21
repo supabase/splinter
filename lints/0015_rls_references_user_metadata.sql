@@ -1,6 +1,6 @@
 create view lint."0015_rls_references_user_metadata" as
 
-with policies as (
+with policies as materialized (
     select
         nsp.nspname as schema_name,
         pc.relname as table_name,
@@ -49,4 +49,8 @@ where
         or qual like '%current_setting(%request.jwt.claims%)%user_metadata%'
         or with_check like '%auth.jwt()%user_metadata%'
         or with_check like '%current_setting(%request.jwt.claims%)%user_metadata%'
-    );
+    )
+order by
+    schema_name,
+    table_name,
+    policy_name;
