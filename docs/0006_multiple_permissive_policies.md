@@ -60,9 +60,11 @@ create policy consolidated_access on employee_data
     for select
     using (
         department = current_user_department()
-        or grade_level >= current_user_grade_level()
+        and grade_level <= current_user_grade_level()
     );
 ```
+
+This combines the two original conditions with `and`, so a row is only visible if it belongs to the querying user's department **and** the employee's grade level is at or below the querying user's grade level — matching our original intention.
 
 In addition to addressing the logic bug, we have also improved the Postgres query planner's ability to inline the policy to check access to rows, which reduces the chance of the query falling off index.
 
