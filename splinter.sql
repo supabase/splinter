@@ -696,6 +696,10 @@ where
         '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'realtime', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and dep.objid is null -- exclude functions owned by extensions
+    -- Exclude aggregates: their pg_proc entry is a placeholder with no body and
+    -- CREATE AGGREGATE has no SET clause, so they can never carry a search_path.
+    -- The support functions they are built from are linted in their own right.
+    and p.prokind <> 'a'
     -- Search path not set
     and not exists (
         select 1
