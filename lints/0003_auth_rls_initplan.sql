@@ -52,9 +52,10 @@ from
     policies
 where
     is_rls_active
-    -- NOTE: does not include realtime in support of monitoring policies on realtime.messages
+    -- NOTE: does not include realtime or storage in support of monitoring user-authored
+    -- policies on realtime.messages and storage.objects
     and schema_name not in (
-        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'repack', 'storage', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
+        '_timescaledb_cache', '_timescaledb_catalog', '_timescaledb_config', '_timescaledb_internal', 'auth', 'cron', 'extensions', 'graphql', 'graphql_public', 'information_schema', 'net', 'pgmq', 'pgroonga', 'pgsodium', 'pgsodium_masks', 'pgtle', 'pgbouncer', 'pg_catalog', 'repack', 'supabase_functions', 'supabase_migrations', 'tiger', 'topology', 'vault'
     )
     and (
         -- Example: auth.uid()

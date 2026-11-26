@@ -90,4 +90,34 @@ begin;
  auth_rls_initplan | Auth RLS Initialization Plan | WARN  | EXTERNAL | {PERFORMANCE} | Detects if calls to \`current_setting()\` and \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row | Table \`realtime.messages\` has a row level security policy \`realtime_check\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info. | https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan | {"name": "messages", "type": "table", "schema": "realtime"} | auth_rls_init_plan_realtime_messages_realtime_check
 (1 row)
 
+    rollback to savepoint a;
+    -- Confirm that storage.objects will be scanned (#35)
+    create schema storage;
+    create table storage.objects( id int primary key, owner uuid);
+    create policy storage_owner_check on storage.objects
+    for select
+        to authenticated
+        using (owner = auth.uid());
+    alter table storage.objects enable row level security;
+    -- 1 entry for storage.objects
+    select * from lint."0003_auth_rls_initplan";
+       name        |            title             | level |  facing  |  categories   |                                                              description                                                              |                                                                                                                                                                                                               detail                                                                                                                                                                                                                |                                      remediation                                      |                         metadata                          |                       cache_key                        
+-------------------+------------------------------+-------+----------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------
+ auth_rls_initplan | Auth RLS Initialization Plan | WARN  | EXTERNAL | {PERFORMANCE} | Detects if calls to \`current_setting()\` and \`auth.<function>()\` in RLS policies are being unnecessarily re-evaluated for each row | Table \`storage.objects\` has a row level security policy \`storage_owner_check\` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing \`auth.<function>()\` with \`(select auth.<function>())\`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info. | https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan | {"name": "objects", "type": "table", "schema": "storage"} | auth_rls_init_plan_storage_objects_storage_owner_check
+(1 row)
+
+    rollback to savepoint a;
+    -- auth remains excluded: users do not author policies there
+    create table auth.sessions( id int primary key, user_id uuid);
+    create policy auth_sessions_check on auth.sessions
+    for select
+        to authenticated
+        using (user_id = auth.uid());
+    alter table auth.sessions enable row level security;
+    -- No issues
+    select * from lint."0003_auth_rls_initplan";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
 rollback;

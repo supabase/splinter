@@ -34,4 +34,41 @@ begin;
  rls_references_user_metadata | RLS references user metadata | ERROR | EXTERNAL | {SECURITY} | Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy. | Table \`public.foo\` has a row level security policy \`bad_policy_2\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context. | https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata | {"name": "foo", "type": "table", "schema": "public"} | rls_references_user_metadata_public_foo_bad_policy_2
 (2 rows)
 
+    savepoint a;
+    drop table public.foo;
+    -- Confirm that storage.objects and realtime.messages will be scanned (#35)
+    create schema storage;
+    create table storage.objects( id int primary key);
+    create policy storage_user_metadata on storage.objects
+    for select
+        to authenticated
+        using ( (( select auth.jwt() ) -> 'user_metadata' ->> 'is_admin' )::bool );
+    create schema realtime;
+    create table realtime.messages( id int primary key);
+    create policy realtime_user_metadata on realtime.messages
+    for select
+        to authenticated
+        using ( (( select auth.jwt() ) -> 'user_metadata' ->> 'is_admin' )::bool );
+    -- 2 errors, one each for storage.objects and realtime.messages
+    select * from lint."0015_rls_references_user_metadata";
+             name             |            title             | level |  facing  | categories |                                               description                                               |                                                                                                               detail                                                                                                               |                                           remediation                                            |                          metadata                           |                               cache_key                               
+------------------------------+------------------------------+-------+----------+------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------+-------------------------------------------------------------+-----------------------------------------------------------------------
+ rls_references_user_metadata | RLS references user metadata | ERROR | EXTERNAL | {SECURITY} | Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy. | Table \`storage.objects\` has a row level security policy \`storage_user_metadata\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context.    | https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata | {"name": "objects", "type": "table", "schema": "storage"}   | rls_references_user_metadata_storage_objects_storage_user_metadata
+ rls_references_user_metadata | RLS references user metadata | ERROR | EXTERNAL | {SECURITY} | Detects when Supabase Auth user_metadata is referenced insecurely in a row level security (RLS) policy. | Table \`realtime.messages\` has a row level security policy \`realtime_user_metadata\` that references Supabase Auth \`user_metadata\`. \`user_metadata\` is editable by end users and should never be used in a security context. | https://supabase.com/docs/guides/database/database-linter?lint=0015_rls_references_user_metadata | {"name": "messages", "type": "table", "schema": "realtime"} | rls_references_user_metadata_realtime_messages_realtime_user_metadata
+(2 rows)
+
+    rollback to savepoint a;
+    drop table public.foo;
+    -- auth remains excluded: users do not author policies there
+    create table auth.sessions( id int primary key);
+    create policy auth_user_metadata on auth.sessions
+    for select
+        to authenticated
+        using ( (( select auth.jwt() ) -> 'user_metadata' ->> 'is_admin' )::bool );
+    -- No issues
+    select * from lint."0015_rls_references_user_metadata";
+ name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
+------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
+(0 rows)
+
 rollback;
