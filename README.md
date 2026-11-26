@@ -34,6 +34,18 @@ set pgrst.db_schemas = 'public, graphql_public, ...';
 
 Without this, exposures in non-`public` schemas will not be reported.
 
+### Storage lints and `splinter.public_buckets`
+
+`0025_public_bucket_allows_listing` does not read `storage.buckets` itself. It reads the list of public buckets from the `splinter.public_buckets` setting, which the preamble at the top of `splinter.sql` populates **transaction-locally** via `set_config(..., true)`.
+
+Run the lints in a single transaction so the preamble and the lint query share it:
+
+```bash
+psql --single-transaction -f splinter.sql
+```
+
+When the setting is not visible, the lint reads an empty bucket list and reports **zero findings**, which is indistinguishable from a project with no affected buckets. The same applies to consumers of the `splinter.json` manifest: a lint's `query` must run in the same transaction as its `setup`.
+
 ## Lint Interface
 
 Each lint creates a view that returns a common interface. The interface is:
