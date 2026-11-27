@@ -40,6 +40,7 @@ nav:
       - Autovacuum Disabled: '0030_autovacuum_disabled.md'
       - Public Can Execute Dynamic SQL Function: '0031_anon_dynamic_sql_function_executable.md'
       - Signed-In Users Can Execute Dynamic SQL Function: '0032_authenticated_dynamic_sql_function_executable.md'
+      - RLS Policy Applies to Anon Role: '0035_policy_on_anon_role.md'
 
 theme:
     name: 'material'
