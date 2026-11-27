@@ -62,6 +62,8 @@ begin;
     union all
     select * from lint."0031_anon_dynamic_sql_function_executable"
     union all
-    select * from lint."0032_authenticated_dynamic_sql_function_executable";
+    select * from lint."0032_authenticated_dynamic_sql_function_executable"
+    union all
+    select * from lint."0035_policy_on_anon_role";
 
 rollback;
