@@ -1,9 +1,8 @@
 create view lint."0035_policy_on_anon_role" as
 
 -- A policy applies to `anon` when its role list is `public` (no TO clause) or
--- names a role that `anon` is a member of. Pure SELECT policies are skipped
--- unless they reference the caller's identity, since those are the usual
--- deliberate public-read pattern.
+-- names a role that `anon` is a member of. SELECT policies are skipped only
+-- when the expression is a literal `true` (deliberate public read).
 with anon_role as (
     select
         r.oid
@@ -65,11 +64,7 @@ policies as (
 
 flagged as (
     select
-        p.*,
-        (
-            p.qual ~* 'auth\.(uid|jwt|role|email)\(\)|request\.jwt'
-            or p.with_check ~* 'auth\.(uid|jwt|role|email)\(\)|request\.jwt'
-        ) as references_identity
+        p.*
     from
         policies p
     where
@@ -84,13 +79,12 @@ select
     array['SECURITY'] as categories,
     'Detects permissive RLS policies that apply to the `anon` role, directly or through `public`. `anon` is also the role a JWT without a `role` claim (such as an OIDC ID token) resolves to, so restrict identity-based policies with `TO authenticated`.' as description,
     format(
-        'Table `%s.%s` has a permissive RLS policy `%s` for `%s` that applies to the `anon` role (via `%s`)%s. Add `TO authenticated` or an explicit role check if it is not meant for signed-out or role-less tokens.',
+        'Table `%s.%s` has a permissive RLS policy `%s` for `%s` that applies to the `anon` role (via `%s`). Add `TO authenticated` or an explicit role check if it is not meant for signed-out or role-less tokens.',
         schema_name,
         table_name,
         policy_name,
         command,
-        array_to_string(anon_roles, ', '),
-        case when references_identity then ' and relies on the caller identity' else '' end
+        array_to_string(anon_roles, ', ')
     ) as detail,
     'https://supabase.com/docs/guides/database/database-linter?lint=0035_policy_on_anon_role' as remediation,
     jsonb_build_object(
@@ -99,8 +93,7 @@ select
         'type', 'table',
         'policy_name', policy_name,
         'command', command,
-        'roles', anon_roles,
-        'references_identity', references_identity
+        'roles', anon_roles
     ) as metadata,
     format(
         'policy_on_anon_role_%s_%s_%s',
@@ -112,7 +105,7 @@ from
     flagged
 where
     command <> 'SELECT'
-    or references_identity
+    or qual !~ '^\(*(true)?\)*$'
 order by
     schema_name,
     table_name,

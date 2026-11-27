@@ -22,13 +22,13 @@ begin;
 
   rollback to savepoint a;
 
-  -- NEGATIVE: pure SELECT policies without an identity reference are public read
+  -- NEGATIVE: SELECT policies with a literal true are deliberate public read
   create policy "explicit_anon_read" on public.docs
     for select to anon
     using (true);
   create policy "public_read" on public.docs
     for select
-    using (published);
+    using (true);
   select * from lint."0035_policy_on_anon_role";
 
   rollback to savepoint a;
@@ -54,7 +54,21 @@ begin;
   create policy "no_to_clause" on public.docs
     for all
     using (owner_id = auth.uid());
-  select metadata->>'policy_name' as policy_name, metadata->>'roles' as roles, metadata->>'references_identity' as references_identity from lint."0035_policy_on_anon_role";
+  select metadata->>'policy_name' as policy_name, metadata->>'roles' as roles from lint."0035_policy_on_anon_role";
+
+  rollback to savepoint a;
+
+  -- POSITIVE: SELECT policies with any expression beyond a literal true are flagged
+  create policy "select_column" on public.docs
+    for select
+    using (published);
+  create policy "select_setting" on public.docs
+    for select to anon
+    using (current_setting('app.tenant', true) = owner_id::text);
+  create policy "select_uid" on public.docs
+    for select
+    using (auth.uid() = owner_id);
+  select metadata->>'policy_name' as policy_name, metadata->>'roles' as roles from lint."0035_policy_on_anon_role";
 
   rollback to savepoint a;
 
@@ -70,7 +84,7 @@ begin;
   create policy "anon_insert" on public.docs
     for insert to anon
     with check (true);
-  select metadata->>'policy_name' as policy_name, metadata->>'command' as command, metadata->>'references_identity' as references_identity from lint."0035_policy_on_anon_role";
+  select metadata->>'policy_name' as policy_name, metadata->>'command' as command from lint."0035_policy_on_anon_role";
 
   rollback to savepoint a;
 
