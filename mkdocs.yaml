@@ -40,7 +40,7 @@ nav:
       - Autovacuum Disabled: '0030_autovacuum_disabled.md'
       - Public Can Execute Dynamic SQL Function: '0031_anon_dynamic_sql_function_executable.md'
       - Signed-In Users Can Execute Dynamic SQL Function: '0032_authenticated_dynamic_sql_function_executable.md'
-      - Default Privileges Expose New Tables: '0033_default_privileges_expose_new_tables.md'
+      - Default Privileges Expose New Tables: '0034_default_privileges_expose_new_tables.md'
 
 theme:
     name: 'material'

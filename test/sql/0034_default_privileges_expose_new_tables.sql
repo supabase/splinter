@@ -8,7 +8,7 @@ begin;
   alter default privileges in schema public revoke select on tables from public;
 
   -- BASELINE: no default privileges for the API roles, no rows
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
 
   savepoint a;
 
@@ -20,7 +20,7 @@ begin;
   create role service_role;
   alter default privileges for role postgres in schema public
     grant select, insert, update, delete on tables to service_role;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
 
   rollback to savepoint a;
 
@@ -33,7 +33,7 @@ begin;
   create schema private_stuff;
   alter default privileges for role postgres in schema private_stuff
     grant select on tables to anon;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
 
   rollback to savepoint b;
 
@@ -45,7 +45,7 @@ begin;
   ----------------------------------------
   alter default privileges for role postgres in schema public
     grant usage, select on sequences to anon;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
 
   rollback to savepoint c;
 
@@ -65,7 +65,7 @@ begin;
     metadata->>'owner' as owner,
     metadata->>'schema' as schema,
     cache_key
-  from lint."0033_default_privileges_expose_new_tables";
+  from lint."0034_default_privileges_expose_new_tables";
 
   ----------------------------------------
   -- RESOLUTION: revoke the default privileges. New tables need an
@@ -73,7 +73,7 @@ begin;
   ----------------------------------------
   alter default privileges for role postgres in schema public
     revoke all on tables from anon, authenticated;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
 
   rollback to savepoint case_lazy_fix;
 
@@ -92,11 +92,11 @@ begin;
     detail,
     metadata->>'schema' as schema,
     cache_key
-  from lint."0033_default_privileges_expose_new_tables";
+  from lint."0034_default_privileges_expose_new_tables";
 
   alter default privileges for role postgres
     revoke select on tables from public;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
 
   rollback to savepoint case_global_public;
 

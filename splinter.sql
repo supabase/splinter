@@ -2365,7 +2365,7 @@ select
         case when schema_name is null then 'any schema' else format('schema `%s`', schema_name) end,
         grants
     ) as detail,
-    'https://supabase.com/docs/guides/database/database-linter?lint=0033_default_privileges_expose_new_tables' as remediation,
+    'https://supabase.com/docs/guides/database/database-linter?lint=0034_default_privileges_expose_new_tables' as remediation,
     jsonb_build_object(
         'owner', owner_name,
         'schema', schema_name,

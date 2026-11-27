@@ -6,7 +6,7 @@ begin;
   -- tests rely on. Start this file from the post-change state.
   alter default privileges in schema public revoke select on tables from public;
   -- BASELINE: no default privileges for the API roles, no rows
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
@@ -20,7 +20,7 @@ begin;
   create role service_role;
   alter default privileges for role postgres in schema public
     grant select, insert, update, delete on tables to service_role;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
@@ -34,7 +34,7 @@ begin;
   create schema private_stuff;
   alter default privileges for role postgres in schema private_stuff
     grant select on tables to anon;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
@@ -47,7 +47,7 @@ begin;
   ----------------------------------------
   alter default privileges for role postgres in schema public
     grant usage, select on sequences to anon;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
@@ -67,7 +67,7 @@ begin;
     metadata->>'owner' as owner,
     metadata->>'schema' as schema,
     cache_key
-  from lint."0033_default_privileges_expose_new_tables";
+  from lint."0034_default_privileges_expose_new_tables";
                  name                 |                                                                                     detail                                                                                     |  owner   | schema |                      cache_key                       
 --------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------+--------+------------------------------------------------------
  default_privileges_expose_new_tables | Default privileges make every table `postgres` creates in schema `public` accessible to anon (DELETE, INSERT, SELECT, UPDATE), authenticated (DELETE, INSERT, SELECT, UPDATE). | postgres | public | default_privileges_expose_new_tables_postgres_public
@@ -79,7 +79,7 @@ begin;
   ----------------------------------------
   alter default privileges for role postgres in schema public
     revoke all on tables from anon, authenticated;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
@@ -98,7 +98,7 @@ begin;
     detail,
     metadata->>'schema' as schema,
     cache_key
-  from lint."0033_default_privileges_expose_new_tables";
+  from lint."0034_default_privileges_expose_new_tables";
                  name                 |                                               detail                                                | schema |                    cache_key                    
 --------------------------------------+-----------------------------------------------------------------------------------------------------+--------+-------------------------------------------------
  default_privileges_expose_new_tables | Default privileges make every table `postgres` creates in any schema accessible to PUBLIC (SELECT). |        | default_privileges_expose_new_tables_postgres_*
@@ -106,7 +106,7 @@ begin;
 
   alter default privileges for role postgres
     revoke select on tables from public;
-  select * from lint."0033_default_privileges_expose_new_tables";
+  select * from lint."0034_default_privileges_expose_new_tables";
  name | title | level | facing | categories | description | detail | remediation | metadata | cache_key 
 ------+-------+-------+--------+------------+-------------+--------+-------------+----------+-----------
 (0 rows)
